@@ -1,0 +1,56 @@
+# careers section data
+- name:
+    detail: Heinz School, Carnegie Mellon University
+    i18n: nextcode
+  desc:
+    detail: I am pursing my degree yet at CMU with focus in Data Science and analytics. I am graduating in May 2017.
+    i18n: nextcode_des
+  date:
+    detail: May. 2017
+    i18n: nextcode_date
+  job:
+    detail: Graduate student, Masters in Information Systems Managementhead
+    i18n: nextcode_job
+  icon: fa-graduation-cap
+
+- name:
+    detail: DataSpark Analytics, Singapore
+    i18n: netease
+  desc:
+    detail: As a Software Engineer, I developed in-house tools for the company. I developed a tool which allows user to configure Spark jobs in YAML from a user friendly interface.
+    i18n: netease_des
+  date:
+    detail: May. 2016
+    i18n: netease_date
+  job:
+    detail: Software Engineering Intern
+    i18n: netease_job
+  icon: fa-jsfiddle
+
+- name:
+    detail: Tata Consultancy Services, Chennai
+    i18n: ucloud
+  desc:
+    detail: As an Assistant Systems Engineer, I individualy handles large scale ETL projects integrating between in-house applications of a retailer to a third party cloud CRM.
+    i18n: ucloud_des
+  date:
+    detail: Jun. 2013
+    i18n: ucloud_date
+  job:
+    detail: Assistant Systems Engineer
+    i18n: ucloud_job
+  icon: fa-suitcase
+
+- name:
+    detail: SRM University, Chennai
+    i18n: college
+  desc:
+    detail: I graduated from SRM University on May 2013 with Bachelors in Information Technology
+    i18n: college_des
+  date:
+    detail: Jul. 2013
+    i18n: college_date
+  job:
+    detail: Student
+    i18n: college_job
+  icon: fa-university

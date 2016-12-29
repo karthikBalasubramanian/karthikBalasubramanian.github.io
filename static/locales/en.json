@@ -1,0 +1,55 @@
+{
+  "website":{
+    "title": "Karthik's blog"
+  },
+  "nav":{
+    "home": "Home",
+    "about_me": "About",
+    "skills": "Skills",
+    "projects": "Projects",
+    "career": "Career",
+    "blog": "Blog",
+    "link": "Link"
+  },
+  "about_me":{
+    "about_me": "About Me",
+    "des": "I am a Data enthusiast. My passion is to identify the actionable information from noisy data that can bolster the business needs. My fascination is always about the beautiful human mind and learning about it will be my life-time project."
+  },
+  "skills":{
+    "my_skills": "My Skills"
+  },
+  "projects":{
+    "my_projects": "My Projects",
+    "airbnb": "This tool predicts the price of an Airbnb listing based on a its features, locational significance and competitor pricing. In addition, it provides information like other nearby Airbnb listing price stats and advertisement suggestions.",
+    "sparkgen": "SparkGen is a tool which automates Spark job configuration. It reverse engineers the Java Spark Jobs and exposes the internals in the user interface. The internals when selected by the user is recorded to a dynamic configuration file.",
+    "altairviz": "Altair-Viz is a new upcoming visualisation library. I have written a getting-started tutorial which gives a brief history about descriptive programming languages and evolution of visualisation libraries that resulted in the formation of Altair-Viz.",
+    "hilti": "Hilti Quiz-Train is a native android application. It is an attempt to ease the knowledge transfer among the Hilti Sales employees about their products and customer interactions."
+  },
+  "career":{
+    "my_career": "My Career",
+    "nextcode": "Heinz School, Carnegie Mellon University",
+    "nextcode_des": "I am pursing my degree yet at CMU with focus in Data Science and analytics. I am graduating in May 2017.",
+    "nextcode_date": "May. 2017",
+    "nextcode_job": "Graduate student, Masters in Information Systems Management",
+    "netease": "DataSpark Analytics, Singapore",
+    "netease_des": "As a Software Engineer, I developed in-house tools for the company. I developed a tool which allows user to configure Spark jobs in YAML from a user friendly interface.",
+    "netease_date": "May. 2016",
+    "netease_job": "Software Engineering Intern",
+    "ucloud": "Tata Consultancy Services, Chennai",
+    "ucloud_des": "As an Assistant Systems Engineer, I individualy handles large scale ETL projects integrating between in-house applications of a retailer to a third party cloud CRM.",
+    "ucloud_date": "Jun. 2013",
+    "ucloud_job": "Assistant Systems Engineer",
+    "college": "SRM University, Chennai",
+    "college_des": "I graduated from SRM University on May 2013 with Bachelors in Information Technology",
+    "college_date": "Jul. 2013",
+    "college_job": "Student"
+  },
+  "blog":{
+    "my_blog": "My Blog"
+  },
+  "link":{
+    "link": "Link",
+    "view": "views"
+  }
+
+}

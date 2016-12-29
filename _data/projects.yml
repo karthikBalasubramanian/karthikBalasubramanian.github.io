@@ -1,0 +1,29 @@
+# projects section data
+- name: 'Airbnb Price Prediciton'
+  i18n: 'airbnb'
+  url: '/karthikBalasubramanian/Airbnb'
+  img: 'static/img/landing/jupyter.png'
+  desc: 'This tool predicts the price of an Airbnb listing based on a its features, locational significance and competitor pricing. In addition, it provides information like other nearby Airbnb listing price stats and advertisement suggestions.'
+
+- name: 'SparkGen'
+  i18n: 'sparkgen'
+  url: '/karthikBalasubramanian/SparkGen'
+  img: 'static/img/landing/SparkGen.png'
+  desc: "SparkGen is a tool which automates Spark job configuration. It reverse engineers the Java Spark Jobs and exposes the internals in the user interface. The internals when selected by the user is recorded to a dynamic configuration file."
+
+- name: 'Altair-Viz'
+  i18n: 'altairviz'
+  url: '/karthikBalasubramanian/Altair-Viz'
+  img: 'static/img/landing/altair.png'
+  desc: "Altair-Viz is a new upcoming visualisation library. I have written a getting-started tutorial which gives a brief history about descriptive programming languages and evolution of visualisation libraries that resulted in the formation of Altair-Viz"
+
+- name: 'Hilti Quiz-Train'
+  i18n: 'hilti'
+  url: '/karthikBalasubramanian/HiltiQuiz-Train'
+  img: 'static/img/landing/hilti-logo.png'
+  desc: "Hilti Quiz-Train is a native android application. It is an attempt to ease the knowledge transfer among the Hilti Sales employees about their products and customer interactions."
+
+# - name: 'FamilyCODE Wchat'
+#   i18n: 'familycode'
+#   img: 'static/img/landing/familycode.png'
+#   desc: This is a shopping mall in wechat, it promotes gene detection. Since time is precious, I write this website with Django, jQuery, weui. This is WuxiNextcode's major product. You can scan project's picture by wechat.

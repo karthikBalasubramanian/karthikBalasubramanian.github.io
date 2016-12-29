@@ -1,0 +1,69 @@
+# Welcome to Jekyll!
+
+# Website settings
+title: "Karthik Balasubramanian"
+description: "Karthik's blog"
+keywords: "Karthik B, Karthik, CMU MISM, Data science"
+baseurl: "/"
+url: "http://karthikBalasubramanian.github.io"
+# url: "http://127.0.0.1:4000"
+
+# author
+author:
+  name: 'Karthik'
+  first_name: 'Karthik'
+  last_name: 'Balasubramanian'
+  email: 'karthikb@andrew.cmu.edu'
+  facebook_username: 'bks4line'
+  github_username: 'karthikBalasubramanian'
+  avatar: 'static/img/landing/profile_pic_karthik.jpg'
+  desc: 'I am a Data enthusiast. My passion is to identify the actionable information from noisy data that can bolster the business needs. My fascination is always about the beautiful human mind and learning about it will be my life-time project'
+
+# localization
+languages:
+  # - locale: 'zh'
+  #   flag: 'static/img/flags/China.png'
+  - locale: 'en'
+    flag: 'static/img/flags/United-States.png'
+
+# blog img path
+img_path: 'http://www.jack003.com/static/img/blog'
+
+# donate
+# donate:
+#   wechat1: 'static/img/pay/w1.jpeg'
+#   wechat5: 'static/img/pay/w5.jpeg'
+
+# comment
+# changyan:
+  # appid: cysfY7ULn
+  # conf: prod_861928934cecb7a18e15bedaed9dae29
+# disqus:
+#   name: jalpc
+#   public_key: tj2MPaNlHMONwTH5bGDNSXyaBpW7q282MeUzh5CwcjJerNhK8Kxk3aWo7IckzTX7
+
+# # share
+# bshare:
+#   uuid: 513f778e-a8f7-4c20-9ec2-d29cc2328d75
+
+# baidu analytics
+# ba:
+  # uuid: 317acca9ef9255b934e46371e471431d
+
+# google analytics
+# ga:
+#   id: UA-73784599-1
+
+# growingIO
+# gio:
+#   id: a49d4901c7853da9
+
+# Build settings
+encoding: "utf-8"
+
+# other settings
+highlighter: rouge
+markdown: kramdown
+kramdown:
+  input: GFM
+  syntax_highlighter: rouge

@@ -1,0 +1,16 @@
+# blog page sections
+- name: Blog
+  href: '/blog/'
+
+- name: Machine Learning
+  href: '/ml/'
+
+- name: Algorithms
+  href: '/Algorithms/'
+
+- name: Life
+  href: '/Life/'
+
+- name: Ideas and Writing
+  href: '/writing/'
+
