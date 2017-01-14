@@ -564,6 +564,268 @@ FileLink('sub_karthik.csv')
     Starting new HTTPS connection (1): www.kaggle.com
     
 
+## Visualising results
+
+ This part of the experiment is very important. We want to understand what makes the model predict the images correctly and what makes it predict wrong. In any image classification task, Jeremy Howard advises to follow the underlying steps to make yourself better understand the model and finetune its parameters accordingly. This is a standard template
+
+ * look into few examples of images in random that we got right.
+ * Few examples of images in random that we got wrong.
+ * Most correct labels in each class classified right. (Images with models assuring highest possibility of belonging to say Cat class when they are actually Cat.)
+ * Most incorrect labels in each class classified wrong.(Images with models assuring highest possibility of belonging to say Cat class when they are actually Dog.)
+ * Most uncertain labels. (Labels with confusion to incline towards a class or other)
+
+ This time we will be working with validation set. Because the validation set has the correct answers.
+
+
+```python
+# We have already loaded weights ft3.h5
+batches_valid,prob_valid = vgg.test(path=DATA_HOME_DIR+"/valid",batch_size=batch_size*2)
+```
+
+    Found 2000 images belonging to 2 classes.
+
+
+
+```python
+type(batches_valid),type(prob_valid)
+```
+
+
+
+
+    (keras.preprocessing.image.DirectoryIterator, numpy.ndarray)
+
+
+
+
+```python
+filenames_valid = batches_valid.filenames
+```
+
+> We already have 98% of accuracy in validation set.
+
+
+```python
+# we are predicting is_dog in competition.
+expected_labels = val_batches.classes #0 or 1
+
+#Round our predictions to 0/1 to generate labels
+# our_predictions are for probability
+our_predictions = prob_valid[:,0]
+# our_labels determines the class label.
+our_labels = np.round(1-our_predictions)
+```
+
+
+```python
+# number of images to view at once
+n_view = 4
+```
+
+
+```python
+#Helper function to plot images by index in the validation set
+#Plots is a helper function in utils.py
+def plots_idx(idx, titles=None):
+    plots([image.load_img(DATA_HOME_DIR +"/valid/"+ filenames_valid[i]) for i in idx], titles=titles)
+```
+
+1. look into few examples of images in random that we got right.
+
+
+```python
+# we are getting zeroth column because its a tuple.
+random_correct_labels  = np.where(expected_labels==our_labels)[0]
+random_correct_labels.shape
+```
+
+
+
+
+    (1971,)
+
+
+
+
+```python
+# check_accuracy
+len(random_correct_labels)/float(len(expected_labels))
+# adhering to our model accuracy!
+```
+
+
+
+
+    0.9855
+
+
+
+
+```python
+idx = permutation(random_correct_labels[:n_view])
+# titles are nothing but probabilities of being a cat.
+plots_idx(idx=idx,titles=our_predictions[idx])
+```
+
+
+[![output_90_0.png](https://s6.postimg.org/3w69ko3tt/output_90_0.png)](https://postimg.org/image/9kckbk865/)
+
+
+#2 Few Incorrect labels
+
+
+```python
+random_incorrect_labels  = np.where(expected_labels!=our_labels)[0]
+random_incorrect_labels.shape
+```
+
+
+
+
+    (29,)
+
+
+
+
+```python
+idx = permutation(random_incorrect_labels[:n_view])
+# titles are nothing but probabilities of being a cat.
+plots_idx(idx=idx,titles=our_predictions[idx])
+```
+
+
+[![output_93_0.png](https://s6.postimg.org/tgd54ueld/output_93_0.png)](https://postimg.org/image/squcshe1p/)
+
+
+we have to interpret these images. These images illustrates how trivial the task of classification to humans, but are complex for computers to learn.
+
+1. the given image is labeled as cat. But probability of being a cat is as close to 6X10^-8. This attributes to the concept of Occlusion.
+2. the second image is a cat. But labled as dog.This corresponds to the concept of Deformation.
+3. Third image has the same problem as first. it is labeled as Dog. But its actually a cat.
+4. Fourth image corresponds to the concept of Background clutter. To get better Idea, see the image below.
+
+[![challenges.jpg](https://s6.postimg.org/71m9x4x29/challenges.jpg)](https://postimg.org/image/a8gtgrhi5/)
+
+
+#3a The images we most confident were cats, and are actually cats
+
+
+```python
+# when our_lables are 0, we have predicted cat.
+# this statement only get the indexes of labels that are correctly predicted as cat.
+correct_cats = np.where((our_labels==0) & (our_labels==expected_labels))[0]
+print "Found %d confident correct cats labels" % len(correct_cats)
+# argsort sorts the indexes based on the value in ascending order.
+# example np.argsort([3,1,2]) = [1,2,0]
+# we then reverse it.
+# most_correct_cats gives indexes of most correct cat lables. [::-1] is used to get the indexes in descending order
+# put our prediction indexes in correct cats. It gives the indexes of most correct cats.
+# get our predictions of correct cat and get the most correct cat
+most_correct_cats = np.argsort(our_predictions[correct_cats])[::-1][:n_view]
+plots_idx(correct_cats[most_correct_cats], our_predictions[correct_cats][most_correct_cats])
+```
+
+    Found 979 confident correct cats labels
+
+
+
+[![output_96_1.png](https://s6.postimg.org/u75vamgyp/output_96_1.png)](https://postimg.org/image/8xi8zs0nx/)
+
+
+#3b. The images we most confident were dogs, and are actually dogs
+
+
+
+```python
+# same as above
+correct_dogs = np.where((our_labels==1) & (our_labels==expected_labels))[0]
+print "Found %d confident correct dogs labels" % len(correct_dogs)
+most_correct_dogs = np.argsort(our_predictions[correct_dogs])[:n_view]
+plots_idx(correct_dogs[most_correct_dogs], our_predictions[correct_dogs][most_correct_dogs])
+```
+
+    Found 992 confident correct dogs labels
+
+
+
+[![output_98_1.png](https://s6.postimg.org/iw37m9a3l/output_98_1.png)](https://postimg.org/image/bsvc6n4nx/)
+
+
+```python
+#4a. The images we were most confident were cats, but are actually dogs
+# label 0 is cat. get labels which we predicted as cat but are actually dogs.
+incorrect_cats = np.where((our_labels==0) & (our_labels!=expected_labels))[0]
+print "Found %d incorrect cats" % len(incorrect_cats)
+# if there are any, follow same steps as above cells
+if len(incorrect_cats):
+    most_incorrect_cats = np.argsort(our_predictions[incorrect_cats])[::-1][:n_view]
+    plots_idx(incorrect_cats[most_incorrect_cats], our_predictions[incorrect_cats][most_incorrect_cats])
+```
+
+    Found 19 incorrect cats
+
+
+
+[![output_99_1.png](https://s6.postimg.org/bu5a026ht/output_99_1.png)](https://postimg.org/image/7xry42li5/)
+
+
+
+```python
+#4b. The images we were most confident were dogs, but are actually cats
+# same as above
+incorrect_dogs = np.where((our_labels==1) & (our_labels!=expected_labels))[0]
+print "Found %d incorrect dogs" % len(incorrect_dogs)
+if len(incorrect_dogs):
+    most_incorrect_dogs = np.argsort(our_predictions[incorrect_dogs])[:n_view]
+    plots_idx(incorrect_dogs[most_incorrect_dogs], our_predictions[incorrect_dogs][most_incorrect_dogs])
+```
+
+    Found 10 incorrect dogs
+
+
+
+[![output_100_1.png](https://s6.postimg.org/pp3kij0wx/output_100_1.png)](https://postimg.org/image/l37ga6fdp/)
+
+
+```python
+#5. The most uncertain labels (ie those with probability closest to 0.5).
+# 0.5 -0.5 becomes 0. 1-0.5 becomes 0.5. 0-0.5 becomes -0.5 absolute of these values becomes positive.
+# argsort of these values brings in most uncertain lables first.
+most_uncertain = np.argsort(np.abs(our_predictions-0.5))
+plots_idx(most_uncertain[:n_view], our_predictions[most_uncertain])
+```
+
+
+[![output_101_0.png](https://s6.postimg.org/xvvka3qzl/output_101_0.png)](https://postimg.org/image/4gpw13mfx/)
+
+
+
+```python
+from sklearn.metrics import confusion_matrix
+cm = confusion_matrix(expected_labels, our_labels)
+cm
+```
+
+
+
+
+    array([[979,  10],
+           [ 19, 992]])
+
+
+
+
+```python
+plot_confusion_matrix(cm, batches_valid.class_indices)
+```
+
+    [[979  10]
+     [ 19 992]]
+
+
+
+[![output_103_1.png](https://s6.postimg.org/bl7pa4tpd/output_103_1.png)](https://postimg.org/image/h9e010y1p/)
+
 
 # Fantastic We are done. 
 
