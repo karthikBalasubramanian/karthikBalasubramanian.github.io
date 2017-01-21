@@ -2,7 +2,7 @@
 - name: blog
   href: '/blog/'
 
-- name: Machine learning
+- name: Data Science
   href: '/ml/'
 
 - name: algorithms
