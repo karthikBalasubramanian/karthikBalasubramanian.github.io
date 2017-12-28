@@ -4,7 +4,7 @@ $(document).ready(function() {
     $.ajax({
         type: "get",
         async: false,
-        url: "http://vps.jack003.com/api/jalpc_count",
+        url: "",
         dataType: "jsonp",
         jsonp: "callback",
         jsonpCallback: "flightHandler",

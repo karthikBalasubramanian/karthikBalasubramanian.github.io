@@ -16,14 +16,20 @@ module.exports = function(grunt) {
     eslint: {
       target: ['src/*.js']
     },
+    concat: {
+      dist: {
+        src: ['src/import.js', 'src/metisMenu.js'],
+        dest: '.tmp/metisMenu.js'
+      }
+    },
     babel: {
       options: {
-        presets: ['es2015'],
-        plugins: ['transform-es2015-modules-umd']
+        // presets: ['es2015'],
+        // plugins: ['transform-es2015-modules-umd']
       },
       dist: {
         files: {
-          'dist/metisMenu.js': 'src/metisMenu.js'
+          'dist/metisMenu.js': '.tmp/metisMenu.js'
         }
       }
     },
@@ -64,7 +70,6 @@ module.exports = function(grunt) {
       min: {
         options: {
           processors: [
-            require('pixrem')(), // add fallbacks for rem units
             require('autoprefixer')({
               browsers: [
                 'Android 2.3',
@@ -114,7 +119,7 @@ module.exports = function(grunt) {
     watch: {
       script: {
         files: ['src/**/*.js'],
-        tasks: ['babel', 'uglify', 'usebanner']
+        tasks: ['concat', 'babel', 'uglify', 'usebanner']
       },
       style: {
         files: ['src/**/*.css'],
@@ -140,11 +145,13 @@ module.exports = function(grunt) {
   grunt.loadNpmTasks('grunt-postcss');
   grunt.loadNpmTasks('grunt-babel');
   grunt.loadNpmTasks('grunt-eslint');
+  grunt.loadNpmTasks('grunt-contrib-concat');
 
   grunt.registerTask('travis', ['eslint']);
   grunt.registerTask('serve', ['connect:livereload', 'watch']);
   grunt.registerTask('default', [
     'eslint',
+    'concat',
     'babel',
     'uglify',
     'postcss',

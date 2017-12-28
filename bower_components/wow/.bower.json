@@ -28,6 +28,5 @@
   },
   "_source": "https://github.com/matthieua/WOW.git",
   "_target": "^1.1.2",
-  "_originalSource": "wowjs",
-  "_direct": true
+  "_originalSource": "wowjs"
 }

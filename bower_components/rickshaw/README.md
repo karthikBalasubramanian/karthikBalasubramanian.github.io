@@ -1,6 +1,45 @@
+[![NPM version][npm-image]][npm-url]
+[![Build Status][travis-image]][travis-url]
+[![Coverage Status][coverage-image]][coverage-url]
+
 # Rickshaw
 
 Rickshaw is a JavaScript toolkit for creating interactive time series graphs, developed at [Shutterstock](http://www.shutterstock.com)
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Table of Contents
+
+- [Getting Started](#getting-started)
+- [Install](#install)
+  - [Dependencies](#dependencies)
+- [Rickshaw.Graph](#rickshawgraph)
+      - [element](#element)
+      - [series](#series)
+      - [renderer](#renderer)
+      - [width](#width)
+      - [height](#height)
+      - [min](#min)
+      - [max](#max)
+      - [padding](#padding)
+      - [interpolation](#interpolation)
+      - [stack](#stack)
+  - [Methods](#methods)
+      - [render()](#render)
+      - [configure()](#configure)
+      - [onUpdate(f)](#onupdatef)
+- [Extensions](#extensions)
+- [Rickshaw.Color.Palette](#rickshawcolorpalette)
+    - [Color Schemes](#color-schemes)
+    - [Interpolation](#interpolation)
+- [Rickshaw and Cross-Browser Support](#rickshaw-and-cross-browser-support)
+- [Building](#building)
+- [Contributing](#contributing)
+- [Authors](#authors)
+- [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 
 ## Getting Started
 
@@ -24,7 +63,28 @@ graph.render();
 ```
 See the [overview](http://code.shutterstock.com/rickshaw/), [tutorial](http://shutterstock.github.com/rickshaw/tutorial/introduction.html), and [examples](http://shutterstock.github.com/rickshaw/examples/) for more.
 
-## Rickshaw.Graph 
+## Install
+
+In the browser, manually add `rickshaw.min.js` and `rickshaw.min.css` in the document head.
+
+Alternatively, you can install Rickshaw using [Bower](https://bower.io/) or [npm](https://npmjs.com).
+
+```sh
+# With bower
+bower install rickshaw
+# With npm
+npm install --save rickshaw
+```
+
+### Dependencies
+
+Rickshaw relies on the fantastic [D3 visualization library](http://mbostock.github.com/d3/) to do lots of the heavy lifting for stacking and rendering to SVG.
+
+Some extensions require [jQuery](http://jquery.com) and [jQuery UI](http://jqueryui.com), but for drawing some basic graphs you'll be okay without.
+
+Rickshaw uses [jsdom](https://github.com/tmpvar/jsdom) to run unit tests in Node to be able to do SVG manipulation. As of the jsdom 7.0.0 release, jsdom requires Node.js 4 or newer [jsdom changelog](https://github.com/tmpvar/jsdom/blob/master/Changelog.md#700). If you want to run the tests on your machine, and you don't have access to a version of node >= 4.0, you can `npm install jsdom@3`  so that you can run the tests using the [3.x branch of jsdom](https://github.com/tmpvar/jsdom/tree/3.x).
+
+## Rickshaw.Graph
 
 A Rickshaw graph.  Send an `element` reference, `series` data, and optionally other properties to the constructor before calling `render()` to point the graph.  A listing of properties follows.  Send these as arguments to the constructor, and optionally set them later on already-instantiated graphs with a call to `configure()`
 
@@ -38,7 +98,7 @@ Array of objects containing series data to plot.  Each object should contain `da
 
 ##### renderer
 
-A string containing the name of the renderer to be used.  Options include `area`, `stack`, `bar`, `line`, and `scatterplot`.  Also see the `multi` meta renderer in order to support different renderers per series.
+A string containing the name of the renderer to be used.  Options include `area`, `stack`, `bar`, `line`, and `scatterplot`.  Defaults to `line`. Also see the `multi` meta renderer in order to support different renderers per series. 
 
 ##### width
 
@@ -71,7 +131,7 @@ Line smoothing / interpolation method (see [D3 docs](https://github.com/mbostock
 
 ##### stack
 
-Boolean to specify whether series should be stacked while in the context of stacking renderers (area, bar, etc).  Defaults to true.
+Allows you to specify whether series should be stacked while in the context of stacking renderers (area, bar, etc).  Defaults to `stack: 'true'`. To unstack, `unstack: 'true'`.
 
 ### Methods
 
@@ -132,6 +192,15 @@ palette.color() // => first color in the palette
 palette.color() // => next color in the palette...
 ```
 
+Optionally, to palette.color() can take a numeric argument to specify which color from the palette should be used (zero-indexed).  This can be helpful when assigning a color to series of a plot with particular meaning:
+
+```javascript
+var palette = new Rickshaw.Color.Palette( { scheme: 'colorwheel' } );
+    
+palette.color(0) // => first color in the palette - red in this example
+palette.color(2) // => third color in the palette - light blue
+```
+
 #### Color Schemes
 
   * classic9
@@ -151,13 +220,6 @@ For graphs with more series than palettes have colors, specify an `interpolatedS
 This library works in modern browsers and Internet Explorer 9+.
 
 Rickshaw relies on the HTMLElement#classList API, which isn't natively supported in Internet Explorer 9.  Rickshaw adds support by including a shim which implements the classList API by extending the HTMLElement prototype.  You can disable this behavior if you like, by setting `RICKSHAW_NO_COMPAT` to a true value before including the library. 
-
-
-## Dependencies
-
-Rickshaw relies on the fantastic [D3 visualization library](http://mbostock.github.com/d3/) to do lots of the heavy lifting for stacking and rendering to SVG.
-
-Some extensions require [jQuery](http://jquery.com) and [jQuery UI](http://jqueryui.com), but for drawing some basic graphs you'll be okay without.
 
 ## Building
 
@@ -190,6 +252,8 @@ Pull requests are always welcome!  Please follow a few guidelines:
 - Do as the Romans do and stick with existing whitespace and formatting conventions (i.e., tabs instead of spaces, etc)
 - Consider adding a simple example under `examples/` that demonstrates any new functionality
 
+Please note that all interactions with Shutterstock follow the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Authors
 
 This library was developed by David Chester, Douglas Hunter, and Silas Sewell at [Shutterstock](http://www.shutterstock.com)
@@ -197,7 +261,7 @@ This library was developed by David Chester, Douglas Hunter, and Silas Sewell at
 
 ## License
 
-Copyright (C) 2011-2013 by Shutterstock Images, LLC
+Copyright (C) 2011-2017 by Shutterstock Images, LLC
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -205,3 +269,9 @@ The above copyright notice and this permission notice shall be included in all c
 
 THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
+[npm-image]: https://img.shields.io/npm/v/rickshaw.svg?style=flat-square
+[npm-url]: https://npmjs.org/package/rickshaw
+[travis-image]: https://travis-ci.org/shutterstock/rickshaw.svg?branch=master
+[travis-url]: https://travis-ci.org/shutterstock/rickshaw
+[coverage-image]: https://coveralls.io/repos/github/shutterstock/rickshaw/badge.svg?branch=master
+[coverage-url]: https://coveralls.io/github/shutterstock/rickshaw
