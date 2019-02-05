@@ -44,7 +44,7 @@ for i in range(36):
     ax.imshow(np.squeeze(x_train[i]))
 ```
 
-![Image list](https://drive.google.com/open?id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5)
+<a href="https://drive.google.com/uc?export=view&id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5"><img src="https://drive.google.com/uc?export=view&id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5" style="width: 750px; max-width: 100%; height: auto" title="List of Images" /></a>
 
 
 ### 3. Rescale the Images by Dividing Every Pixel in Every Image by 255
@@ -267,9 +267,7 @@ for i, idx in enumerate(np.random.choice(x_test.shape[0], size=16, replace=False
 ```
 
 
-![prediction](https://drive.google.com/open?id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8)
-
-
+<a href="https://drive.google.com/uc?export=view&id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8"><img src="https://drive.google.com/uc?export=view&id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8" style="width: 125px; max-width: 100%; height: auto" title="Predictions" /></a>
 
 ```python
 
