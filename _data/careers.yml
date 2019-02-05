@@ -1,5 +1,19 @@
 # careers section data
 - name:
+    detail: Marketo, An Adobe Company
+    i18n: mkto
+  desc:
+    detail: My primary works involves in large scale data migrations, Optimizing and evaluating replication and migration tools for our customers to undergo Zero down time migrations.
+    i18n: mkto_des
+  date:
+    detail: October 2017
+    i18n: mkto_date
+  job:
+    detail: Associate Software Engineer, Tools and Infrastructure
+    i18n: mkto_job
+  icon: fa-suitcase
+
+- name:
     detail: Heinz School, Carnegie Mellon University
     i18n: nextcode
   desc:

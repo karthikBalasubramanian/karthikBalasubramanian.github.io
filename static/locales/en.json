@@ -23,10 +23,14 @@
     "airbnb": "This tool predicts the price of an Airbnb listing based on a its features, locational significance and competitor pricing. In addition, it provides information like other nearby Airbnb listing price stats and advertisement suggestions.",
     "sparkgen": "SparkGen is a tool which automates Spark job configuration. It reverse engineers the Java Spark Jobs and exposes the internals in the user interface. The internals when selected by the user is recorded to a dynamic configuration file.",
     "altairviz": "Altair-Viz is a new upcoming visualisation library. I have written a getting-started tutorial which gives a brief history about descriptive programming languages and evolution of visualisation libraries that resulted in the formation of Altair-Viz.",
-    "hilti": "Hilti Quiz-Train is a native android application. It is an attempt to ease the knowledge transfer among the Hilti Sales employees about their products and customer interactions."
+    "lta": "A project to understand if the supply pattern of taxicabs fill the gaps in the public transport network in the city state - Singapore"
   },
   "career":{
     "my_career": "My Career",
+    "mkto": "Marketo, An Adobe Company",
+    "mkto_des": "My primary works involves in large scale data migrations, Optimizing and evaluating replication and migration tools for our customers to undergo Zero down time migrations.",
+    "mkto_date": "Oct. 2017",
+    "mkto_job": "Associate Software Engineer, Tools and Infrastructure",
     "nextcode": "Heinz School, Carnegie Mellon University",
     "nextcode_des": "I am pursing my degree yet at CMU with focus in Data Science and analytics. I am graduating in May 2017.",
     "nextcode_date": "May. 2017",

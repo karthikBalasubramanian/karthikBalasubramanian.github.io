@@ -17,11 +17,11 @@
   img: 'static/img/landing/altair.png'
   desc: "Altair-Viz is a new upcoming visualisation library. I have written a getting-started tutorial which gives a brief history about descriptive programming languages and evolution of visualisation libraries that resulted in the formation of Altair-Viz"
 
-- name: 'Hilti Quiz-Train'
-  i18n: 'hilti'
-  url: '/karthikBalasubramanian/HiltiQuiz-Train'
-  img: 'static/img/landing/hilti-logo.png'
-  desc: "Hilti Quiz-Train is a native android application. It is an attempt to ease the knowledge transfer among the Hilti Sales employees about their products and customer interactions."
+- name: "How are Taxis enhancing the Singapore's Public Transport System?"
+  i18n: 'lta'
+  url: '/karthikBalasubramanian/LTA_Singapore'
+  img: 'static/img/landing/Singapore.png'
+  desc: "A project to understand if the supply pattern of taxicabs fill the gaps in the public transport network in the city state - Singapore"
 
 # - name: 'FamilyCODE Wchat'
 #   i18n: 'familycode'
