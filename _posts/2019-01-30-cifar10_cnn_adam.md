@@ -44,8 +44,7 @@ for i in range(36):
     ax.imshow(np.squeeze(x_train[i]))
 ```
 
-
-![png](static/images/cifar10/output_3_0.png)
+![Image list](https://drive.google.com/open?id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5)
 
 
 ### 3. Rescale the Images by Dividing Every Pixel in Every Image by 255
@@ -268,7 +267,7 @@ for i, idx in enumerate(np.random.choice(x_test.shape[0], size=16, replace=False
 ```
 
 
-![png](static/images/cifar10/output_20_0.png)
+![prediction](https://drive.google.com/open?id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8)
 
 
 
