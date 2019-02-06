@@ -1,21 +1,21 @@
 # skills section data
-- name: Python
+- name: Databases
   percentage: 90
 
 - name: Machine Learning/ Algorithms
   percentage: 80
 
-- name: Linux/Shell
-  percentage: 80
+- name: OS and Networking
+  percentage: 75
 
-- name: SQL
-  percentage: 85
+- name: Distributed Systems
+  percentage: 75
 
 - name: Java/J2ee
   percentage: 85
 
-- name: JavaScript
-  percentage: 70
+- name: Scripting
+  percentage: 75
 
-- name: Android
-  percentage: 80
+- name: Exploratory Data Analysis & Data Viz
+  percentage: 75
