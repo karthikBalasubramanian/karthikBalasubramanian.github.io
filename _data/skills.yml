@@ -11,11 +11,11 @@
 - name: Distributed Systems
   percentage: 75
 
-- name: Web Applications & API Development
+- name: Web App & API Dev
   percentage: 85
 
 - name: Scripting
   percentage: 75
 
-- name: Exploratory Data Analysis & Data Viz
+- name: EDA & Data Viz
   percentage: 75
