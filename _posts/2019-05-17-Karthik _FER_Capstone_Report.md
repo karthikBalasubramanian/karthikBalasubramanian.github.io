@@ -399,7 +399,10 @@ There is definitely more work to do to make this project more robust.
 
 ### References
 
-http://www.paulvangent.com/2016/08/05/emotion-recognition-using-facial-landmarks/  
-https://github.com/mayurmadnani/fer  
-https://towardsdatascience.com/a-comprehensive-hands-on-guide-to-transfer-learning-with-real-world-applications-in-deep-learning-212bf3b2f27a  
+<http://www.paulvangent.com/2016/08/05/emotion-recognition-using-facial-landmarks/>  
+<https://github.com/mayurmadnani/fer>  
+<https://towardsdatascience.com/a-comprehensive-hands-on-guide-to-transfer-learning-with-real-world-applications-in-deep-learning-212bf3b2f27a>
+
+### Codebase
+<https://github.com/karthikBalasubramanian/FER>
 
