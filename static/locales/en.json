@@ -27,6 +27,10 @@
   },
   "career":{
     "my_career": "My Career",
+    "adbe": "Adobe Systems Inc.",
+    "adbe_des": "I work as a growth Data engineer to gather customer experiences in digital products that provides sound recommendations to Product Marketing/Management and Customer Success stakeholders.",
+    "adbe_date": "May 2019",
+    "adbe_job": "Data Engineer, Product & Customer Analytics",
     "mkto": "Marketo, An Adobe Company",
     "mkto_des": "My primary works involves in large scale data migrations, Optimizing and evaluating replication and migration tools for our customers to undergo Zero down time migrations.",
     "mkto_date": "Oct. 2017",
