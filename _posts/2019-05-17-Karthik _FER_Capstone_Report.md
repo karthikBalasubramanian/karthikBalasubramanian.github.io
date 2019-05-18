@@ -370,9 +370,7 @@ I declare that my Deep Neural Nets models did not do better than the Baseline SV
 Since I could not decide on a solution to the problem via Deep Learning, I will use this section to document what I could have done in finding a solution using Deep Neural nets. Mostly my take is on the dataset.
 
 1. I used data augumentation to just augument the existing data. But what I later realized while writing the report is that, I did not enhance/add new images to the dataset. Doing that might have got multiple instances of the same emotion and model might have performed well.
-
 2. Choice of dataset and constraining myself to taking the peak frames for emotions made me drop many images. I could have labeled last few peak frames to the emotion label rather than naming the penultimate frame the emotion.
-
 3. I could have pivoted to another dataset. The methodology holds valid for any dataset. Cohn-Kanade dataset particulary was `acted out` rather than authentically expressed. Acted facial expressions are usually more exaggerated than what we see in the real world. If we were to classify new images with these models, they would most likely underperform. Systems trained on datasets created in a controlled lab setting generally fail to generalize across datasets.
 
 So if I have another chance, I would take a emotions dataset in wild to capture the emotions.
