@@ -9,8 +9,6 @@ tags: [blog, Deep Learning, Emotions recognition]
 icon: fa-pencil
 ---
 
-# Facial Emotions Recognition using Heuristic Learning and Transfer Learning
-
 Karthik Balasubramanian 
 May 16th, 2019
 
