@@ -1,5 +1,19 @@
 # careers section data
 - name:
+    detail: Adobe Systems
+    i18n: adbe
+  desc:
+    detail: I work as a growth Data engineer to gather customer experiences in digital products that provides sound recommendations to Product Marketing/Management and Customer Success stakeholders
+    i18n: adbe_des
+  date:
+    detail: May 2019
+    i18n: adbe_date
+  job:
+    detail: Data Engineer, Product & Customer Analytics
+    i18n: adbe_job
+  icon: fa-suitcase
+
+- name:
     detail: Marketo, An Adobe Company
     i18n: mkto
   desc:
