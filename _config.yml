@@ -18,6 +18,7 @@ author:
   github_username: 'karthikBalasubramanian'
   avatar: 'static/img/landing/profile_pic_karthik.jpg'
   desc: 'I am a Data enthusiast. My passion is to identify the actionable information from noisy data that can bolster the business needs. My fascination is always about the beautiful human mind and learning about it will be my life-time project. I run in my free time. Follow me on Strava!'
+  pgp: 'PGP fingerprint <b>C3F4 A8A7 620A 9056 915B FDE0 C649 D585 83A6 936A</b>'
 
 # localization
 languages:
