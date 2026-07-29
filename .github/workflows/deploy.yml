@@ -46,6 +46,7 @@ jobs:
       - name: Copy Vite App into Jekyll Site
         run: |
           if [ -d "child-financial-investment-planner/dist" ]; then
+            sudo chown -R $USER:$USER ./_site
             mkdir -p ./_site/child-financial-investment-planner
             cp -r ./child-financial-investment-planner/dist/* ./_site/child-financial-investment-planner/
             touch ./_site/child-financial-investment-planner/.nojekyll
