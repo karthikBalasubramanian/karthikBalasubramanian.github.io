@@ -1,20 +1,27 @@
-name: Deploy Child Planner to Subdirectory
+name: Deploy to GitHub Pages
 
 on:
   push:
     branches: ['master', 'main']
-    paths:
-      - 'child-financial-investment-planner/**'
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
 
 jobs:
   deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Repository
+      - name: Checkout
         uses: actions/checkout@v4
 
       - name: Setup Node.js
@@ -22,21 +29,37 @@ jobs:
         with:
           node-version: 20
 
-      - name: Install Dependencies
+      - name: Detect Directory & Install Dependencies
         run: |
-          cd child-financial-investment-planner
+          if [ -d "child-financial-investment-planner" ]; then
+            echo "Building inside child-financial-investment-planner subdirectory"
+            cd child-financial-investment-planner
+          fi
           npm ci || npm install
 
-      - name: Build Application
+      - name: Build static site
         run: |
-          cd child-financial-investment-planner
-          npm run build
-          touch dist/.nojekyll
+          if [ -d "child-financial-investment-planner" ]; then
+            echo "Building subfolder app..."
+            cd child-financial-investment-planner
+            npm ci || npm install
+            npm run build
+            touch dist/.nojekyll
+            # Copy compiled dist files into the subfolder so GitHub Pages serves compiled assets
+            cp -r dist/* .
+            touch .nojekyll
+            cd ..
+          else
+            npm ci || npm install
+            npm run build
+            touch dist/.nojekyll
+          fi
 
-      - name: Deploy to Subdirectory (Preserves Existing Site)
-        uses: JamesIves/github-pages-deploy-action@v4
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          folder: child-financial-investment-planner/dist
-          target-folder: child-financial-investment-planner
-          branch: gh-pages
-          clean: false  # 👈 CRITICAL: Stops GitHub from deleting existing root files
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

@@ -233,48 +233,33 @@ export const GitHubIntegration: React.FC = () => {
           <div className="flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Syncing to Your Existing Repository (karthikBalasubramanian.github.io)
+              Subfolder App Deployment Solution
             </h4>
           </div>
-          <span className="text-[10px] font-mono bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 px-2.5 py-1 rounded-md border border-indigo-100 dark:border-indigo-900 font-bold">
-            2 Quick Options
+          <span className="text-[10px] font-mono bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-100 dark:border-emerald-900 font-bold">
+            Root Site Preserved
           </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-          <div className="p-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
-            <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 font-bold">
-              <span className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center text-[11px] font-mono">1</span>
-                Option A: Enter Exact Name in UI
-              </span>
-              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-indigo-50 dark:bg-indigo-950 text-indigo-600">UI Sync</span>
-            </div>
-            <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              In the <strong>Sync to GitHub</strong> popup, enter <code>karthikBalasubramanian.github.io</code> into the <em>New repository name</em> box. Even though it says "New", typing your exact existing repository name will sync your code to that repository.
-            </p>
-          </div>
+        <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/50 rounded-lg text-indigo-900 dark:text-indigo-200 text-xs space-y-1">
+          <p className="font-bold">Root Cause of the 404 on /src/main.tsx:</p>
+          <p className="text-[11px] text-indigo-800 dark:text-indigo-300 leading-relaxed">
+            GitHub Pages served the uncompiled <code>child-financial-investment-planner/index.html</code> directly from Git (which references <code>/src/main.tsx</code>). Because Vite requires a build step, the production files in <code>dist/</code> must be copied into the subfolder.
+          </p>
+        </div>
 
-          <div className="p-4 rounded-lg bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 space-y-2">
-            <div className="flex items-center justify-between text-indigo-600 dark:text-indigo-400 font-bold">
-              <span className="flex items-center gap-1.5">
-                <span className="w-5 h-5 rounded-full bg-indigo-100 dark:bg-indigo-950 flex items-center justify-center text-[11px] font-mono">2</span>
-                Option B: Download ZIP &amp; Git Push
-              </span>
-              <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-emerald-50 dark:bg-emerald-950 text-emerald-600">Manual Git</span>
-            </div>
-            <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
-              Download/Export the project ZIP from the top menu, unzip into your local <code>karthikBalasubramanian.github.io</code> directory, and run:
-            </p>
-            <div className="p-2 bg-slate-900 text-slate-200 rounded font-mono text-[10px] overflow-x-auto">
-              git add . &amp;&amp; git commit -m "Update child wealth planner app" &amp;&amp; git push
-            </div>
+        <div className="space-y-2">
+          <p className="text-xs font-bold text-slate-900 dark:text-white">Option A: Quick Local Command (Builds &amp; pushes directly to Git)</p>
+          <div className="p-3 bg-slate-900 text-emerald-400 rounded-lg font-mono text-xs overflow-x-auto space-y-1 border border-slate-800">
+            <div>cd child-financial-investment-planner</div>
+            <div>npm run build &amp;&amp; cp -r dist/* .</div>
+            <div>git add . &amp;&amp; git commit -m "Deploy compiled bundle to subfolder" &amp;&amp; git push origin master</div>
           </div>
         </div>
 
         <div className="p-3 bg-slate-900 text-slate-200 rounded-lg font-mono text-[11px] flex items-center justify-between border border-slate-800">
-          <span>GitHub Actions Workflow file: <code>.github/workflows/deploy.yml</code></span>
-          <span className="text-emerald-400 font-bold">✓ Automatically Included</span>
+          <span>Target Live URL: <code className="text-indigo-400">https://karthikbalasubramanian.github.io/child-financial-investment-planner/</code></span>
+          <span className="text-emerald-400 font-bold">✓ Preserves Main Homepage</span>
         </div>
       </div>
 
