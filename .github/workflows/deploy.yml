@@ -1,0 +1,42 @@
+name: Deploy Child Planner to Subdirectory
+
+on:
+  push:
+    branches: ['master', 'main']
+    paths:
+      - 'child-financial-investment-planner/**'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Dependencies
+        run: |
+          cd child-financial-investment-planner
+          npm ci || npm install
+
+      - name: Build Application
+        run: |
+          cd child-financial-investment-planner
+          npm run build
+          touch dist/.nojekyll
+
+      - name: Deploy to Subdirectory (Preserves Existing Site)
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: child-financial-investment-planner/dist
+          target-folder: child-financial-investment-planner
+          branch: gh-pages
+          clean: false  # 👈 CRITICAL: Stops GitHub from deleting existing root files
