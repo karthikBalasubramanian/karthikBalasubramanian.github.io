@@ -233,33 +233,31 @@ export const GitHubIntegration: React.FC = () => {
           <div className="flex items-center gap-2">
             <GitBranch className="w-4 h-4 text-indigo-600 dark:text-indigo-400" />
             <h4 className="text-sm font-bold text-slate-900 dark:text-white">
-              Subfolder App Deployment Solution
+              Dual Build Fix: Root Jekyll + Subfolder Vite App
             </h4>
           </div>
           <span className="text-[10px] font-mono bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 px-2.5 py-1 rounded-md border border-emerald-100 dark:border-emerald-900 font-bold">
-            Root Site Preserved
+            Root Jekyll &amp; Subfolder Solved
           </span>
         </div>
 
         <div className="p-3 bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/50 rounded-lg text-indigo-900 dark:text-indigo-200 text-xs space-y-1">
-          <p className="font-bold">Root Cause of the 404 on /src/main.tsx:</p>
+          <p className="font-bold">Why the root homepage failed with raw Liquid tags:</p>
           <p className="text-[11px] text-indigo-800 dark:text-indigo-300 leading-relaxed">
-            GitHub Pages served the uncompiled <code>child-financial-investment-planner/index.html</code> directly from Git (which references <code>/src/main.tsx</code>). Because Vite requires a build step, the production files in <code>dist/</code> must be copied into the subfolder.
+            The previous workflow uploaded static files without running Jekyll on the repository root. This caused your main site's Liquid template tags (<code>&#123;% for section %&#125;</code>) to render as unparsed raw text.
           </p>
         </div>
 
         <div className="space-y-2">
-          <p className="text-xs font-bold text-slate-900 dark:text-white">Option A: Quick Local Command (Builds &amp; pushes directly to Git)</p>
-          <div className="p-3 bg-slate-900 text-emerald-400 rounded-lg font-mono text-xs overflow-x-auto space-y-1 border border-slate-800">
-            <div>cd child-financial-investment-planner</div>
-            <div>npm run build &amp;&amp; cp -r dist/* .</div>
-            <div>git add . &amp;&amp; git commit -m "Deploy compiled bundle to subfolder" &amp;&amp; git push origin master</div>
-          </div>
+          <p className="text-xs font-bold text-slate-900 dark:text-white">Solution in <code>.github/workflows/deploy.yml</code>:</p>
+          <p className="text-[11px] text-slate-600 dark:text-slate-300">
+            We updated <code>.github/workflows/deploy.yml</code> to run <code>actions/jekyll-build-pages</code> for your root homepage AND copy the compiled Vite React app into <code>_site/child-financial-investment-planner/</code> before deploying!
+          </p>
         </div>
 
         <div className="p-3 bg-slate-900 text-slate-200 rounded-lg font-mono text-[11px] flex items-center justify-between border border-slate-800">
-          <span>Target Live URL: <code className="text-indigo-400">https://karthikbalasubramanian.github.io/child-financial-investment-planner/</code></span>
-          <span className="text-emerald-400 font-bold">✓ Preserves Main Homepage</span>
+          <span>Root Homepage: <code className="text-indigo-400">https://karthikbalasubramanian.github.io/</code></span>
+          <span className="text-emerald-400 font-bold">✓ Jekyll Processed</span>
         </div>
       </div>
 

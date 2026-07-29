@@ -29,36 +29,32 @@ jobs:
         with:
           node-version: 20
 
-      - name: Detect Directory & Install Dependencies
+      - name: Build Vite App (Child Planner)
         run: |
           if [ -d "child-financial-investment-planner" ]; then
-            echo "Building inside child-financial-investment-planner subdirectory"
             cd child-financial-investment-planner
+            npm ci || npm install
+            npm run build
           fi
-          npm ci || npm install
 
-      - name: Build static site
+      - name: Build Jekyll Root Site
+        uses: actions/jekyll-build-pages@v1
+        with:
+          source: ./
+          destination: ./_site
+
+      - name: Copy Vite App into Jekyll Site
         run: |
-          if [ -d "child-financial-investment-planner" ]; then
-            echo "Building subfolder app..."
-            cd child-financial-investment-planner
-            npm ci || npm install
-            npm run build
-            touch dist/.nojekyll
-            # Copy compiled dist files into the subfolder so GitHub Pages serves compiled assets
-            cp -r dist/* .
-            touch .nojekyll
-            cd ..
-          else
-            npm ci || npm install
-            npm run build
-            touch dist/.nojekyll
+          if [ -d "child-financial-investment-planner/dist" ]; then
+            mkdir -p ./_site/child-financial-investment-planner
+            cp -r ./child-financial-investment-planner/dist/* ./_site/child-financial-investment-planner/
+            touch ./_site/child-financial-investment-planner/.nojekyll
           fi
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './_site'
 
       - name: Deploy to GitHub Pages
         id: deployment
