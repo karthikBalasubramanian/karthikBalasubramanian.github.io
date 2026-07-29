@@ -1,0 +1,6 @@
+{
+  "name": "Child Financial Investment Planner",
+  "description": "Interactive financial spreadsheet and portfolio optimizer comparing 529 plans, custodial accounts, Roth IRAs, and Trump accounts for children with growth projections up to age 60.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
