@@ -131,11 +131,11 @@ export const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({
               onChange={(e) => onUpdateInputs({ monthlyContribution: Number(e.target.value) })}
               className="w-full accent-indigo-600 cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] font-mono text-slate-400">
-              <span>$25/mo</span>
-              <span>$500/mo</span>
-              <span>$1,500/mo</span>
-              <span>$3,000/mo</span>
+            <div className="relative w-full h-4 text-[10px] font-mono text-slate-400">
+              <span className="absolute left-0">$25/mo</span>
+              <span className="absolute -translate-x-1/2" style={{ left: '16%' }}>$500/mo</span>
+              <span className="absolute -translate-x-1/2" style={{ left: '49.6%' }}>$1,500/mo</span>
+              <span className="absolute right-0 text-right">$3,000/mo</span>
             </div>
           </div>
 
@@ -157,11 +157,11 @@ export const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({
               onChange={(e) => onUpdateInputs({ childCurrentAge: Number(e.target.value) })}
               className="w-full accent-blue-600 cursor-pointer"
             />
-            <div className="flex justify-between text-[10px] text-slate-400">
-              <span>Age 0</span>
-              <span>Age 5</span>
-              <span>Age 10</span>
-              <span>Age 17</span>
+            <div className="relative w-full h-4 text-[10px] text-slate-400">
+              <span className="absolute left-0">Age 0</span>
+              <span className="absolute -translate-x-1/2" style={{ left: '29.4%' }}>Age 5</span>
+              <span className="absolute -translate-x-1/2" style={{ left: '58.8%' }}>Age 10</span>
+              <span className="absolute right-0 text-right">Age 17</span>
             </div>
           </div>
 

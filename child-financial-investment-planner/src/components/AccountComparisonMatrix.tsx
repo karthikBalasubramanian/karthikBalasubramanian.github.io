@@ -106,7 +106,12 @@ export const AccountComparisonMatrix: React.FC = () => {
             <div
               key={acc.id}
               id={`account-card-${acc.id}`}
-              onClick={() => setSelectedAccountId(acc.id)}
+              onClick={() => {
+                setSelectedAccountId(acc.id);
+                setTimeout(() => {
+                  document.getElementById('deep-dive-inspector')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 50);
+              }}
               className={`cursor-pointer rounded-xl p-5 border transition-all duration-200 relative flex flex-col justify-between ${
                 isSelected
                   ? 'bg-white dark:bg-slate-900 border-indigo-600 dark:border-indigo-500 shadow-sm ring-2 ring-indigo-500/20'
@@ -164,7 +169,7 @@ export const AccountComparisonMatrix: React.FC = () => {
               {/* Bottom Action */}
               <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-xs">
                 <span className="text-slate-400">Click for details</span>
-                <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1 group-hover:underline">
                   View Rules &rarr;
                 </span>
               </div>
@@ -175,7 +180,7 @@ export const AccountComparisonMatrix: React.FC = () => {
 
       {/* Selected Account Deep Dive Drawer / Panel */}
       {selectedAcc && (
-        <div className="bg-slate-900 text-white rounded-xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-6">
+        <div id="deep-dive-inspector" className="bg-slate-900 text-white rounded-xl p-6 sm:p-8 shadow-xl border border-slate-800 space-y-6 scroll-mt-24">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800 pb-4">
             <div>
               <div className="flex items-center gap-2">
@@ -315,13 +320,20 @@ export const AccountComparisonMatrix: React.FC = () => {
               <th className="px-4 py-3">Age of Control</th>
               <th className="px-4 py-3">IRA Rollover Option</th>
               <th className="px-4 py-3">Flexibility</th>
+              <th className="px-4 py-3 text-right">Details</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
             {accounts.map((acc) => (
               <tr
                 key={acc.id}
-                className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors"
+                onClick={() => {
+                  setSelectedAccountId(acc.id);
+                  setTimeout(() => {
+                    document.getElementById('deep-dive-inspector')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                  }, 50);
+                }}
+                className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors cursor-pointer"
               >
                 <td className="px-4 py-3.5 font-bold text-indigo-600 dark:text-indigo-400 flex items-center gap-2">
                   <span className={`w-2.5 h-2.5 rounded-full ${acc.bgColor} border ${acc.borderColor}`} />
@@ -344,6 +356,9 @@ export const AccountComparisonMatrix: React.FC = () => {
                   )}
                 </td>
                 <td className="px-4 py-3.5 text-slate-700 dark:text-slate-300">{acc.flexibility}</td>
+                <td className="px-4 py-3.5 text-right font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+                  View Rules &rarr;
+                </td>
               </tr>
             ))}
           </tbody>
