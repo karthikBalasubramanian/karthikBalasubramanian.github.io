@@ -68,3 +68,14 @@ markdown: kramdown
 kramdown:
   input: GFM
   syntax_highlighter: rouge
+
+exclude:
+  - "**/node_modules"
+  - node_modules
+  - child-financial-investment-planner/node_modules
+  - child-financial-investment-planner/src
+  - child-financial-investment-planner/public
+  - package.json
+  - package-lock.json
+  - Gemfile
+  - Gemfile.lock
