@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ParentInputs } from '../types';
 import { Sparkles, Send, Loader2, Bot, Lightbulb, MessageSquare, Key, Eye, EyeOff, ShieldCheck, ExternalLink, Check, Trash2 } from 'lucide-react';
 import { GoogleGenAI } from '@google/genai';
+import Markdown from 'react-markdown';
 
 interface AIAdvisorTabProps {
   inputs: ParentInputs;
@@ -392,8 +393,8 @@ User Question: ${textToSubmit}`;
             </span>
           </div>
 
-          <div className="prose dark:prose-invert max-w-none text-xs sm:text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
-            {response}
+          <div className="prose dark:prose-invert max-w-none text-xs sm:text-sm text-slate-700 dark:text-slate-300 leading-relaxed prose-headings:font-bold prose-headings:text-slate-900 dark:prose-headings:text-white prose-p:my-2 prose-ul:my-2 prose-li:my-0.5">
+            <Markdown>{response}</Markdown>
           </div>
         </div>
       )}
