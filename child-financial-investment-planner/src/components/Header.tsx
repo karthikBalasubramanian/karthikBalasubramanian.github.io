@@ -1,5 +1,5 @@
 import React from 'react';
-import { ParentInputs, InvestmentGoal } from '../types';
+import { ParentInputs } from '../types';
 import { US_STATES } from '../data/accountData';
 import {
   GraduationCap,
@@ -11,7 +11,6 @@ import {
   DollarSign,
   Calendar,
   Calculator,
-  Github,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -43,7 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
     { id: 'rollover', label: 'Rollover Maximizer', icon: ShieldCheck },
     { id: 'spreadsheet', label: 'Excel Grid View', icon: GraduationCap },
     { id: 'ai_advisor', label: 'AI Advisor', icon: Sparkles },
-    { id: 'author_site', label: 'Author Portfolio', icon: Github },
   ];
 
   return (
@@ -101,18 +99,6 @@ export const Header: React.FC<HeaderProps> = ({
               <Download className="w-3.5 h-3.5" />
               Export CSV
             </button>
-
-            {/* Author GitHub Website Badge */}
-            <a
-              href="https://karthikbalasubramanian.github.io/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="mt-4 sm:mt-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-slate-900 hover:bg-slate-800 text-white font-medium text-xs transition-colors shadow-xs"
-              title="Visit official website: karthikbalasubramanian.github.io"
-            >
-              <Github className="w-3.5 h-3.5 text-indigo-400" />
-              <span>karthikBalasubramanian.github.io</span>
-            </a>
           </div>
         </div>
 

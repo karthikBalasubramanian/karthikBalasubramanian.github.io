@@ -8,7 +8,6 @@ import { GrowthCharts } from './components/GrowthCharts';
 import { RolloverMaximizer } from './components/RolloverMaximizer';
 import { SpreadsheetGrid } from './components/SpreadsheetGrid';
 import { AIAdvisorTab } from './components/AIAdvisorTab';
-import { GitHubIntegration } from './components/GitHubIntegration';
 import { Github, ExternalLink, Globe } from 'lucide-react';
 
 export default function App() {
@@ -127,8 +126,6 @@ export default function App() {
         )}
 
         {activeTab === 'ai_advisor' && <AIAdvisorTab inputs={inputs} />}
-
-        {activeTab === 'author_site' && <GitHubIntegration />}
       </main>
 
       {/* Global Application Footer with Integrated Website Link */}
