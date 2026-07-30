@@ -58,7 +58,7 @@ export const Header: React.FC<HeaderProps> = ({
                 J
               </div>
               <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                Junior Wealth Strategy
+                J&apos;s Wealth Strategy
               </span>
               <span className="text-slate-300 dark:text-slate-700">|</span>
               <span className="text-xs text-slate-500 dark:text-slate-400">529 &amp; Trump Account Platform</span>
