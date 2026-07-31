@@ -38,41 +38,31 @@ permalink: /
         </div>
     </nav>
 </div>
-<div id="inSlider" class="carousel carousel-fade" data-ride="carousel">
-    <ol class="carousel-indicators">
-        <li data-target="#inSlider" data-slide-to="0" class="active"></li>
-        <li data-target="#inSlider" data-slide-to="1"></li>
-    </ol>
-    <div class="carousel-inner" role="listbox">
-        <div class="item active">
-            <div class="container">
-                <div class="carousel-caption">
+<section id="page-top" class="hero-2026 text-left">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="badge-2026">
+                    <i class="fa fa-code"></i> Software Engineer &amp; Builder
                 </div>
-                <div class="carousel-image wow zoomIn">
-                    <!-- <img src="static/img/landing/laptop.png" alt="laptop"/> -->
+                <h1 class="hero-title">
+                    Architecting Data Systems &amp; <span class="hero-[#1ab394]">Interactive Applications</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Hi, I&apos;m <strong>Karthik Balasubramanian</strong> — Software/Data Engineer at Adobe and builder of full-stack financial &amp; data web tools.
+                </p>
+                <div class="hero-cta-group" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+                    <a href="#child-financial-planning" class="btn hero-btn-primary page-scroll">
+                        Explore Interactive Tools &rarr;
+                    </a>
+                    <a href="#blog" class="btn hero-btn-secondary page-scroll">
+                        Read Blog
+                    </a>
                 </div>
             </div>
-            <!-- Set background for slide in css -->
-            <div class="header-back one"></div>
-        </div>
-        <div class="item">
-            <div class="container">
-                <div class="carousel-caption blank">
-                </div>
-            </div>
-            <!-- Set background for slide in css -->
-            <div class="header-back two"></div>
         </div>
     </div>
-    <a class="left carousel-control" href="#inSlider" role="button" data-slide="prev">
-        <span class="glyphicon glyphicon-chevron-left" aria-hidden="true"></span>
-        <span class="sr-only">Previous</span>
-    </a>
-    <a class="right carousel-control" href="#inSlider" role="button" data-slide="next">
-        <span class="glyphicon glyphicon-chevron-right" aria-hidden="true"></span>
-        <span class="sr-only">Next</span>
-    </a>
-</div>
+</section>
 
 {% for section in site.data.landing %}
   {% assign loopindex = forloop.index | modulo: 2 %}

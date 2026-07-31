@@ -102,7 +102,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-16 selection:bg-indigo-500 selection:text-white">
+    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased pb-16">
       {/* App Header */}
       <Header
         activePresetId={activePresetId}

@@ -52,15 +52,15 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
     <div className="space-y-6">
       
       {/* 1. Pre-Tax Retirement & Health Accounts */}
-      <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl text-slate-100 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+      <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-slate-900 space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-800/50">
+            <div className="p-2 rounded-xl bg-[#1ab394]/10 text-[#1ab394] border border-[#1ab394]/20">
               <Shield className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-base font-bold text-white">Pre-Tax Deductions (Lowers Taxable Income)</h3>
-              <p className="text-xs text-slate-400">Deducted before income taxes are computed</p>
+              <h3 className="text-base font-bold text-slate-900">Pre-Tax Deductions (Lowers Taxable Income)</h3>
+              <p className="text-xs text-slate-500">Deducted before income taxes are computed</p>
             </div>
           </div>
         </div>

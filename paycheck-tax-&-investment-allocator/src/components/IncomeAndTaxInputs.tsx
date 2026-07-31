@@ -17,16 +17,16 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
   const currentStateInfo = US_STATES[inputs.state] || US_STATES.OTHER;
 
   return (
-    <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl text-slate-100 space-y-4">
+    <div className="bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-slate-900 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between gap-3 border-b border-slate-800 pb-3">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-100 pb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-indigo-950 text-indigo-400 border border-indigo-800/50">
+          <div className="p-2 rounded-xl bg-[#1ab394]/10 text-[#1ab394] border border-[#1ab394]/20">
             <DollarSign className="w-5 h-5" />
           </div>
           <div>
-            <h2 className="text-base font-bold text-white">Paycheck & Location Inputs</h2>
-            <p className="text-xs text-slate-400">Set your gross pay and state tax jurisdiction</p>
+            <h2 className="text-base font-bold text-slate-900">Paycheck &amp; Location Inputs</h2>
+            <p className="text-xs text-slate-500">Set your gross pay and state tax jurisdiction</p>
           </div>
         </div>
 
@@ -44,21 +44,21 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
         
         {/* Salary Input */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-300 flex items-center justify-between">
+          <label className="text-xs font-semibold text-slate-600 flex items-center justify-between">
             <span>Gross Salary ({inputs.payFrequency === 'annual' ? 'Annual' : 'Biweekly'})</span>
-            <span className="text-[10px] text-indigo-400 font-mono">
+            <span className="text-[10px] text-[#1ab394] font-mono">
               {inputs.payFrequency === 'biweekly'
                 ? `$${(inputs.grossSalary * 26).toLocaleString()}/yr`
                 : `$${Math.round(inputs.grossSalary / 26).toLocaleString()}/bw`}
             </span>
           </label>
           <div className="relative">
-            <span className="absolute left-3 top-2.5 text-slate-500 font-bold">$</span>
+            <span className="absolute left-3 top-2.5 text-slate-400 font-bold">$</span>
             <input
               type="number"
               value={inputs.grossSalary || ''}
               onChange={(e) => onChange({ grossSalary: Math.max(0, parseFloat(e.target.value) || 0) })}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 pl-7 pr-3 text-sm font-mono text-white font-bold focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 pl-7 pr-3 text-sm font-mono text-slate-900 font-bold focus:outline-none focus:border-[#1ab394] focus:ring-1 focus:ring-[#1ab394]"
               placeholder="e.g. 5000"
             />
           </div>
@@ -66,14 +66,14 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
 
         {/* US State Selector */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-            <MapPin className="w-3.5 h-3.5 text-rose-400" />
-            <span>State (Tax Rules & SDI)</span>
+          <label className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+            <MapPin className="w-3.5 h-3.5 text-rose-500" />
+            <span>State (Tax Rules &amp; SDI)</span>
           </label>
           <select
             value={inputs.state}
             onChange={(e) => onChange({ state: e.target.value })}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white font-medium focus:outline-none focus:border-indigo-500"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1ab394]"
           >
             {Object.entries(US_STATES).map(([code, info]) => (
               <option key={code} value={code}>
@@ -82,20 +82,20 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
             ))}
           </select>
           {currentStateInfo.notes && (
-            <p className="text-[10px] text-slate-400 italic font-sans">{currentStateInfo.notes}</p>
+            <p className="text-[10px] text-slate-500 italic font-sans">{currentStateInfo.notes}</p>
           )}
         </div>
 
         {/* Filing Status */}
         <div className="space-y-1.5">
-          <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
-            <Users className="w-3.5 h-3.5 text-purple-400" />
+          <label className="text-xs font-semibold text-slate-600 flex items-center gap-1">
+            <Users className="w-3.5 h-3.5 text-purple-600" />
             <span>Filing Status</span>
           </label>
           <select
             value={inputs.filingStatus}
             onChange={(e) => onChange({ filingStatus: e.target.value as FilingStatus })}
-            className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white font-medium focus:outline-none focus:border-indigo-500"
+            className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm text-slate-900 font-medium focus:outline-none focus:border-[#1ab394]"
           >
             <option value="single">Single</option>
             <option value="married">Married Filing Jointly</option>
@@ -106,18 +106,18 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
         {/* Dependents & Age */}
         <div className="grid grid-cols-2 gap-2">
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Dependents</label>
+            <label className="text-xs font-semibold text-slate-600">Dependents</label>
             <input
               type="number"
               min={0}
               max={10}
               value={inputs.dependents}
               onChange={(e) => onChange({ dependents: parseInt(e.target.value) || 0 })}
-              className="w-full bg-slate-950 border border-slate-700 rounded-xl py-2 px-3 text-sm text-white font-mono font-medium focus:outline-none focus:border-indigo-500"
+              className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2 px-3 text-sm text-slate-900 font-mono font-medium focus:outline-none focus:border-[#1ab394]"
             />
           </div>
           <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-slate-300">Age</label>
+            <label className="text-xs font-semibold text-slate-600">Age</label>
             <input
               type="number"
               min={18}

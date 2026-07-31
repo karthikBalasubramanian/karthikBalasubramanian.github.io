@@ -133,22 +133,22 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl text-slate-100 overflow-hidden"
+      className="relative bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-slate-900 overflow-hidden"
     >
       {/* Top Banner / Toolbar */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
         <div>
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-indigo-400" />
-            <h2 className="text-lg font-bold tracking-tight text-white">
+            <Sparkles className="w-5 h-5 text-[#1ab394]" />
+            <h2 className="text-lg font-bold tracking-tight text-slate-900">
               Paycheck Sankey Flow
             </h2>
-            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-indigo-950/80 text-indigo-300 border border-indigo-800/50">
+            <span className="px-2 py-0.5 text-xs font-semibold rounded-full bg-[#1ab394]/10 text-[#1ab394] border border-[#1ab394]/30">
               {isBiweekly ? 'Biweekly' : 'Annual'}
             </span>
           </div>
-          <p className="text-xs text-slate-400 mt-0.5">
-            Visualize how gross paycheck converts into taxes, investments, and net cash. Click <span className="text-rose-400 font-medium">Taxes</span> to dissect!
+          <p className="text-xs text-slate-500 mt-0.5">
+            Visualize how gross paycheck converts into taxes, investments, and net cash. Click <span className="text-rose-500 font-medium">Taxes</span> to dissect!
           </p>
         </div>
 
