@@ -72,8 +72,6 @@ kramdown:
 exclude:
   - "**/node_modules"
   - "**/src"
-  - "**/public"
-  - "**/dist"
   - "**/package.json"
   - "**/package-lock.json"
   - "**/bun.lock"
