@@ -71,11 +71,13 @@ kramdown:
 
 exclude:
   - "**/node_modules"
-  - node_modules
-  - child-financial-investment-planner/node_modules
-  - child-financial-investment-planner/src
-  - child-financial-investment-planner/public
-  - package.json
-  - package-lock.json
+  - "**/src"
+  - "**/public"
+  - "**/dist"
+  - "**/package.json"
+  - "**/package-lock.json"
+  - "**/bun.lock"
+  - "**/vite.config.*"
+  - "**/tsconfig.*"
   - Gemfile
   - Gemfile.lock

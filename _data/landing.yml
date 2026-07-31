@@ -29,6 +29,12 @@
   tpl: 'child_financial_planning.html'
   css: 'gray-section'
 
+- id: 'paycheck-tax-allocator'
+  i18n: 'nav.paycheck_tax_allocator'
+  name: 'Paycheck Tax Allocator'
+  tpl: 'paycheck_tax_allocator.html'
+  css: ''
+
 - id: 'blog'
   i18n: 'nav.blog'
   name: 'Blog'

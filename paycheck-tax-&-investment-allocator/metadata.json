@@ -1,0 +1,6 @@
+{
+  "name": "Paycheck Tax & Investment Allocator",
+  "description": "Interactive biweekly paycheck analyzer and Sankey visualization for taxes, pre-tax/post-tax investments, ESPP, and net take-home pay.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
