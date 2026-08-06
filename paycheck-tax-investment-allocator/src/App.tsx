@@ -239,20 +239,17 @@ export default function App() {
         {/* Tab Content Panels */}
         {activeTab === 'sankey' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2 space-y-6">
-                <PaycheckSummary inputs={inputs} taxResult={taxResult} />
-                <TaxDissectionCard
-                  inputs={inputs}
-                  taxResult={taxResult}
-                  onToggleDissectInSankey={handleToggleDissectTaxes}
-                />
-              </div>
-              <div className="space-y-6">
-                <InvestmentControls inputs={inputs} onChange={handleInputChange} />
-              </div>
+            <PaycheckSummary inputs={inputs} taxResult={taxResult} />
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+              <TaxDissectionCard
+                inputs={inputs}
+                taxResult={taxResult}
+                onToggleDissectInSankey={handleToggleDissectTaxes}
+              />
+              <InvestmentControls inputs={inputs} onChange={handleInputChange} />
             </div>
-            
+
             <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
           </div>
         )}
