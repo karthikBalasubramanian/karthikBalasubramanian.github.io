@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta content="Karthik's Blog" name="description">
+  <meta name="keywords" content="Karthik Balasubramanian">
+  <meta name="author" content="Karthik Balasubramanian">
+  <title>Karthik Balasubramanian</title>
+  <!-- favicon -->
+  <link rel="shortcut icon" href="{{ "/static/img/brain.ico" | prepend: site.baseurl }}">
+
+  <!-- Third-party CSS -->
+  <link href="/bower_components/normalize-css/normalize.min.css" rel="stylesheet">
+  <link href="/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="/bower_components/animate.css/animate.min.css" rel="stylesheet">
+  <link href="/bower_components/components-font-awesome/css/font-awesome.min.css" rel="stylesheet">
+  <link href="/static/font-mfizz/font-mfizz.css" rel="stylesheet">
+  <!-- <link href="bower_components/toastr/toastr.min.css" rel="stylesheet"> -->
+  <link href="/bower_components/jquery.gritter/css/jquery.gritter.css" rel="stylesheet">
+  <!-- Custom styles for this template -->
+  <!-- <link href="static/css/pygments.css" rel="stylesheet"> -->
+  <link href="/static/css/style.min.css" rel="stylesheet">
+  <link href="/static/css/modern-2026.css" rel="stylesheet">
+
+  <!-- Third-party scripts -->
+  <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+  <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+  <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+  <script src="/bower_components/i18next/i18next.min.js"></script>
+  <script src="/bower_components/PACE/pace.min.js"></script>
+  <script src="/bower_components/wow/dist/wow.min.js"></script>
+
+  <!-- Custom and plugin javascript -->
+  <!-- <script src="static/js/inspinia.js"></script> -->
+
+<!-- GrowingIO -->
+{% if site.gio %}
+  <script>
+    var _vds = _vds || [];
+    window._vds = _vds;
+    (function(){
+      _vds.push(['setAccountId', '{{ site.gio.id }}']);
+      (function() {
+        var vds = document.createElement('script');
+        vds.type='text/javascript';
+        vds.async = true;
+        vds.src = ('https:' == document.location.protocol ? 'https://' : 'http://') + 'dn-growing.qbox.me/vds.js';
+        var s = document.getElementsByTagName('script')[0];
+        s.parentNode.insertBefore(vds, s);
+      })();
+    })();
+  </script>
+{% endif %}
+
+</head>
+
+  </head>
+  <body id="page-top" class="landing-page">
+    ---
+layout: blog
+title: index
+permalink: /
+---
+
+<div class="navbar-wrapper">
+    <nav class="navbar navbar-default navbar-fixed-top" role="navigation">
+        <div class="container">
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="#page-top" id="i18_title"><span data-i18n="website.title">Karthik Balasubramanian</span></a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav navbar-right" id="i18_navbar">
+                
+  <section id="child-financial-planning" class="features gray-section" style="margin-top: 0px;">
+    <div class="container" id="child-financial-planning">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <div class="navy-line"></div>
+        <h1>Child Financial &amp; Investment Planner</h1>
+        <p>Simulate long-term college funds, compounding investments, and inflation-adjusted projections.</p>
+      </div>
+    </div>
+    <div class="row m-t-lg text-center">
+      <div class="col-lg-8 col-lg-offset-2">
+        <div class="glass-card p-md" style="padding: 36px 28px;">
+          <div style="margin-bottom: 14px;">
+            <span class="pill-badge pill-badge-[#1ab394]">529 Plans</span>
+            <span class="pill-badge pill-badge-[#1ab394]">Custodial IRAs</span>
+            <span class="pill-badge pill-badge-[#1ab394]">UTMA / UGMA</span>
+          </div>
+          <h3 class="m-b-md" style="font-weight: 700; font-size: 1.4rem;">Interactive Wealth &amp; Compounding Engine</h3>
+          <p class="m-b-lg text-muted" style="font-size: 0.95rem; line-height: 1.6; max-width: 580px; margin: 0 auto 24px;">
+            Compare multi-account allocations, state tax deduction rules, SECURE 2.0 Roth IRA rollovers, and inflation-adjusted college savings targets.
+          </p>
+          <a href="/child-financial-investment-planner/" class="btn hero-btn-primary btn-lg">
+            Launch Child Financial Planner &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+</div>
+  </section>
+  <section id="paycheck-tax-allocator" class="features" style="margin-top: 0px;">
+    <div class="container" id="paycheck-tax-allocator">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <div class="navy-line"></div>
+        <h1>Paycheck Tax &amp; Investment Allocator</h1>
+        <p>Interactive Sankey diagram and real-time breakdown for paycheck taxes, take-home pay, 401(k), HSA, and investment allocations.</p>
+      </div>
+    </div>
+    <div class="row m-t-lg text-center">
+      <div class="col-lg-8 col-lg-offset-2">
+        <div class="glass-card p-md" style="padding: 36px 28px;">
+          <div style="margin-bottom: 14px;">
+            <span class="pill-badge pill-badge-[#1ab394]">D3 Sankey Flow</span>
+            <span class="pill-badge pill-badge-[#1ab394]">Tax Dissection</span>
+            <span class="pill-badge pill-badge-[#1ab394]">401(k) + HSA + ESPP</span>
+          </div>
+          <h3 class="m-b-md" style="font-weight: 700; font-size: 1.4rem;">Paycheck &amp; Tax Visualization Tool</h3>
+          <p class="m-b-lg text-muted" style="font-size: 0.95rem; line-height: 1.6; max-width: 580px; margin: 0 auto 24px;">
+            Visualize your federal, state, and payroll tax obligations alongside pre-tax and post-tax investment goals using real-time interactive flow charts.
+          </p>
+          <a href="/paycheck-tax-investment-allocator/" class="btn hero-btn-primary btn-lg">
+            Launch Paycheck Allocator &rarr;
+          </a>
+        </div>
+      </div>
+    </div>
+</div>
+
+  </section>
+  <section id="blog" class="features testimonials navy-section" style="margin-top: 0px;">
+    <div class="container">
+    <div class="row">
+        <div class="col-lg-12 text-center wow zoomIn" id="i18_blog">
+            <div style="height: 80px;"></div>
+            <a class="btn btn-lg btn-default btn-rounded btn-outline wow bounceIn" href="/blog/"><span data-i18n="blog.my_blog">My Blog</span></a>
+            <div style="height: 80px;"></div>
+        </div>
+    </div>
+</div>
+
+  </section>
+
+
+                {% for language in site.languages %}
+                  <li>
+                    <a id="set_lang_{{ language.locale }}" class="btn btn-sm set_{{ language.locale }}" data-locale="{{ language.locale }}">
+                      <img src="{{ language.flag | prepend: site.baseurl }}" height="16px" width="16px">
+                    </a>
+                  </li>
+                {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</div>
+<section id="page-top" class="hero-2026 text-left">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-lg-8 col-md-10">
+                <div class="badge-2026">
+                    <i class="fa fa-cubes"></i> Software &amp; Site Reliability Engineer
+                </div>
+                <h1 class="hero-title">
+                    Bridging System Architecture, <span class="hero-[#1ab394]">Observability &amp; Business Value</span>
+                </h1>
+                <p class="hero-subtitle">
+                    Hi, I&apos;m <strong>Karthik Balasubramanian</strong> — a Software Engineer at Adobe specializing in <strong>Site Reliability, Observability, and Resilient Systems</strong>. Driven by solving core business challenges, I bridge high-level business strategy with deep technical execution — seamlessly connecting big-picture architecture to the finest engineering details. I partner closely with research and business teams to transform experimental POCs into robust, production-ready products. In my free time, I build tools to solve lingering problems I encounter in day-to-day life and make them useful for others. <strong>I do not collect, store, or use your data for any purpose.</strong>
+                </p>
+                <div class="hero-cta-group" style="display: flex; gap: 14px; flex-wrap: wrap; align-items: center;">
+                    <a href="#child-financial-planning" class="btn hero-btn-primary page-scroll">
+                        Explore Interactive Tools &rarr;
+                    </a>
+                    <a href="#blog" class="btn hero-btn-secondary page-scroll">
+                        Read Blog
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% for section in site.data.landing %}
+  {% assign loopindex = forloop.index | modulo: 2 %}
+  <section id="{{ section.id }}" class="features {% if loopindex != 1 %} gray-section {% endif %} {{ section.css }}" style="margin-top: 0px;">
+    {% include sections/{{section.tpl}} %}
+  </section>
+{% endfor %}
+    <script src="{{ "static/js/scroll.js" | prepend: site.baseurl }}"></script>
+<script src="{{ "static/js/localization.js" | prepend: site.baseurl }}"></script>
+<script async src="{{ "static/js/count.js" | prepend: site.baseurl }}"></script>
+
+<!-- Baidu analytics -->
+{% if site.ba %}
+  <script>
+      var _hmt = _hmt || [];
+      (function() {
+        var hm = document.createElement("script");
+        hm.src = "//hm.baidu.com/hm.js?{{ site.ba.uuid }}";
+        var s = document.getElementsByTagName("script")[0];
+        s.parentNode.insertBefore(hm, s);
+      })();
+  </script>
+{% endif %}
+
+<!-- Google analytics -->
+{% if site.ga %}
+  <script>
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','https://www.google-analytics.com/analytics.js','ga');
+
+    ga('create', '{{ site.ga.id }}', 'auto');
+    ga('send', 'pageview');
+
+  </script>
+{% endif %}
+
+  </body>
+</html>
