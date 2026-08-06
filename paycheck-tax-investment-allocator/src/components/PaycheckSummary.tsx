@@ -233,13 +233,6 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
           <span>-{fmt(taxResult.preTaxDeductionsBiweekly)}</span>
         </div>
 
-        {taxResult.companyMatchBiweekly > 0 && (
-          <div className="flex justify-between py-1 text-emerald-400 pl-4 border-l-2 border-emerald-500/50 bg-emerald-950/30 font-semibold rounded-r">
-            <span>+ Employer Company Match (Free 401k Boost)</span>
-            <span>+{fmt(taxResult.companyMatchBiweekly)}</span>
-          </div>
-        )}
-
         <div className="flex justify-between py-1 text-slate-300 font-semibold border-t border-slate-900">
           <span>= Taxable Income Base</span>
           <span>{fmt(taxResult.taxableGrossBiweekly)}</span>
@@ -250,15 +243,23 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
           <span>-{fmt(taxResult.totalTaxesBiweekly)}</span>
         </div>
 
-        <div className="flex justify-between py-1 text-emerald-300 pl-4 border-l-2 border-emerald-800/50">
-          <span>Less: Post-Tax Accounts (Roth 401k/IRA + 529 + Child + ESPP)</span>
-          <span>-{fmt(taxResult.postTaxContributionsBiweekly)}</span>
-        </div>
-
         <div className="flex justify-between py-2 text-green-400 font-bold text-sm border-t border-slate-800 bg-slate-900/60 px-2 rounded-lg mt-1">
           <span className="font-sans">Final Net Take-Home Pay (Bank Account)</span>
           <span>{fmt(taxResult.netTakeHomePayBiweekly)}</span>
         </div>
+
+        {taxResult.postTaxContributionsBiweekly > 0 && (
+          <div className="flex justify-between py-1 text-emerald-300/80 pl-4 border-l-2 border-emerald-800/50 text-[11px]">
+            <span>Less: Post-Tax Allocations (Roth/529/Child/ESPP)</span>
+            <span>-{fmt(taxResult.postTaxContributionsBiweekly)}</span>
+          </div>
+        )}
+
+        {taxResult.companyMatchBiweekly > 0 && (
+          <p className="text-[10px] text-emerald-400/90 font-sans italic pt-2 border-t border-slate-900">
+            * Note: Employer 401(k) Match (+{fmt(taxResult.companyMatchBiweekly)}) is deposited directly into your 401(k) retirement account and is excluded from liquid net take-home pay.
+          </p>
+        )}
       </div>
 
     </div>

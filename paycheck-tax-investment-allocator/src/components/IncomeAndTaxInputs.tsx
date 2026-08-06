@@ -362,19 +362,51 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 pt-3 sm:pt-0">
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={inputs.includeBonusIn401k ?? true}
-                      onChange={(e) => onChange({ includeBonusIn401k: e.target.checked })}
-                      className="sr-only peer"
-                    />
-                    <div className="w-8 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600"></div>
-                  </label>
-                  <span className="text-[11px] font-semibold text-slate-300">
-                    Deduct 401(k) % & Company Match from Bonus
-                  </span>
+                <div className="space-y-2 col-span-1 sm:col-span-2 pt-2 sm:pt-0">
+                  <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.includeBonusIn401k ?? true}
+                        onChange={(e) => onChange({ includeBonusIn401k: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600"></div>
+                    </label>
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      Apply 401(k) % & Match to Bonus (capped at $24.5k limit)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.includeBonusInHsa ?? false}
+                        onChange={(e) => onChange({ includeBonusInHsa: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-600"></div>
+                    </label>
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      Apply HSA to Bonus (capped at $8.75k / $4.4k limit)
+                    </span>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={inputs.includeBonusInEspp ?? false}
+                        onChange={(e) => onChange({ includeBonusInEspp: e.target.checked })}
+                        className="sr-only peer"
+                      />
+                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                    </label>
+                    <span className="text-[11px] font-semibold text-slate-300">
+                      Apply ESPP % to Bonus (capped at $21.25k limit)
+                    </span>
+                  </div>
                 </div>
 
                 <div className="bg-amber-950/40 border border-amber-800/40 rounded-xl p-2.5 flex items-center justify-between">

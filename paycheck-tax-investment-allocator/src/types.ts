@@ -56,6 +56,8 @@ export interface UserFinancialInputs {
   annualBonusIsPercent: boolean; // default true
   annualBonusAmount: number; // custom fixed amount if not percentage
   includeBonusIn401k: boolean; // default true
+  includeBonusInHsa?: boolean; // default false
+  includeBonusInEspp?: boolean; // default false
 
   // Sankey controls
   dissectTaxesInSankey: boolean;
@@ -123,6 +125,8 @@ export interface TaxBreakdownResult {
   grossAnnualBonus: number;
   grossTotalAnnualWithBonus: number;
   bonus401kContribution: number;
+  bonusHsaContribution: number;
+  bonusEsppContribution: number;
   bonusCompanyMatch: number;
   bonusTaxableGross: number;
   bonusFederalTax: number;

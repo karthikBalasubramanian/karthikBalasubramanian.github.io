@@ -216,24 +216,44 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const grossTotalAnnualWithBonus = grossAnnual + grossAnnualBonus;
 
   const includeBonusIn401k = inputs.includeBonusIn401k ?? true;
+  const includeBonusInHsa = inputs.includeBonusInHsa ?? false;
+  const includeBonusInEspp = inputs.includeBonusInEspp ?? false;
+
   let bonus401kContribution = 0;
+  let bonusHsaContribution = 0;
+  let bonusEsppContribution = 0;
   let bonusCompanyMatch = 0;
 
-  if (includeBonusIn401k && grossAnnualBonus > 0) {
-    const remaining401kCapacity = Math.max(0, max401kAnnual - (preTax401kBiweekly * 26));
-    const desiredBonus401k = grossAnnualBonus * (employee401kPercent / 100);
-    bonus401kContribution = Math.min(desiredBonus401k, remaining401kCapacity);
+  if (grossAnnualBonus > 0) {
+    // 1. Bonus 401(k) Contribution (capped by remaining $24,500 annual IRS limit)
+    if (includeBonusIn401k) {
+      const remaining401kCapacity = Math.max(0, max401kAnnual - (preTax401kBiweekly * 26));
+      const desiredBonus401k = grossAnnualBonus * (employee401kPercent / 100);
+      bonus401kContribution = Math.min(desiredBonus401k, remaining401kCapacity);
 
-    const eligibleMatchPercent = Math.min(employee401kPercent, companyMatchUpToPercent);
+      const eligibleMatchPercent = Math.min(employee401kPercent, companyMatchUpToPercent);
+      const remainingMatchCompCapacity = Math.max(0, taxLimits.COMPENSATION_LIMIT_401K - eligibleSalaryForMatchAnnual);
+      const eligibleBonusForMatch = Math.min(grossAnnualBonus, remainingMatchCompCapacity);
 
-    // Total compensation eligible for matching across salary + bonus is capped at IRS limit
-    const remainingMatchCompCapacity = Math.max(0, taxLimits.COMPENSATION_LIMIT_401K - eligibleSalaryForMatchAnnual);
-    const eligibleBonusForMatch = Math.min(grossAnnualBonus, remainingMatchCompCapacity);
+      bonusCompanyMatch = eligibleBonusForMatch * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
+    }
 
-    bonusCompanyMatch = eligibleBonusForMatch * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
+    // 2. Bonus HSA Contribution (capped by remaining statutory HSA limit: $8,750 Family / $4,400 Single)
+    if (includeBonusInHsa) {
+      const remainingHsaCapacity = Math.max(0, maxHsaStatutoryAnnual - (hsaBiweekly * 26) - employerHsaAnnual);
+      const desiredBonusHsa = grossAnnualBonus * 0.05;
+      bonusHsaContribution = Math.min(desiredBonusHsa, remainingHsaCapacity);
+    }
+
+    // 3. Bonus ESPP Contribution (capped by remaining $21,250 annual payroll contribution limit)
+    if (includeBonusInEspp && esppPct > 0) {
+      const remainingEsppCapacity = Math.max(0, maxEsppAnnualPayroll - (esppContributionBiweekly * 26));
+      const desiredBonusEspp = grossAnnualBonus * (esppPct / 100);
+      bonusEsppContribution = Math.min(desiredBonusEspp, remainingEsppCapacity);
+    }
   }
 
-  const bonusTaxableGross = Math.max(0, grossAnnualBonus - bonus401kContribution);
+  const bonusTaxableGross = Math.max(0, grossAnnualBonus - bonus401kContribution - bonusHsaContribution);
 
   // Bonus Federal Supplemental Tax (22% standard IRS supplemental rate)
   const bonusFederalTax = bonusTaxableGross * 0.22;
@@ -271,14 +291,18 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const bonusFicaTax = bonusSS + bonusMedicare;
 
   const bonusTotalTaxes = bonusFederalTax + bonusStateTax + bonusFicaTax;
-  const bonusNetTakeHome = Math.max(0, grossAnnualBonus - bonus401kContribution - bonusTotalTaxes);
+
+  // Bonus Net Take-Home (Lump Sum Check in Hand) = Gross Bonus - 401k - HSA - Taxes - ESPP
+  const bonusNetTakeHome = Math.max(0, grossAnnualBonus - bonus401kContribution - bonusHsaContribution - bonusTotalTaxes - bonusEsppContribution);
 
   const totalCombinedNetAnnual = netTakeHomePayAnnual + bonusNetTakeHome;
   const totalCombinedWealthInvestedAnnual =
-    (preTaxDeductionsAnnual) +
-    companyMatchAnnual +
+    preTaxDeductionsAnnual +
     postTaxContributionsAnnual +
     bonus401kContribution +
+    bonusHsaContribution +
+    bonusEsppContribution +
+    companyMatchAnnual +
     bonusCompanyMatch;
 
   // Percentages relative to Gross Biweekly
@@ -340,6 +364,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     grossAnnualBonus,
     grossTotalAnnualWithBonus,
     bonus401kContribution,
+    bonusHsaContribution,
+    bonusEsppContribution,
     bonusCompanyMatch,
     bonusTaxableGross,
     bonusFederalTax,
