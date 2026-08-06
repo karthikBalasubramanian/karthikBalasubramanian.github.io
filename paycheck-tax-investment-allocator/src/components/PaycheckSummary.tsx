@@ -46,9 +46,15 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
         
         {/* Net Take-Home Pay */}
         <div className="bg-gradient-to-br from-green-950/80 via-slate-900 to-slate-950 border-2 border-green-500/50 rounded-2xl p-4 shadow-lg space-y-1 relative overflow-hidden">
-          <span className="text-xs font-semibold text-green-300 uppercase tracking-wider">
-            Net Take-Home Pay
-          </span>
+          <div className="flex items-center justify-between">
+            <span className="text-xs font-semibold text-green-300 uppercase tracking-wider">
+              Payroll Net Pay
+            </span>
+            <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-900/60 text-green-200 border border-green-700/50">
+              Before Post-Tax
+            </span>
+          </div>
+
           <div className="text-2xl sm:text-3xl font-black font-mono text-green-400">
             {fmt(taxResult.netTakeHomePayBiweekly)}
           </div>
@@ -56,10 +62,15 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
             <span>{taxResult.percentages.takeHome.toFixed(1)}% of Gross</span>
             <span className="font-mono text-slate-400">${(taxResult.netTakeHomePayAnnual).toLocaleString()}/yr</span>
           </div>
-          {taxResult.postTaxContributionsBiweekly > 0 && (
-            <div className="mt-1.5 pt-1 border-t border-green-900/40 text-[10px] text-slate-400 flex items-center justify-between font-mono">
-              <span>After Post-Tax:</span>
-              <span className="text-emerald-300 font-bold">{fmt(taxResult.netTakeHomeAfterPostTaxBiweekly)}</span>
+
+          {taxResult.postTaxContributionsBiweekly > 0 ? (
+            <div className="mt-1.5 pt-1.5 border-t border-green-900/60 text-xs text-slate-300 flex items-center justify-between font-mono bg-emerald-950/50 -mx-4 -mb-4 p-2.5">
+              <span className="text-[11px] font-sans text-slate-300">Remaining After Post-Tax:</span>
+              <span className="text-emerald-300 font-bold text-sm">{fmt(taxResult.netTakeHomeAfterPostTaxBiweekly)}</span>
+            </div>
+          ) : (
+            <div className="mt-1.5 pt-1 text-[10px] text-slate-400 font-sans italic">
+              Gross − Pre-Tax 401(k)/HSA − Taxes
             </div>
           )}
         </div>
