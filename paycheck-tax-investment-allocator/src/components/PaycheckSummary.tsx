@@ -172,19 +172,43 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 text-xs">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 text-xs">
+            {/* Employee 401(k) Deduction from Bonus */}
             <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg space-y-1">
-              <span className="text-[10px] text-slate-400 block font-semibold">Bonus 401(k) & Match</span>
-              <div className="font-mono font-bold text-purple-300 text-sm">
-                +${Math.round(taxResult.bonus401kContribution + taxResult.bonusCompanyMatch).toLocaleString()}
+              <span className="text-[10px] text-purple-300 block font-semibold">Bonus 401(k) Deferral</span>
+              <div className="font-mono font-bold text-purple-400 text-sm">
+                {taxResult.bonus401kContribution > 0 ? `-$${Math.round(taxResult.bonus401kContribution).toLocaleString()}` : '$0'}
               </div>
-              <span className="text-[10px] text-purple-400 block">
-                (${Math.round(taxResult.bonus401kContribution)} employee + ${Math.round(taxResult.bonusCompanyMatch)} match)
+              <span className="text-[10px] text-slate-400 block">
+                {taxResult.bonus401kContribution > 0 ? 'Pre-tax employee deduction' : 'Not applied or capped'}
               </span>
             </div>
 
+            {/* Employee HSA Deduction from Bonus */}
+            {taxResult.bonusHsaContribution > 0 && (
+              <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg space-y-1">
+                <span className="text-[10px] text-teal-300 block font-semibold">Bonus HSA Contribution</span>
+                <div className="font-mono font-bold text-teal-400 text-sm">
+                  -${Math.round(taxResult.bonusHsaContribution).toLocaleString()}
+                </div>
+                <span className="text-[10px] text-slate-400 block">Pre-tax HSA deduction</span>
+              </div>
+            )}
+
+            {/* Employee ESPP Deduction from Bonus */}
+            {taxResult.bonusEsppContribution > 0 && (
+              <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg space-y-1">
+                <span className="text-[10px] text-indigo-300 block font-semibold">Bonus ESPP Contribution</span>
+                <div className="font-mono font-bold text-indigo-400 text-sm">
+                  -${Math.round(taxResult.bonusEsppContribution).toLocaleString()}
+                </div>
+                <span className="text-[10px] text-slate-400 block">Post-tax stock purchase</span>
+              </div>
+            )}
+
+            {/* Supplemental Taxes */}
             <div className="bg-slate-900/80 border border-slate-800 p-2.5 rounded-lg space-y-1">
-              <span className="text-[10px] text-slate-400 block font-semibold">Supplemental Taxes</span>
+              <span className="text-[10px] text-rose-300 block font-semibold">Supplemental Taxes</span>
               <div className="font-mono font-bold text-rose-400 text-sm">
                 -${Math.round(taxResult.bonusTotalTaxes).toLocaleString()}
               </div>
@@ -193,6 +217,7 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
               </span>
             </div>
 
+            {/* Net Bonus Check in Hand */}
             <div className="bg-emerald-950/70 border border-emerald-700/60 p-2.5 rounded-lg space-y-1">
               <span className="text-[10px] text-emerald-300 block font-bold uppercase tracking-wider">Net Bonus Take-Home</span>
               <div className="font-mono font-black text-green-300 text-base">
@@ -203,6 +228,7 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
               </span>
             </div>
 
+            {/* Total Combined Annual Net */}
             <div className="bg-indigo-950/70 border border-indigo-700/60 p-2.5 rounded-lg space-y-1">
               <span className="text-[10px] text-indigo-300 block font-bold uppercase tracking-wider">Total Combined Annual Net</span>
               <div className="font-mono font-black text-indigo-200 text-base">
@@ -213,6 +239,12 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
               </span>
             </div>
           </div>
+
+          {taxResult.bonusCompanyMatch > 0 && (
+            <p className="text-[10px] text-purple-300 font-sans italic pt-1">
+              + Employer Bonus 401(k) Match (+${Math.round(taxResult.bonusCompanyMatch).toLocaleString()}) is deposited directly into your 401(k) retirement account.
+            </p>
+          )}
         </div>
       )}
 
