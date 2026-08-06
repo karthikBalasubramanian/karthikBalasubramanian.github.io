@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef } from 'react';
 import { UserFinancialInputs, PresetProfile, PayFrequency } from './types';
 import { FINANCIAL_PRESETS } from './data/presets';
 import { calculatePaycheckTaxBreakdown, getMaximizedInputs } from './utils/taxCalculator';

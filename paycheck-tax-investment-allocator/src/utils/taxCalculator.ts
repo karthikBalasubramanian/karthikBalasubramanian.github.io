@@ -140,10 +140,14 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     sdiTaxAnnual = sdiSubjectGross * stateInfo.sdiRate;
   }
 
-  const stateIncomeTaxBiweekly = stateIncomeTaxAnnual / 26;
-  const sdiTaxBiweekly = sdiTaxAnnual / 26;
+  const federalTaxAnnual = federalIncomeTaxAnnual;
+  const federalTaxBiweekly = federalIncomeTaxBiweekly;
+  const stateTaxAnnual = stateIncomeTaxAnnual;
+  const stateTaxBiweekly = stateIncomeTaxAnnual / 26;
+  const sdiAnnual = sdiTaxAnnual;
+  const sdiBiweekly = sdiTaxAnnual / 26;
 
-  // 4. FICA Taxes (Social Security 6.2% + Medicare 1.45% + Add'l Medicare 0.9%)
+  // FICA Taxes (Social Security 6.2% + Medicare 1.45% + Add'l Medicare 0.9%)
   const ssSubjectAnnual = Math.min(ficaGrossAnnual, taxLimits.SOCIAL_SECURITY_WAGE_CAP);
   const socialSecurityAnnual = ssSubjectAnnual * taxLimits.SOCIAL_SECURITY_RATE;
   const socialSecurityBiweekly = socialSecurityAnnual / 26;
@@ -157,8 +161,6 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     medicareAnnual += (ficaGrossAnnual - addMedicareThreshold) * taxLimits.ADDITIONAL_MEDICARE_RATE;
   }
   const medicareBiweekly = medicareAnnual / 26;
-
-  const sdiBiweekly = sdiAnnual / 26;
 
   // Total Taxes
   const totalTaxesBiweekly = federalTaxBiweekly + stateTaxBiweekly + socialSecurityBiweekly + medicareBiweekly + sdiBiweekly;
