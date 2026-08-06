@@ -6,4 +6,7 @@ Gemfile.lock
 .idea
 .DS_Store
 .scout
+.vite
+dist
+*.log
 
