@@ -293,9 +293,9 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
 
       {/* 2. Post-Tax Retirement, Child Accounts & ESPP */}
       <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-xl text-slate-100 space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-800 pb-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-emerald-950 text-emerald-400 border border-emerald-800/50">
+            <div className="p-2 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <TrendingUp className="w-5 h-5" />
             </div>
             <div>
@@ -305,6 +305,34 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
               <p className="text-xs text-slate-400">Roth IRA, 529 College, Custodial/Trump accounts, & Company ESPP</p>
             </div>
           </div>
+
+          {/* Quick Post-Tax Selector Presets */}
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <button
+              onClick={() => onChange({ esppPercent: 15, rothIra: 0, plan529: 0, custodialAccount: 0, trumpAccount: 0, custodialIra: 0 })}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-indigo-900/60 text-indigo-300 border border-indigo-700/60 hover:bg-indigo-800 transition-all"
+            >
+              ESPP Only
+            </button>
+            <button
+              onClick={() => onChange({ rothIra: maxIraBiweekly, esppPercent: 0, plan529: 0, custodialAccount: 0, trumpAccount: 0, custodialIra: 0 })}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-emerald-900/60 text-emerald-300 border border-emerald-700/60 hover:bg-emerald-800 transition-all"
+            >
+              Roth IRA Only
+            </button>
+            <button
+              onClick={() => onChange({ plan529: 250, esppPercent: 0, rothIra: 0, custodialAccount: 0, trumpAccount: 0, custodialIra: 0 })}
+              className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-sky-900/60 text-sky-300 border border-sky-700/60 hover:bg-sky-800 transition-all"
+            >
+              529 Only
+            </button>
+            <button
+              onClick={() => onChange({ esppPercent: 0, rothIra: 0, plan529: 0, custodialAccount: 0, trumpAccount: 0, custodialIra: 0 })}
+              className="text-[10px] font-bold px-2 py-1 rounded-lg bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white transition-all"
+            >
+              Clear All Post-Tax
+            </button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -313,12 +341,20 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
           <div className="bg-slate-950 border border-slate-800 rounded-xl p-3.5 space-y-2">
             <div className="flex items-center justify-between">
               <label className="text-xs font-bold text-emerald-300">Roth IRA (Post-Tax)</label>
-              <button
-                onClick={() => onChange({ rothIra: maxIraBiweekly })}
-                className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-800/60"
-              >
-                Max (${maxIraBiweekly}/bw)
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onChange({ rothIra: maxIraBiweekly })}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-emerald-900/50 text-emerald-300 border border-emerald-700/50 hover:bg-emerald-800/60"
+                >
+                  Max (${maxIraBiweekly}/bw)
+                </button>
+                <button
+                  onClick={() => onChange({ rothIra: 0 })}
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white"
+                >
+                  Off ($0)
+                </button>
+              </div>
             </div>
 
             <div className="relative">
@@ -343,12 +379,20 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
                 <Baby className="w-3.5 h-3.5 text-sky-400" />
                 <label className="text-xs font-bold text-sky-300">529 College Savings</label>
               </div>
-              <button
-                onClick={() => onChange({ plan529: 250 })}
-                className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-900/50 text-sky-300 border border-sky-700/50 hover:bg-sky-800/60"
-              >
-                Set $250/bw
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => onChange({ plan529: 250 })}
+                  className="text-[10px] font-bold px-2 py-0.5 rounded bg-sky-900/50 text-sky-300 border border-sky-700/50 hover:bg-sky-800/60"
+                >
+                  Set $250/bw
+                </button>
+                <button
+                  onClick={() => onChange({ plan529: 0 })}
+                  className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white"
+                >
+                  Off ($0)
+                </button>
+              </div>
             </div>
 
             <div className="relative">
@@ -373,6 +417,12 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
                 <PiggyBank className="w-3.5 h-3.5 text-teal-400" />
                 <label className="text-xs font-bold text-teal-300">Custodial & Trump Child Accounts</label>
               </div>
+              <button
+                onClick={() => onChange({ custodialAccount: 0, trumpAccount: 0, custodialIra: 0 })}
+                className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white"
+              >
+                Off ($0)
+              </button>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -422,6 +472,12 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
               </div>
 
               <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => onChange({ esppPercent: 0 })}
+                  className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-400 border border-slate-700 hover:bg-slate-700 hover:text-white"
+                >
+                  Off (0%)
+                </button>
                 <button
                   onClick={() => onChange({ esppPercent: 15 })}
                   className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
