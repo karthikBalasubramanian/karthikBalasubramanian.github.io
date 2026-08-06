@@ -71,7 +71,14 @@ export default function App() {
 
   // Input change handler
   const handleInputChange = (updated: Partial<UserFinancialInputs>) => {
-    setInputs((prev) => ({ ...prev, ...updated }));
+    setInputs((prev) => {
+      const next = { ...prev, ...updated };
+      // Auto-sync HSA coverage with filing status unless user explicitly provided hsaCoverage
+      if (updated.filingStatus !== undefined && updated.hsaCoverage === undefined) {
+        next.hsaCoverage = updated.filingStatus === 'married' ? 'family' : 'single';
+      }
+      return next;
+    });
   };
 
   // Maximize all IRS allowable investments

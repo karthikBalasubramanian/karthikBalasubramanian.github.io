@@ -99,7 +99,7 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
                     : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
                 }`}
               >
-                50% for 6% (Adobe)
+                50% for 6%
               </button>
               <button
                 onClick={() => onChange({ companyMatchPercent: 100, companyMatchUpToPercent: 6 })}
