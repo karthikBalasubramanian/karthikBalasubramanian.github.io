@@ -1,4 +1,4 @@
-import { UserFinancialInputs, TaxBreakdownResult, StateTaxInfo, SankeyNodeData, SankeyLinkData } from '../types';
+import { UserFinancialInputs, TaxBreakdownResult, StateTaxInfo, SankeyNodeData, SankeyLinkData, PayPeriodDetail, PaycheckScheduleResult } from '../types';
 import { getTaxLimitsForYear, US_STATES } from '../data/taxRates';
 
 export function getPayPeriodsCount(frequency: string): number {
@@ -388,6 +388,259 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
       medicare: pct(medicareBiweekly),
       sdi: pct(sdiBiweekly),
     },
+
+    schedule: generatePaycheckSchedule(inputs, {
+      payPeriodsPerYear: 26,
+      grossAnnual,
+      grossBiweekly,
+      companyMatchBiweekly,
+      companyMatchAnnual,
+      employee401kPercent,
+      total401kAccumulationBiweekly,
+      total401kAccumulationAnnual,
+      preTax401kBiweekly,
+      hsaBiweekly,
+      employerHsaBiweekly,
+      employerHsaAnnual,
+      fsaBiweekly,
+      preTaxDeductionsBiweekly,
+      preTaxDeductionsAnnual,
+      taxableGrossBiweekly,
+      taxableGrossAnnual,
+      federalTaxBiweekly,
+      federalTaxAnnual,
+      stateTaxBiweekly,
+      stateTaxAnnual,
+      socialSecurityBiweekly,
+      socialSecurityAnnual,
+      medicareBiweekly,
+      medicareAnnual,
+      sdiBiweekly,
+      sdiAnnual,
+      totalTaxesBiweekly,
+      totalTaxesAnnual,
+      roth401kBiweekly,
+      iraBiweekly,
+      rothIraBiweekly,
+      plan529Biweekly,
+      custodialAccountBiweekly,
+      trumpAccountBiweekly,
+      custodialIraBiweekly,
+      esppContributionBiweekly,
+      esppDiscountGainBiweekly,
+      postTaxContributionsBiweekly,
+      postTaxContributionsAnnual,
+      netTakeHomePayBiweekly,
+      netTakeHomePayAnnual,
+      netTakeHomeAfterPostTaxBiweekly,
+      netTakeHomeAfterPostTaxAnnual,
+      grossAnnualBonus,
+      grossTotalAnnualWithBonus,
+      bonus401kContribution,
+      bonusHsaContribution,
+      bonusEsppContribution,
+      bonusCompanyMatch,
+      bonusTaxableGross,
+      bonusFederalTax,
+      bonusStateTax,
+      bonusFicaTax,
+      bonusTotalTaxes,
+      bonusNetTakeHome,
+      totalCombinedNetAnnual,
+      totalCombinedWealthInvestedAnnual,
+      percentages: {
+        preTax: pct(preTaxDeductionsBiweekly),
+        taxes: pct(totalTaxesBiweekly),
+        postTax: pct(postTaxContributionsBiweekly),
+        takeHome: pct(netTakeHomePayBiweekly),
+        federalTax: pct(federalTaxBiweekly),
+        stateTax: pct(stateTaxBiweekly),
+        socialSecurity: pct(socialSecurityBiweekly),
+        medicare: pct(medicareBiweekly),
+        sdi: pct(sdiBiweekly),
+      },
+    }),
+  };
+}
+
+export function generatePaycheckSchedule(
+  inputs: UserFinancialInputs,
+  taxResultWithoutSchedule: Omit<TaxBreakdownResult, 'schedule'>
+): PaycheckScheduleResult {
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
+  const bonusPeriodNumber = inputs.bonusPayPeriodNumber || 4; // default Paycheck #4 (Feb)
+  const stateInfo = US_STATES[inputs.state] || US_STATES['CA'];
+  const age = inputs.age || 30;
+  const max401kAnnual = age >= 50
+    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
+    : taxLimits.TRADITIONAL_401K_MAX;
+  const maxHsaStatutoryAnnual = inputs.hsaCoverage === 'family' ? taxLimits.HSA_FAMILY_MAX : taxLimits.HSA_SINGLE_MAX;
+  const maxEsppAnnualPayroll = 21250; // $21,250 annual payroll limit for 15% discount
+
+  const periods: PayPeriodDetail[] = [];
+
+  let ytdGross = 0;
+  let ytd401kEmployee = 0;
+  let ytdHsaTotal = inputs.employerHsaAnnual || 0;
+  let ytdEsppPayroll = 0;
+  let ytdSocialSecurityWages = 0;
+
+  let maxOutPayPeriod401k: number | null = null;
+  let maxOutPayPeriodHsa: number | null = null;
+  let maxOutPayPeriodSS: number | null = null;
+
+  const months = ['Jan', 'Jan', 'Feb', 'Feb', 'Mar', 'Mar', 'Apr', 'Apr', 'May', 'May', 'Jun', 'Jun', 'Jul', 'Jul', 'Aug', 'Aug', 'Sep', 'Sep', 'Oct', 'Oct', 'Nov', 'Nov', 'Dec', 'Dec', 'Dec', 'Dec'];
+
+  for (let p = 1; p <= 26; p++) {
+    const isBonusPeriod = (p === bonusPeriodNumber);
+    const grossSalary = taxResultWithoutSchedule.grossBiweekly;
+    const grossBonus = isBonusPeriod ? taxResultWithoutSchedule.grossAnnualBonus : 0;
+    const totalGross = grossSalary + grossBonus;
+
+    // 1. Employee 401(k) Deferral
+    const remaining401kCap = Math.max(0, max401kAnnual - ytd401kEmployee);
+    const desired401kSal = inputs.traditional401kIsPercent
+      ? grossSalary * (inputs.traditional401k / 100)
+      : inputs.traditional401k;
+    const desired401kBon = (isBonusPeriod && (inputs.includeBonusIn401k ?? true))
+      ? grossBonus * (taxResultWithoutSchedule.employee401kPercent / 100)
+      : 0;
+    const employee401k = Math.min(desired401kSal + desired401kBon, remaining401kCap);
+
+    if (ytd401kEmployee < max401kAnnual && (ytd401kEmployee + employee401k >= max401kAnnual)) {
+      maxOutPayPeriod401k = p;
+    }
+    ytd401kEmployee += employee401k;
+    const is401kCapHit = (ytd401kEmployee >= max401kAnnual);
+
+    // 2. Employer Match
+    const matchPct = Math.min(taxResultWithoutSchedule.employee401kPercent, inputs.companyMatchUpToPercent);
+    const eligibleComp = Math.min(totalGross, taxLimits.COMPENSATION_LIMIT_401K / 26);
+    const employerMatch = eligibleComp * (matchPct / 100) * (inputs.companyMatchPercent / 100);
+
+    // 3. HSA Contribution
+    const remainingHsaCap = Math.max(0, maxHsaStatutoryAnnual - ytdHsaTotal);
+    const desiredHsaSal = inputs.hsa || 0;
+    const desiredHsaBon = (isBonusPeriod && (inputs.includeBonusInHsa ?? false)) ? grossBonus * 0.05 : 0;
+    const hsa = Math.min(desiredHsaSal + desiredHsaBon, remainingHsaCap);
+
+    if (ytdHsaTotal < maxHsaStatutoryAnnual && (ytdHsaTotal + hsa >= maxHsaStatutoryAnnual)) {
+      maxOutPayPeriodHsa = p;
+    }
+    ytdHsaTotal += hsa;
+    const isHsaCapHit = (ytdHsaTotal >= maxHsaStatutoryAnnual);
+
+    // 4. FSA
+    const fsa = inputs.fsa || 0;
+    const totalPreTax = employee401k + hsa + fsa;
+    const taxableGross = Math.max(0, totalGross - totalPreTax);
+
+    // 5. Taxes for Pay Period
+    const remainingSSCap = Math.max(0, taxLimits.SOCIAL_SECURITY_WAGE_CAP - ytdSocialSecurityWages);
+    const ssSubject = Math.min(taxableGross, remainingSSCap);
+    const socialSecurity = ssSubject * taxLimits.SOCIAL_SECURITY_RATE;
+
+    if (ytdSocialSecurityWages < taxLimits.SOCIAL_SECURITY_WAGE_CAP && (ytdSocialSecurityWages + taxableGross >= taxLimits.SOCIAL_SECURITY_WAGE_CAP)) {
+      maxOutPayPeriodSS = p;
+    }
+    ytdSocialSecurityWages += taxableGross;
+    const isSocialSecurityCapHit = (ytdSocialSecurityWages >= taxLimits.SOCIAL_SECURITY_WAGE_CAP);
+
+    const medicare = taxableGross * taxLimits.MEDICARE_RATE;
+    let sdi = 0;
+    if (stateInfo.hasSDI) {
+      sdi = taxableGross * stateInfo.sdiRate;
+    }
+
+    const fedSalaryTax = taxResultWithoutSchedule.federalTaxBiweekly;
+    const fedBonusTax = isBonusPeriod ? taxResultWithoutSchedule.bonusFederalTax : 0;
+    const federalTax = fedSalaryTax + fedBonusTax;
+
+    const stateSalaryTax = taxResultWithoutSchedule.stateTaxBiweekly;
+    const stateBonusTax = isBonusPeriod ? taxResultWithoutSchedule.bonusStateTax : 0;
+    const stateTax = stateSalaryTax + stateBonusTax;
+
+    const totalTaxes = federalTax + stateTax + socialSecurity + medicare + sdi;
+
+    // 6. ESPP Contribution
+    const remainingEsppCap = Math.max(0, maxEsppAnnualPayroll - ytdEsppPayroll);
+    const desiredEsppSal = grossSalary * (inputs.esppPercent / 100);
+    const desiredEsppBon = (isBonusPeriod && (inputs.includeBonusInEspp ?? false)) ? grossBonus * (inputs.esppPercent / 100) : 0;
+    const esppContribution = Math.min(desiredEsppSal + desiredEsppBon, remainingEsppCap);
+    ytdEsppPayroll += esppContribution;
+    const isEsppCapHit = (ytdEsppPayroll >= maxEsppAnnualPayroll);
+
+    const rothIra = inputs.rothIra || 0;
+    const plan529 = inputs.plan529 || 0;
+    const childAccounts = (inputs.custodialAccount || 0) + (inputs.trumpAccount || 0);
+    const totalPostTax = rothIra + plan529 + childAccounts + esppContribution;
+
+    const netTakeHomePay = Math.max(0, totalGross - totalPreTax - totalTaxes);
+    const netTakeHomeAfterPostTax = Math.max(0, netTakeHomePay - totalPostTax);
+
+    ytdGross += totalGross;
+
+    const monthLabel = months[p - 1] || 'Dec';
+    const label = `Paycheck #${p} (${monthLabel})${isBonusPeriod ? ' [BONUS]' : ''}`;
+
+    periods.push({
+      periodNumber: p,
+      label,
+      isBonusPeriod,
+      grossSalary,
+      grossBonus,
+      totalGross,
+      employee401k,
+      employerMatch,
+      hsa,
+      fsa,
+      totalPreTax,
+      is401kCapHit,
+      isHsaCapHit,
+      isEsppCapHit,
+      isSocialSecurityCapHit,
+      taxableGross,
+      federalTax,
+      stateTax,
+      socialSecurity,
+      medicare,
+      sdi,
+      totalTaxes,
+      rothIra,
+      plan529,
+      childAccounts,
+      esppContribution,
+      totalPostTax,
+      netTakeHomePay,
+      netTakeHomeAfterPostTax,
+      ytdGross,
+      ytd401kEmployee,
+      ytdHsaTotal,
+      ytdEsppPayroll,
+      ytdSocialSecurityWages,
+    });
+  }
+
+  const regularNonBonusPeriods = periods.filter(p => !p.isBonusPeriod);
+  const earlyNonBonus = regularNonBonusPeriods.filter(p => !p.is401kCapHit && !p.isHsaCapHit);
+  const lateNonBonus = regularNonBonusPeriods.filter(p => p.is401kCapHit || p.isHsaCapHit);
+
+  const earlyPhaseNetBiweekly = earlyNonBonus.length > 0
+    ? earlyNonBonus.reduce((sum, p) => sum + p.netTakeHomePay, 0) / earlyNonBonus.length
+    : taxResultWithoutSchedule.netTakeHomePayBiweekly;
+
+  const latePhaseNetBiweekly = lateNonBonus.length > 0
+    ? lateNonBonus.reduce((sum, p) => sum + p.netTakeHomePay, 0) / lateNonBonus.length
+    : earlyPhaseNetBiweekly;
+
+  return {
+    periods,
+    bonusPeriodNumber,
+    earlyPhaseNetBiweekly,
+    latePhaseNetBiweekly,
+    maxOutPayPeriod401k,
+    maxOutPayPeriodHsa,
+    maxOutPayPeriodSS,
   };
 }
 

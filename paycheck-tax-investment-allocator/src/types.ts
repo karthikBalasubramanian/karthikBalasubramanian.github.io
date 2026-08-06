@@ -58,10 +58,68 @@ export interface UserFinancialInputs {
   includeBonusIn401k: boolean; // default true
   includeBonusInHsa?: boolean; // default false
   includeBonusInEspp?: boolean; // default false
+  bonusPayPeriodNumber?: number; // 1 to 26 (default 4 for mid-February)
 
   // Sankey controls
   dissectTaxesInSankey: boolean;
   includePostTaxInSankey?: boolean;
+}
+
+export interface PayPeriodDetail {
+  periodNumber: number; // 1 to 26
+  label: string; // e.g. "Paycheck #4 (Feb)"
+  isBonusPeriod: boolean;
+
+  grossSalary: number;
+  grossBonus: number;
+  totalGross: number;
+
+  employee401k: number;
+  employerMatch: number;
+  hsa: number;
+  fsa: number;
+  totalPreTax: number;
+
+  is401kCapHit: boolean;
+  isHsaCapHit: boolean;
+  isEsppCapHit: boolean;
+  isSocialSecurityCapHit: boolean;
+
+  taxableGross: number;
+  federalTax: number;
+  stateTax: number;
+  socialSecurity: number;
+  medicare: number;
+  sdi: number;
+  totalTaxes: number;
+
+  rothIra: number;
+  plan529: number;
+  childAccounts: number;
+  esppContribution: number;
+  totalPostTax: number;
+
+  netTakeHomePay: number;
+  netTakeHomeAfterPostTax: number;
+
+  // Cumulative YTD trackers
+  ytdGross: number;
+  ytd401kEmployee: number;
+  ytdHsaTotal: number;
+  ytdEsppPayroll: number;
+  ytdSocialSecurityWages: number;
+}
+
+export interface PaycheckScheduleResult {
+  periods: PayPeriodDetail[];
+  bonusPeriodNumber: number;
+
+  // Phase summary metrics
+  earlyPhaseNetBiweekly: number; // Paychecks before maxing out 401k/HSA
+  latePhaseNetBiweekly: number;  // Paychecks after 401k/HSA maxed out
+  maxOutPayPeriod401k: number | null; // Pay period when 401k reaches $24,500
+  maxOutPayPeriodHsa: number | null;  // Pay period when HSA reaches statutory cap
+  maxOutPayPeriodSS: number | null;   // Pay period when SS cap ($176,100) reached
 }
 
 export interface TaxBreakdownResult {
@@ -136,6 +194,9 @@ export interface TaxBreakdownResult {
   bonusNetTakeHome: number;
   totalCombinedNetAnnual: number; // Base net + bonus net
   totalCombinedWealthInvestedAnnual: number; // Regular investments + bonus 401k + match
+
+  // 26-Paycheck Chronological Timeline Schedule
+  schedule: PaycheckScheduleResult;
 
   // Percentages of gross
   percentages: {

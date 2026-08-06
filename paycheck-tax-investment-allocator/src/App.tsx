@@ -14,8 +14,9 @@ import { TaxDissectionCard } from './components/TaxDissectionCard';
 import { InvestmentControls } from './components/InvestmentControls';
 import { PaycheckSummary } from './components/PaycheckSummary';
 import { ChildWealthProjection } from './components/ChildWealthProjection';
+import { PaycheckScheduleTable } from './components/PaycheckScheduleTable';
 import { TaxTipsModal } from './components/TaxTipsModal';
-import { Sparkles, PieChart, Landmark, TrendingUp, Shield, Wallet, Baby } from 'lucide-react';
+import { Sparkles, PieChart, Landmark, TrendingUp, Shield, Wallet, Baby, Calendar } from 'lucide-react';
 
 export default function App() {
   // Default to High Earner / Balanced preset ($5,200 biweekly = $135.2k/yr in CA)
@@ -52,13 +53,14 @@ export default function App() {
     annualBonusIsPercent: true,
     annualBonusAmount: 0,
     includeBonusIn401k: true,
+    bonusPayPeriodNumber: 4,
 
     dissectTaxesInSankey: false,
   });
 
   const [activePresetId, setActivePresetId] = useState<string>('tech_high_earner');
   const [isTipsOpen, setIsTipsOpen] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<'sankey' | 'taxes' | 'investments' | 'child_wealth'>('sankey');
+  const [activeTab, setActiveTab] = useState<'sankey' | 'schedule' | 'taxes' | 'investments' | 'child_wealth'>('sankey');
   
   const [isInputsCollapsed, setIsInputsCollapsed] = useState<boolean>(false);
   const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
@@ -133,14 +135,7 @@ export default function App() {
 
   // Action: Toggle focus mode
   const handleToggleFocusMode = () => {
-    const nextFocus = !isFocusMode;
-    setIsFocusMode(nextFocus);
-    setIsInputsCollapsed(nextFocus);
-    if (nextFocus) {
-      setTimeout(() => {
-        sankeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }, 150);
-    }
+    setIsFocusMode(!isFocusMode);
   };
 
   return (
@@ -193,6 +188,18 @@ export default function App() {
           </button>
 
           <button
+            onClick={() => setActiveTab('schedule')}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
+              activeTab === 'schedule'
+                ? 'bg-purple-600 text-white shadow-lg shadow-purple-950'
+                : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+            }`}
+          >
+            <Calendar className="w-4 h-4" />
+            <span>26-Paycheck Sequencing Schedule</span>
+          </button>
+
+          <button
             onClick={() => setActiveTab('taxes')}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-xl transition-all ${
               activeTab === 'taxes'
@@ -231,18 +238,29 @@ export default function App() {
 
         {/* Tab Content Panels */}
         {activeTab === 'sankey' && (
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2 space-y-6">
-              <PaycheckSummary inputs={inputs} taxResult={taxResult} />
-              <TaxDissectionCard
-                inputs={inputs}
-                taxResult={taxResult}
-                onToggleDissectInSankey={handleToggleDissectTaxes}
-              />
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                <PaycheckSummary inputs={inputs} taxResult={taxResult} />
+                <TaxDissectionCard
+                  inputs={inputs}
+                  taxResult={taxResult}
+                  onToggleDissectInSankey={handleToggleDissectTaxes}
+                />
+              </div>
+              <div className="space-y-6">
+                <InvestmentControls inputs={inputs} onChange={handleInputChange} />
+              </div>
             </div>
-            <div className="space-y-6">
-              <InvestmentControls inputs={inputs} onChange={handleInputChange} />
-            </div>
+            
+            <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
+          </div>
+        )}
+
+        {activeTab === 'schedule' && (
+          <div className="space-y-6">
+            <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
+            <PaycheckSummary inputs={inputs} taxResult={taxResult} />
           </div>
         )}
 
