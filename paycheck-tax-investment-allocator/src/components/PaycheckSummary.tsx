@@ -166,11 +166,11 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
                 <Sparkles className="w-4.5 h-4.5" />
               </div>
               <div>
-                <h4 className="text-xs font-bold text-amber-200 uppercase tracking-wider">
-                  One-Time Annual Performance Bonus Breakdown
+                <h4 className="text-xs font-bold text-amber-200 uppercase tracking-wider flex items-center gap-2">
+                  <span>One-Time Annual Performance Bonus Breakdown</span>
                 </h4>
                 <p className="text-[11px] text-slate-300">
-                  {inputs.annualBonusIsPercent ? `${inputs.annualBonusPercent}% of Gross Salary` : 'Fixed Annual Bonus'}
+                  {inputs.annualBonusIsPercent ? `${inputs.annualBonusPercent}% of Gross Salary` : 'Fixed Annual Bonus'} • Taxed as IRS Supplemental Wages (22% Fed + State + FICA)
                 </p>
               </div>
             </div>
