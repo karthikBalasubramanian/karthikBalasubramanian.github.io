@@ -1,11 +1,4 @@
 # index page sections
-- id: 'about-me'
-  i18n: 'nav.about_me'
-  name: 'About'
-  tpl: 'about.html'
-  css: ''
-
-
 - id: 'child-financial-planning'
   i18n: 'nav.child_financial_planning'
   name: 'Child Financial Planner'
