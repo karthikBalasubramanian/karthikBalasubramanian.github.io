@@ -3,12 +3,16 @@ import { sankey, sankeyLinkHorizontal, SankeyNode, SankeyLink } from 'd3-sankey'
 import { UserFinancialInputs, TaxBreakdownResult } from '../types';
 import { generateSankeyData } from '../utils/taxCalculator';
 import { motion, AnimatePresence } from 'motion/react';
-import { Layers, Eye, Info, Sparkles, SplitSquareVertical, ZoomIn, DollarSign } from 'lucide-react';
+import { Layers, Eye, Info, Sparkles, SplitSquareVertical, ZoomIn, DollarSign, Maximize2, Minimize2 } from 'lucide-react';
 
 interface SankeyDiagramProps {
   inputs: UserFinancialInputs;
   taxResult: TaxBreakdownResult;
   onToggleDissectTaxes: () => void;
+  onToggleIncludePostTax?: () => void;
+  isFocusMode?: boolean;
+  onToggleFocusMode?: () => void;
+  chartRef?: React.RefObject<HTMLDivElement | null>;
 }
 
 interface CustomNode {
@@ -42,12 +46,23 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
   inputs,
   taxResult,
   onToggleDissectTaxes,
+  onToggleIncludePostTax,
+  isFocusMode,
+  onToggleFocusMode,
+  chartRef,
 }) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerWidth, setContainerWidth] = useState<number>(850);
   const [hoveredNode, setHoveredNode] = useState<CustomNode | null>(null);
   const [hoveredLink, setHoveredLink] = useState<CustomLink | null>(null);
   const [mousePos, setMousePos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
+
+  // Attach external ref if provided
+  useEffect(() => {
+    if (chartRef && containerRef.current) {
+      (chartRef as React.MutableRefObject<HTMLDivElement | null>).current = containerRef.current;
+    }
+  }, [chartRef]);
 
   // Handle container resize cleanly
   useEffect(() => {
@@ -133,7 +148,9 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className="relative bg-white border border-slate-200 rounded-2xl p-5 shadow-xs text-slate-900 overflow-hidden"
+      className={`relative bg-white border border-slate-200 rounded-2xl p-5 text-slate-900 overflow-hidden transition-all duration-300 ${
+        isFocusMode ? 'shadow-2xl ring-2 ring-indigo-500/50' : 'shadow-xs'
+      }`}
     >
       {/* Top Banner / Toolbar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4 pb-3 border-b border-slate-100">
@@ -153,13 +170,43 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
         </div>
 
         <div className="flex items-center gap-2">
+          {onToggleFocusMode && (
+            <button
+              onClick={onToggleFocusMode}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all border shadow-xs ${
+                isFocusMode
+                  ? 'bg-indigo-600 text-white border-indigo-500 hover:bg-indigo-700'
+                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              }`}
+              title={isFocusMode ? 'Exit Chart Focus Mode' : 'Focus Chart View'}
+            >
+              {isFocusMode ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
+              <span>{isFocusMode ? 'Normal View' : 'Focus Chart'}</span>
+            </button>
+          )}
+
+          {onToggleIncludePostTax && (
+            <button
+              onClick={onToggleIncludePostTax}
+              className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border shadow-xs ${
+                inputs.includePostTaxInSankey
+                  ? 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-700'
+                  : 'bg-slate-100 text-slate-700 border-slate-200 hover:bg-slate-200'
+              }`}
+              title="Option to include post-tax investments (Roth, 529, Child, ESPP) in Sankey flow"
+            >
+              <Eye className="w-3.5 h-3.5" />
+              <span>{inputs.includePostTaxInSankey ? 'Hide Post-Tax Allocations' : '+ Add Post-Tax Accounts (Roth/529/Child/ESPP)'}</span>
+            </button>
+          )}
+
           <button
             onClick={onToggleDissectTaxes}
             id="btn-dissect-taxes"
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border shadow-sm ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg transition-all border shadow-xs ${
               inputs.dissectTaxesInSankey
-                ? 'bg-rose-600/20 text-rose-300 border-rose-500/50 hover:bg-rose-600/30'
-                : 'bg-slate-800 text-slate-200 border-slate-700 hover:bg-slate-700 hover:text-white'
+                ? 'bg-rose-50 text-rose-700 border-rose-200 hover:bg-rose-100'
+                : 'bg-slate-800 text-slate-100 border-slate-700 hover:bg-slate-900'
             }`}
           >
             <SplitSquareVertical className="w-3.5 h-3.5" />
@@ -254,30 +301,38 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
                       fill={node.color || '#6366f1'}
                       rx={4}
                       className={`transition-all duration-200 ${
-                        isHovered ? 'brightness-125 filter stroke-2 stroke-white' : ''
+                        isHovered ? 'brightness-110 filter stroke-2 stroke-white' : ''
                       }`}
                     />
 
-                    {/* Node Label Text */}
+                    {/* Node Label Text - High Contrast */}
                     <text
                       x={x0 < containerWidth / 2 ? x1 + 8 : x0 - 8}
                       y={y0 + nodeHeight / 2}
                       dy="0.35em"
                       textAnchor={x0 < containerWidth / 2 ? 'start' : 'end'}
-                      className={`text-[12px] font-semibold transition-all duration-200 ${
-                        isHovered ? 'fill-white font-bold' : 'fill-slate-200'
+                      stroke="#ffffff"
+                      strokeWidth="3.5px"
+                      paintOrder="stroke fill"
+                      strokeLinejoin="round"
+                      className={`text-[12px] font-bold transition-all duration-200 ${
+                        isHovered ? 'fill-indigo-600' : 'fill-slate-900'
                       }`}
                     >
                       {node.name}
                     </text>
 
-                    {/* Value Badge below/next to label */}
+                    {/* Value Badge below/next to label - High Contrast */}
                     <text
                       x={x0 < containerWidth / 2 ? x1 + 8 : x0 - 8}
                       y={y0 + nodeHeight / 2 + 15}
                       dy="0.35em"
                       textAnchor={x0 < containerWidth / 2 ? 'start' : 'end'}
-                      className="text-[11px] font-mono fill-slate-400"
+                      stroke="#ffffff"
+                      strokeWidth="3px"
+                      paintOrder="stroke fill"
+                      strokeLinejoin="round"
+                      className="text-[11px] font-mono font-semibold fill-slate-700"
                     >
                       {fmt(isBiweekly ? node.valueBiweekly : node.valueAnnual)} (
                       {node.percentageOfGross.toFixed(1)}%)

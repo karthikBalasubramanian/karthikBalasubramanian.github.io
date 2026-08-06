@@ -1,59 +1,252 @@
 import { StateTaxInfo } from '../types';
 
-export const TAX_LIMITS_2026 = {
-  TRADITIONAL_401K_MAX: 23500,
-  TRADITIONAL_401K_CATCHUP: 7500, // Age 50+
-  IRA_MAX: 7000,
-  IRA_CATCHUP: 1000, // Age 50+
-  HSA_SINGLE_MAX: 4300,
-  HSA_FAMILY_MAX: 8550,
-  HSA_CATCHUP: 1000, // Age 55+
-  FSA_MAX: 3200,
+export interface TaxLimits {
+  TRADITIONAL_401K_MAX: number;
+  TRADITIONAL_401K_CATCHUP: number;
+  COMPENSATION_LIMIT_401K: number;
+  TOTAL_401K_ADDITION_415C: number;
+  IRA_MAX: number;
+  IRA_CATCHUP: number;
+  HSA_SINGLE_MAX: number;
+  HSA_FAMILY_MAX: number;
+  HSA_CATCHUP: number;
+  FSA_MAX: number;
 
-  SOCIAL_SECURITY_RATE: 0.062,
-  SOCIAL_SECURITY_WAGE_CAP: 176100,
+  SOCIAL_SECURITY_RATE: number;
+  SOCIAL_SECURITY_WAGE_CAP: number;
 
-  MEDICARE_RATE: 0.0145,
-  ADDITIONAL_MEDICARE_RATE: 0.009,
-  ADDITIONAL_MEDICARE_THRESHOLD_SINGLE: 200000,
-  ADDITIONAL_MEDICARE_THRESHOLD_MARRIED: 250000,
+  MEDICARE_RATE: number;
+  ADDITIONAL_MEDICARE_RATE: number;
+  ADDITIONAL_MEDICARE_THRESHOLD_SINGLE: number;
+  ADDITIONAL_MEDICARE_THRESHOLD_MARRIED: number;
 
   FEDERAL_STANDARD_DEDUCTION: {
-    single: 15000,
-    married: 30000,
-    head_of_household: 22500,
-  },
+    single: number;
+    married: number;
+    head_of_household: number;
+  };
 
   FEDERAL_BRACKETS: {
-    single: [
-      { min: 0, max: 11925, rate: 0.10 },
-      { min: 11925, max: 48475, rate: 0.12 },
-      { min: 48475, max: 103350, rate: 0.22 },
-      { min: 103350, max: 197300, rate: 0.24 },
-      { min: 197300, max: 250525, rate: 0.32 },
-      { min: 250525, max: 626350, rate: 0.35 },
-      { min: 626350, max: Infinity, rate: 0.37 },
-    ],
-    married: [
-      { min: 0, max: 23850, rate: 0.10 },
-      { min: 23850, max: 96950, rate: 0.12 },
-      { min: 96950, max: 206700, rate: 0.22 },
-      { min: 206700, max: 394600, rate: 0.24 },
-      { min: 394600, max: 501050, rate: 0.32 },
-      { min: 501050, max: 751600, rate: 0.35 },
-      { min: 751600, max: Infinity, rate: 0.37 },
-    ],
-    head_of_household: [
-      { min: 0, max: 17000, rate: 0.10 },
-      { min: 17000, max: 64850, rate: 0.12 },
-      { min: 64850, max: 103350, rate: 0.22 },
-      { min: 103350, max: 197300, rate: 0.24 },
-      { min: 197300, max: 250500, rate: 0.32 },
-      { min: 250500, max: 626350, rate: 0.35 },
-      { min: 626350, max: Infinity, rate: 0.37 },
-    ],
+    single: { min: number; max: number; rate: number }[];
+    married: { min: number; max: number; rate: number }[];
+    head_of_household: { min: number; max: number; rate: number }[];
+  };
+}
+
+export const TAX_LIMITS_BY_YEAR: Record<number, TaxLimits> = {
+  2024: {
+    TRADITIONAL_401K_MAX: 23000,
+    TRADITIONAL_401K_CATCHUP: 7500,
+    COMPENSATION_LIMIT_401K: 345000,
+    TOTAL_401K_ADDITION_415C: 69000,
+    IRA_MAX: 7000,
+    IRA_CATCHUP: 1000,
+    HSA_SINGLE_MAX: 4150,
+    HSA_FAMILY_MAX: 8300,
+    HSA_CATCHUP: 1000,
+    FSA_MAX: 3200,
+    SOCIAL_SECURITY_RATE: 0.062,
+    SOCIAL_SECURITY_WAGE_CAP: 168600,
+    MEDICARE_RATE: 0.0145,
+    ADDITIONAL_MEDICARE_RATE: 0.009,
+    ADDITIONAL_MEDICARE_THRESHOLD_SINGLE: 200000,
+    ADDITIONAL_MEDICARE_THRESHOLD_MARRIED: 250000,
+    FEDERAL_STANDARD_DEDUCTION: {
+      single: 14600,
+      married: 29200,
+      head_of_household: 21900,
+    },
+    FEDERAL_BRACKETS: {
+      single: [
+        { min: 0, max: 11600, rate: 0.10 },
+        { min: 11600, max: 47150, rate: 0.12 },
+        { min: 47150, max: 100525, rate: 0.22 },
+        { min: 100525, max: 191950, rate: 0.24 },
+        { min: 191950, max: 243725, rate: 0.32 },
+        { min: 243725, max: 609350, rate: 0.35 },
+        { min: 609350, max: Infinity, rate: 0.37 },
+      ],
+      married: [
+        { min: 0, max: 23200, rate: 0.10 },
+        { min: 23200, max: 94300, rate: 0.12 },
+        { min: 94300, max: 201050, rate: 0.22 },
+        { min: 201050, max: 383900, rate: 0.24 },
+        { min: 383900, max: 487450, rate: 0.32 },
+        { min: 487450, max: 731200, rate: 0.35 },
+        { min: 731200, max: Infinity, rate: 0.37 },
+      ],
+      head_of_household: [
+        { min: 0, max: 16550, rate: 0.10 },
+        { min: 16550, max: 63100, rate: 0.12 },
+        { min: 63100, max: 100500, rate: 0.22 },
+        { min: 100500, max: 191950, rate: 0.24 },
+        { min: 191950, max: 243700, rate: 0.32 },
+        { min: 243700, max: 609350, rate: 0.35 },
+        { min: 609350, max: Infinity, rate: 0.37 },
+      ],
+    },
+  },
+
+  2025: {
+    TRADITIONAL_401K_MAX: 23500,
+    TRADITIONAL_401K_CATCHUP: 7500,
+    COMPENSATION_LIMIT_401K: 350000,
+    TOTAL_401K_ADDITION_415C: 70000,
+    IRA_MAX: 7000,
+    IRA_CATCHUP: 1000,
+    HSA_SINGLE_MAX: 4300,
+    HSA_FAMILY_MAX: 8550,
+    HSA_CATCHUP: 1000,
+    FSA_MAX: 3300,
+    SOCIAL_SECURITY_RATE: 0.062,
+    SOCIAL_SECURITY_WAGE_CAP: 176100,
+    MEDICARE_RATE: 0.0145,
+    ADDITIONAL_MEDICARE_RATE: 0.009,
+    ADDITIONAL_MEDICARE_THRESHOLD_SINGLE: 200000,
+    ADDITIONAL_MEDICARE_THRESHOLD_MARRIED: 250000,
+    FEDERAL_STANDARD_DEDUCTION: {
+      single: 15000,
+      married: 30000,
+      head_of_household: 22500,
+    },
+    FEDERAL_BRACKETS: {
+      single: [
+        { min: 0, max: 11925, rate: 0.10 },
+        { min: 11925, max: 48475, rate: 0.12 },
+        { min: 48475, max: 103350, rate: 0.22 },
+        { min: 103350, max: 197300, rate: 0.24 },
+        { min: 197300, max: 250525, rate: 0.32 },
+        { min: 250525, max: 626350, rate: 0.35 },
+        { min: 626350, max: Infinity, rate: 0.37 },
+      ],
+      married: [
+        { min: 0, max: 23850, rate: 0.10 },
+        { min: 23850, max: 96950, rate: 0.12 },
+        { min: 96950, max: 206700, rate: 0.22 },
+        { min: 206700, max: 394600, rate: 0.24 },
+        { min: 394600, max: 501050, rate: 0.32 },
+        { min: 501050, max: 751600, rate: 0.35 },
+        { min: 751600, max: Infinity, rate: 0.37 },
+      ],
+      head_of_household: [
+        { min: 0, max: 17000, rate: 0.10 },
+        { min: 17000, max: 64850, rate: 0.12 },
+        { min: 64850, max: 103350, rate: 0.22 },
+        { min: 103350, max: 197300, rate: 0.24 },
+        { min: 197300, max: 250500, rate: 0.32 },
+        { min: 250500, max: 626350, rate: 0.35 },
+        { min: 626350, max: Infinity, rate: 0.37 },
+      ],
+    },
+  },
+
+  2026: {
+    TRADITIONAL_401K_MAX: 24500,
+    TRADITIONAL_401K_CATCHUP: 7500,
+    COMPENSATION_LIMIT_401K: 360000,
+    TOTAL_401K_ADDITION_415C: 70000,
+    IRA_MAX: 7000,
+    IRA_CATCHUP: 1000,
+    HSA_SINGLE_MAX: 4400,
+    HSA_FAMILY_MAX: 8750,
+    HSA_CATCHUP: 1000,
+    FSA_MAX: 3300,
+    SOCIAL_SECURITY_RATE: 0.062,
+    SOCIAL_SECURITY_WAGE_CAP: 176100,
+    MEDICARE_RATE: 0.0145,
+    ADDITIONAL_MEDICARE_RATE: 0.009,
+    ADDITIONAL_MEDICARE_THRESHOLD_SINGLE: 200000,
+    ADDITIONAL_MEDICARE_THRESHOLD_MARRIED: 250000,
+    FEDERAL_STANDARD_DEDUCTION: {
+      single: 15000,
+      married: 30000,
+      head_of_household: 22500,
+    },
+    FEDERAL_BRACKETS: {
+      single: [
+        { min: 0, max: 11925, rate: 0.10 },
+        { min: 11925, max: 48475, rate: 0.12 },
+        { min: 48475, max: 103350, rate: 0.22 },
+        { min: 103350, max: 197300, rate: 0.24 },
+        { min: 197300, max: 250525, rate: 0.32 },
+        { min: 250525, max: 626350, rate: 0.35 },
+        { min: 626350, max: Infinity, rate: 0.37 },
+      ],
+      married: [
+        { min: 0, max: 23850, rate: 0.10 },
+        { min: 23850, max: 96950, rate: 0.12 },
+        { min: 96950, max: 206700, rate: 0.22 },
+        { min: 206700, max: 394600, rate: 0.24 },
+        { min: 394600, max: 501050, rate: 0.32 },
+        { min: 501050, max: 751600, rate: 0.35 },
+        { min: 751600, max: Infinity, rate: 0.37 },
+      ],
+      head_of_household: [
+        { min: 0, max: 17000, rate: 0.10 },
+        { min: 17000, max: 64850, rate: 0.12 },
+        { min: 64850, max: 103350, rate: 0.22 },
+        { min: 103350, max: 197300, rate: 0.24 },
+        { min: 197300, max: 250500, rate: 0.32 },
+        { min: 250500, max: 626350, rate: 0.35 },
+        { min: 626350, max: Infinity, rate: 0.37 },
+      ],
+    },
   },
 };
+
+/**
+ * Returns grounded IRS Tax Limits for any given year.
+ * If year > 2026, automatically projects future limits using IRS Chained CPI-U inflation steps.
+ */
+export function getTaxLimitsForYear(year: number = 2026): TaxLimits {
+  if (year <= 2024) return TAX_LIMITS_BY_YEAR[2024];
+  if (year === 2025) return TAX_LIMITS_BY_YEAR[2025];
+  if (year === 2026) return TAX_LIMITS_BY_YEAR[2026];
+
+  // For future years (2027+), project limits using IRS indexing rules
+  const base2026 = TAX_LIMITS_BY_YEAR[2026];
+  const yearsAhead = year - 2026;
+  const inflationMult = Math.pow(1.025, yearsAhead); // ~2.5% inflation per year
+
+  return {
+    ...base2026,
+    TRADITIONAL_401K_MAX: base2026.TRADITIONAL_401K_MAX + Math.floor(yearsAhead * 500),
+    COMPENSATION_LIMIT_401K: base2026.COMPENSATION_LIMIT_401K + yearsAhead * 5000,
+    TOTAL_401K_ADDITION_415C: base2026.TOTAL_401K_ADDITION_415C + yearsAhead * 1500,
+    IRA_MAX: base2026.IRA_MAX + Math.floor(yearsAhead * 500),
+    HSA_SINGLE_MAX: base2026.HSA_SINGLE_MAX + yearsAhead * 100,
+    HSA_FAMILY_MAX: base2026.HSA_FAMILY_MAX + yearsAhead * 250, // 2027: $8,750 + $250 = $9,000
+    FSA_MAX: base2026.FSA_MAX + yearsAhead * 100,
+    SOCIAL_SECURITY_WAGE_CAP: Math.round(base2026.SOCIAL_SECURITY_WAGE_CAP * inflationMult / 100) * 100,
+
+    FEDERAL_STANDARD_DEDUCTION: {
+      single: Math.round((base2026.FEDERAL_STANDARD_DEDUCTION.single * inflationMult) / 50) * 50,
+      married: Math.round((base2026.FEDERAL_STANDARD_DEDUCTION.married * inflationMult) / 50) * 50,
+      head_of_household: Math.round((base2026.FEDERAL_STANDARD_DEDUCTION.head_of_household * inflationMult) / 50) * 50,
+    },
+
+    FEDERAL_BRACKETS: {
+      single: base2026.FEDERAL_BRACKETS.single.map((b) => ({
+        ...b,
+        min: Math.round((b.min * inflationMult) / 25) * 25,
+        max: b.max === Infinity ? Infinity : Math.round((b.max * inflationMult) / 25) * 25,
+      })),
+      married: base2026.FEDERAL_BRACKETS.married.map((b) => ({
+        ...b,
+        min: Math.round((b.min * inflationMult) / 25) * 25,
+        max: b.max === Infinity ? Infinity : Math.round((b.max * inflationMult) / 25) * 25,
+      })),
+      head_of_household: base2026.FEDERAL_BRACKETS.head_of_household.map((b) => ({
+        ...b,
+        min: Math.round((b.min * inflationMult) / 25) * 25,
+        max: b.max === Infinity ? Infinity : Math.round((b.max * inflationMult) / 25) * 25,
+      })),
+    },
+  };
+}
+
+// Backward compatibility default
+export const TAX_LIMITS_2026 = getTaxLimitsForYear(2026);
 
 export const US_STATES: Record<string, StateTaxInfo> = {
   CA: {

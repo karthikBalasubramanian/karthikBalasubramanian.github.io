@@ -59,6 +59,10 @@ export default function App() {
   const [activePresetId, setActivePresetId] = useState<string>('tech_high_earner');
   const [isTipsOpen, setIsTipsOpen] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<'sankey' | 'taxes' | 'investments' | 'child_wealth'>('sankey');
+  
+  const [isInputsCollapsed, setIsInputsCollapsed] = useState<boolean>(false);
+  const [isFocusMode, setIsFocusMode] = useState<boolean>(false);
+  const sankeyRef = useRef<HTMLDivElement | null>(null);
 
   // Compute live tax and paycheck results
   const taxResult = useMemo(() => {
@@ -91,6 +95,8 @@ export default function App() {
     const defaultPreset = FINANCIAL_PRESETS[0];
     setActivePresetId(defaultPreset.id);
     setInputs((prev) => ({ ...prev, ...defaultPreset.inputs }));
+    setIsInputsCollapsed(false);
+    setIsFocusMode(false);
   };
 
   // Toggle tax dissection in Sankey
@@ -99,6 +105,35 @@ export default function App() {
       ...prev,
       dissectTaxesInSankey: !prev.dissectTaxesInSankey,
     }));
+  };
+
+  // Toggle optional post-tax allocations in Sankey
+  const handleToggleIncludePostTax = () => {
+    setInputs((prev) => ({
+      ...prev,
+      includePostTaxInSankey: !prev.includePostTaxInSankey,
+    }));
+  };
+
+  // Action: Visualize flow (collapses inputs + scrolls to Sankey chart)
+  const handleVisualizeFlow = () => {
+    setIsInputsCollapsed(true);
+    setIsFocusMode(true);
+    setTimeout(() => {
+      sankeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 150);
+  };
+
+  // Action: Toggle focus mode
+  const handleToggleFocusMode = () => {
+    const nextFocus = !isFocusMode;
+    setIsFocusMode(nextFocus);
+    setIsInputsCollapsed(nextFocus);
+    if (nextFocus) {
+      setTimeout(() => {
+        sankeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 150);
+    }
   };
 
   return (
@@ -120,6 +155,9 @@ export default function App() {
           inputs={inputs}
           onChange={handleInputChange}
           onMaximizeAll={handleMaximizeAll}
+          isCollapsed={isInputsCollapsed}
+          onToggleCollapse={() => setIsInputsCollapsed(!isInputsCollapsed)}
+          onVisualizeFlow={handleVisualizeFlow}
         />
 
         {/* Primary Interactive Sankey Diagram */}
@@ -127,6 +165,10 @@ export default function App() {
           inputs={inputs}
           taxResult={taxResult}
           onToggleDissectTaxes={handleToggleDissectTaxes}
+          onToggleIncludePostTax={handleToggleIncludePostTax}
+          isFocusMode={isFocusMode}
+          onToggleFocusMode={handleToggleFocusMode}
+          chartRef={sankeyRef}
         />
 
         {/* Navigation / Feature Tabs */}

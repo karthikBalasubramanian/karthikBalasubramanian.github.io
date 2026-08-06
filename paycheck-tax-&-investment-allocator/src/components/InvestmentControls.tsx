@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserFinancialInputs } from '../types';
-import { TAX_LIMITS_2026 } from '../data/taxRates';
+import { getTaxLimitsForYear } from '../data/taxRates';
 import { Shield, TrendingUp, PiggyBank, Baby, Building, Sparkles, Check, Info, Award, Zap } from 'lucide-react';
 
 interface InvestmentControlsProps {
@@ -11,21 +11,24 @@ interface InvestmentControlsProps {
 export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, onChange }) => {
   const isBiweekly = inputs.payFrequency !== 'annual';
   const payPeriods = 26;
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
 
   // Max calculations
   const max401kAnnual = inputs.age >= 50
-    ? TAX_LIMITS_2026.TRADITIONAL_401K_MAX + TAX_LIMITS_2026.TRADITIONAL_401K_CATCHUP
-    : TAX_LIMITS_2026.TRADITIONAL_401K_MAX;
+    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
+    : taxLimits.TRADITIONAL_401K_MAX;
   const max401kBiweekly = Math.round((max401kAnnual / payPeriods) * 100) / 100;
 
-  const maxHsaAnnual = inputs.hsaCoverage === 'family'
-    ? TAX_LIMITS_2026.HSA_FAMILY_MAX + (inputs.age >= 55 ? TAX_LIMITS_2026.HSA_CATCHUP : 0)
-    : TAX_LIMITS_2026.HSA_SINGLE_MAX + (inputs.age >= 55 ? TAX_LIMITS_2026.HSA_CATCHUP : 0);
-  const maxHsaBiweekly = Math.round((maxHsaAnnual / payPeriods) * 100) / 100;
+  const employerHsaAnnual = inputs.employerHsaAnnual || 0;
+  const maxHsaStatutoryAnnual = inputs.hsaCoverage === 'family'
+    ? taxLimits.HSA_FAMILY_MAX + (inputs.age >= 55 ? taxLimits.HSA_CATCHUP : 0)
+    : taxLimits.HSA_SINGLE_MAX + (inputs.age >= 55 ? taxLimits.HSA_CATCHUP : 0);
+  const maxEmployeeHsaAnnual = Math.max(0, maxHsaStatutoryAnnual - employerHsaAnnual);
+  const maxHsaBiweekly = Math.round((maxEmployeeHsaAnnual / payPeriods) * 100) / 100;
 
   const maxIraAnnual = inputs.age >= 50
-    ? TAX_LIMITS_2026.IRA_MAX + TAX_LIMITS_2026.IRA_CATCHUP
-    : TAX_LIMITS_2026.IRA_MAX;
+    ? taxLimits.IRA_MAX + taxLimits.IRA_CATCHUP
+    : taxLimits.IRA_MAX;
   const maxIraBiweekly = Math.round((maxIraAnnual / payPeriods) * 100) / 100;
 
   // ESPP Benefit calculation with 25% paycheck cap and $21,250 payroll limit ($25,000 IRS annual FMV purchase limit with 15% discount)
@@ -39,14 +42,19 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
   const isEsppAnnualCapped = uncappedEsppContrib > maxEsppBiweekly;
   const esppGain = esppContrib > 0 ? esppContrib * (discountFrac / (1 - discountFrac)) : 0;
 
-  // Company Match Calculation
+  // Company Match Calculation with IRS §401(a)(17) Compensation Limit ($360,000 in 2026)
   const matchPercent = inputs.companyMatchPercent ?? 100;
   const matchCapPercent = inputs.companyMatchUpToPercent ?? 6;
   const employee401kBiweekly = (inputs.traditional401k || 0) + (inputs.roth401k || 0);
   const employee401kPercent = biweeklyGross > 0 ? (employee401kBiweekly / biweeklyGross) * 100 : 0;
   const matchedPercent = Math.min(employee401kPercent, matchCapPercent);
-  const companyMatchBiweekly = biweeklyGross * (matchedPercent / 100) * (matchPercent / 100);
-  const companyMatchAnnual = companyMatchBiweekly * 26;
+
+  const annualGrossComp = inputs.payFrequency === 'annual' ? inputs.grossSalary : inputs.grossSalary * 26;
+  const eligibleCompForMatchAnnual = Math.min(annualGrossComp, taxLimits.COMPENSATION_LIMIT_401K);
+  const isMatchCompCapped = annualGrossComp > taxLimits.COMPENSATION_LIMIT_401K;
+
+  const companyMatchAnnual = eligibleCompForMatchAnnual * (matchedPercent / 100) * (matchPercent / 100);
+  const companyMatchBiweekly = companyMatchAnnual / 26;
 
   return (
     <div className="space-y-6">
@@ -77,32 +85,53 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
                   Employer 401(k) Company Match ("Free Money")
                 </h4>
                 <p className="text-[11px] text-slate-300">
-                  Company matches <span className="font-bold text-white">{matchPercent}%</span> of your contributions up to <span className="font-bold text-white">{matchCapPercent}%</span> of salary.
+                  Company matches <span className="font-bold text-white">{matchPercent}%</span> of your contributions up to <span className="font-bold text-white">{matchCapPercent}%</span> of salary (IRS comp limit: <span className="font-mono text-emerald-400 font-bold">$360k</span>).
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
+                onClick={() => onChange({ companyMatchPercent: 50, companyMatchUpToPercent: 6 })}
+                className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                  matchPercent === 50 && matchCapPercent === 6
+                    ? 'bg-emerald-900/90 text-emerald-200 border-emerald-600'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
+              >
+                50% for 6% (Adobe)
+              </button>
+              <button
                 onClick={() => onChange({ companyMatchPercent: 100, companyMatchUpToPercent: 6 })}
-                className="text-[10px] font-bold px-2 py-1 rounded bg-emerald-900/60 text-emerald-200 border border-emerald-700 hover:bg-emerald-800"
+                className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                  matchPercent === 100 && matchCapPercent === 6
+                    ? 'bg-emerald-900/90 text-emerald-200 border-emerald-600'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
               >
                 100% for 6%
               </button>
               <button
-                onClick={() => onChange({ companyMatchPercent: 50, companyMatchUpToPercent: 6 })}
-                className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
-              >
-                50% for 6%
-              </button>
-              <button
                 onClick={() => onChange({ companyMatchPercent: 100, companyMatchUpToPercent: 4 })}
-                className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
+                className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                  matchPercent === 100 && matchCapPercent === 4
+                    ? 'bg-emerald-900/90 text-emerald-200 border-emerald-600'
+                    : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                }`}
               >
                 100% for 4%
               </button>
             </div>
           </div>
+
+          {isMatchCompCapped && (
+            <div className="text-[11px] text-amber-300 bg-amber-950/60 border border-amber-800/60 rounded-lg p-2 flex items-center gap-2">
+              <Info className="w-4 h-4 text-amber-400 shrink-0" />
+              <span>
+                <strong>IRS §401(a)(17) Limit Applied:</strong> Your annual compensation (${annualGrossComp.toLocaleString()}) exceeds the IRS limit. Eligible compensation for employer matching is capped at <strong>$360,000</strong>/yr.
+              </span>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
@@ -210,8 +239,27 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
                 <option value="family">Family</option>
               </select>
             </div>
-            <p className="text-[10px] text-slate-400">
-              Saves Federal, State & FICA taxes! Max: <span className="font-mono text-slate-200">${maxHsaAnnual.toLocaleString()}</span>
+            {/* Employer HSA Input */}
+            <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+              <label className="block text-[10px] font-semibold text-slate-400">
+                Employer Annual HSA Contribution ($/yr)
+              </label>
+              <div className="relative">
+                <span className="absolute left-2.5 top-1.5 text-slate-500 font-bold text-xs">$</span>
+                <input
+                  type="number"
+                  value={inputs.employerHsaAnnual ?? ''}
+                  onChange={(e) => onChange({ employerHsaAnnual: Math.max(0, parseFloat(e.target.value) || 0) })}
+                  className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1 pl-6 pr-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-teal-500"
+                  placeholder="Enter company HSA contribution (e.g. 1700)"
+                />
+              </div>
+            </div>
+
+            <p className="text-[10px] text-slate-400 pt-1">
+              IRS Statutory Cap: <span className="font-mono text-slate-200">${maxHsaStatutoryAnnual.toLocaleString()}</span>
+              <br />
+              Your Employee Max: <span className="font-mono text-teal-300 font-bold">${maxEmployeeHsaAnnual.toLocaleString()}/yr</span> (${maxHsaBiweekly}/bw)
             </p>
           </div>
 

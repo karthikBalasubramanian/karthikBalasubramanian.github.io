@@ -1,5 +1,5 @@
 import { UserFinancialInputs, TaxBreakdownResult, StateTaxInfo, SankeyNodeData, SankeyLinkData } from '../types';
-import { TAX_LIMITS_2026, US_STATES } from '../data/taxRates';
+import { getTaxLimitsForYear, US_STATES } from '../data/taxRates';
 
 export function getPayPeriodsCount(frequency: string): number {
   switch (frequency) {
@@ -17,6 +17,7 @@ export function getPayPeriodsCount(frequency: string): number {
 }
 
 export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxBreakdownResult {
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
   const payPeriods = getPayPeriodsCount(inputs.payFrequency);
 
   // Normalize gross to Annual and Biweekly equivalent for consistent calculations
@@ -38,8 +39,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   // Cap 401k at IRS limit
   const age = inputs.age || 30;
   const max401kAnnual = age >= 50
-    ? TAX_LIMITS_2026.TRADITIONAL_401K_MAX + TAX_LIMITS_2026.TRADITIONAL_401K_CATCHUP
-    : TAX_LIMITS_2026.TRADITIONAL_401K_MAX;
+    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
+    : taxLimits.TRADITIONAL_401K_MAX;
   
   if (preTax401kBiweekly * 26 > max401kAnnual) {
     preTax401kBiweekly = max401kAnnual / 26;
@@ -53,7 +54,7 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     roth401kBiweekly = inputs.roth401k || 0;
   }
 
-  // 401(k) Employer Match Calculation (e.g. 100% match on up to 6% of salary)
+  // 401(k) Employer Match Calculation with IRS §401(a)(17) Annual Compensation Limit
   const companyMatchPercent = inputs.companyMatchPercent ?? 100;
   const companyMatchUpToPercent = inputs.companyMatchUpToPercent ?? 6;
 
@@ -61,13 +62,29 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const employee401kPercent = grossBiweekly > 0 ? (employee401kBiweekly / grossBiweekly) * 100 : 0;
 
   const eligibleMatchPercent = Math.min(employee401kPercent, companyMatchUpToPercent);
-  const companyMatchBiweekly = grossBiweekly * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
-  const companyMatchAnnual = companyMatchBiweekly * 26;
+
+  // IRS §401(a)(17) caps compensation used for employer match at limit
+  const eligibleSalaryForMatchAnnual = Math.min(grossAnnual, taxLimits.COMPENSATION_LIMIT_401K);
+
+  const companyMatchAnnual = eligibleSalaryForMatchAnnual * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
+  const companyMatchBiweekly = companyMatchAnnual / 26;
 
   const total401kAccumulationBiweekly = employee401kBiweekly + companyMatchBiweekly;
   const total401kAccumulationAnnual = total401kAccumulationBiweekly * 26;
 
-  const hsaBiweekly = inputs.hsa || 0;
+  const employerHsaAnnual = inputs.employerHsaAnnual || 0;
+  const employerHsaBiweekly = employerHsaAnnual / 26;
+
+  const maxHsaStatutoryAnnual = inputs.hsaCoverage === 'family'
+    ? taxLimits.HSA_FAMILY_MAX + (age >= 55 ? taxLimits.HSA_CATCHUP : 0)
+    : taxLimits.HSA_SINGLE_MAX + (age >= 55 ? taxLimits.HSA_CATCHUP : 0);
+  const maxEmployeeHsaAnnual = Math.max(0, maxHsaStatutoryAnnual - employerHsaAnnual);
+
+  let hsaBiweekly = inputs.hsa || 0;
+  if (hsaBiweekly * 26 > maxEmployeeHsaAnnual) {
+    hsaBiweekly = maxEmployeeHsaAnnual / 26;
+  }
+
   const fsaBiweekly = inputs.fsa || 0;
 
   const preTaxDeductionsBiweekly = preTax401kBiweekly + hsaBiweekly + fsaBiweekly;
@@ -82,61 +99,65 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const ficaGrossAnnual = Math.max(0, grossAnnual - ficaDeductionsAnnual);
 
   // 2. Federal Income Tax Calculation
-  const stdDeduction = TAX_LIMITS_2026.FEDERAL_STANDARD_DEDUCTION[inputs.filingStatus] || 15000;
-  const federalTaxableIncome = Math.max(0, taxableGrossAnnual - stdDeduction);
+  const stdDeduction = taxLimits.FEDERAL_STANDARD_DEDUCTION[inputs.filingStatus] || 15000;
+  const federalTaxableBase = Math.max(0, taxableGrossAnnual - stdDeduction);
 
-  const federalBrackets = TAX_LIMITS_2026.FEDERAL_BRACKETS[inputs.filingStatus] || TAX_LIMITS_2026.FEDERAL_BRACKETS.single;
-  let federalTaxAnnual = 0;
+  const federalBrackets = taxLimits.FEDERAL_BRACKETS[inputs.filingStatus] || taxLimits.FEDERAL_BRACKETS.single;
+  let federalIncomeTaxAnnual = 0;
 
-  for (const bracket of federalBrackets) {
-    if (federalTaxableIncome > bracket.min) {
-      const taxableInBracket = Math.min(federalTaxableIncome, bracket.max) - bracket.min;
-      federalTaxAnnual += taxableInBracket * bracket.rate;
+  for (const b of federalBrackets) {
+    if (federalTaxableBase > b.min) {
+      const taxableInBracket = Math.min(federalTaxableBase, b.max) - b.min;
+      federalIncomeTaxAnnual += taxableInBracket * b.rate;
     }
   }
-  const federalTaxBiweekly = federalTaxAnnual / 26;
+  const federalIncomeTaxBiweekly = federalIncomeTaxAnnual / 26;
 
-  // 3. State Income Tax Calculation
-  const stateInfo: StateTaxInfo = US_STATES[inputs.state] || US_STATES.OTHER;
-  let stateTaxAnnual = 0;
+  // 3. State Income Tax & SDI Calculation
+  const stateInfo = US_STATES[inputs.state] || US_STATES.OTHER;
+  let stateIncomeTaxAnnual = 0;
+  let sdiTaxAnnual = 0;
 
   if (stateInfo.hasStateTax) {
     if (stateInfo.type === 'flat' && stateInfo.flatRate) {
-      stateTaxAnnual = taxableGrossAnnual * stateInfo.flatRate;
-    } else if (stateInfo.type === 'progressive' && stateInfo.brackets) {
-      const bracketsList = stateInfo.brackets[inputs.filingStatus === 'married' ? 'married' : 'single'];
-      for (const bracket of bracketsList) {
-        if (taxableGrossAnnual > bracket.min) {
-          const taxableInBracket = Math.min(taxableGrossAnnual, bracket.max) - bracket.min;
-          stateTaxAnnual += taxableInBracket * bracket.rate;
+      stateIncomeTaxAnnual = taxableGrossAnnual * stateInfo.flatRate;
+    } else if (stateInfo.brackets) {
+      const brackets = stateInfo.brackets[inputs.filingStatus === 'married' ? 'married' : 'single'] || stateInfo.brackets.single;
+      for (const b of brackets) {
+        if (taxableGrossAnnual > b.min) {
+          const taxableInBracket = Math.min(taxableGrossAnnual, b.max) - b.min;
+          stateIncomeTaxAnnual += taxableInBracket * b.rate;
         }
       }
     }
   }
-  const stateTaxBiweekly = stateTaxAnnual / 26;
 
-  // 4. Social Security Tax (6.2% up to $176,100 cap)
-  const ssSubjectAnnual = Math.min(ficaGrossAnnual, TAX_LIMITS_2026.SOCIAL_SECURITY_WAGE_CAP);
-  const socialSecurityAnnual = ssSubjectAnnual * TAX_LIMITS_2026.SOCIAL_SECURITY_RATE;
+  // SDI Calculation
+  if (stateInfo.hasSDI && stateInfo.sdiRate) {
+    const sdiSubjectGross = stateInfo.sdiMaxWage
+      ? Math.min(ficaGrossAnnual, stateInfo.sdiMaxWage)
+      : ficaGrossAnnual;
+    sdiTaxAnnual = sdiSubjectGross * stateInfo.sdiRate;
+  }
+
+  const stateIncomeTaxBiweekly = stateIncomeTaxAnnual / 26;
+  const sdiTaxBiweekly = sdiTaxAnnual / 26;
+
+  // 4. FICA Taxes (Social Security 6.2% + Medicare 1.45% + Add'l Medicare 0.9%)
+  const ssSubjectAnnual = Math.min(ficaGrossAnnual, taxLimits.SOCIAL_SECURITY_WAGE_CAP);
+  const socialSecurityAnnual = ssSubjectAnnual * taxLimits.SOCIAL_SECURITY_RATE;
   const socialSecurityBiweekly = socialSecurityAnnual / 26;
 
-  // 5. Medicare Tax (1.45% baseline + 0.9% additional over threshold)
-  let medicareAnnual = ficaGrossAnnual * TAX_LIMITS_2026.MEDICARE_RATE;
+  let medicareAnnual = ficaGrossAnnual * taxLimits.MEDICARE_RATE;
   const addMedicareThreshold = inputs.filingStatus === 'married'
-    ? TAX_LIMITS_2026.ADDITIONAL_MEDICARE_THRESHOLD_MARRIED
-    : TAX_LIMITS_2026.ADDITIONAL_MEDICARE_THRESHOLD_SINGLE;
+    ? taxLimits.ADDITIONAL_MEDICARE_THRESHOLD_MARRIED
+    : taxLimits.ADDITIONAL_MEDICARE_THRESHOLD_SINGLE;
 
   if (ficaGrossAnnual > addMedicareThreshold) {
-    medicareAnnual += (ficaGrossAnnual - addMedicareThreshold) * TAX_LIMITS_2026.ADDITIONAL_MEDICARE_RATE;
+    medicareAnnual += (ficaGrossAnnual - addMedicareThreshold) * taxLimits.ADDITIONAL_MEDICARE_RATE;
   }
   const medicareBiweekly = medicareAnnual / 26;
 
-  // 6. State Disability Insurance (SDI / Paid Leave)
-  let sdiAnnual = 0;
-  if (stateInfo.hasSDI && stateInfo.sdiRate > 0) {
-    const sdiWage = stateInfo.sdiMaxWage ? Math.min(grossAnnual, stateInfo.sdiMaxWage) : grossAnnual;
-    sdiAnnual = sdiWage * stateInfo.sdiRate;
-  }
   const sdiBiweekly = sdiAnnual / 26;
 
   // Total Taxes
@@ -176,9 +197,13 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
 
   const postTaxContributionsAnnual = postTaxContributionsBiweekly * 26;
 
-  // Net Take-Home Pay (Checking Account deposit)
-  const netTakeHomePayBiweekly = grossBiweekly - preTaxDeductionsBiweekly - totalTaxesBiweekly - postTaxContributionsBiweekly;
+  // Default Net Income = Gross Income - Pre-Tax Deductions (401k, HSA, FSA) - Taxes
+  const netTakeHomePayBiweekly = Math.max(0, grossBiweekly - preTaxDeductionsBiweekly - totalTaxesBiweekly);
   const netTakeHomePayAnnual = netTakeHomePayBiweekly * 26;
+
+  // Net Cash after optional Post-Tax Allocations (Roth 401k/IRA, 529, Child Accounts, ESPP)
+  const netTakeHomeAfterPostTaxBiweekly = Math.max(0, netTakeHomePayBiweekly - postTaxContributionsBiweekly);
+  const netTakeHomeAfterPostTaxAnnual = netTakeHomeAfterPostTaxBiweekly * 26;
 
   // 8. Annual Bonus Calculations
   const annualBonusIsPercent = inputs.annualBonusIsPercent ?? true;
@@ -198,7 +223,12 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     bonus401kContribution = Math.min(desiredBonus401k, remaining401kCapacity);
 
     const eligibleMatchPercent = Math.min(employee401kPercent, companyMatchUpToPercent);
-    bonusCompanyMatch = grossAnnualBonus * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
+
+    // Total compensation eligible for matching across salary + bonus is capped at IRS limit
+    const remainingMatchCompCapacity = Math.max(0, taxLimits.COMPENSATION_LIMIT_401K - eligibleSalaryForMatchAnnual);
+    const eligibleBonusForMatch = Math.min(grossAnnualBonus, remainingMatchCompCapacity);
+
+    bonusCompanyMatch = eligibleBonusForMatch * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
   }
 
   const bonusTaxableGross = Math.max(0, grossAnnualBonus - bonus401kContribution);
@@ -223,18 +253,18 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const bonusStateTax = bonusTaxableGross * bonusStateTaxRate;
 
   // Bonus FICA Tax (Social Security 6.2% up to cap, Medicare 1.45% + 0.9%)
-  const ssUsedSoFar = Math.min(ficaGrossAnnual, TAX_LIMITS_2026.SOCIAL_SECURITY_WAGE_CAP);
-  const ssRemainingCap = Math.max(0, TAX_LIMITS_2026.SOCIAL_SECURITY_WAGE_CAP - ssUsedSoFar);
+  const ssUsedSoFar = Math.min(ficaGrossAnnual, taxLimits.SOCIAL_SECURITY_WAGE_CAP);
+  const ssRemainingCap = Math.max(0, taxLimits.SOCIAL_SECURITY_WAGE_CAP - ssUsedSoFar);
   const bonusSubjectSS = Math.min(bonusTaxableGross, ssRemainingCap);
-  const bonusSS = bonusSubjectSS * TAX_LIMITS_2026.SOCIAL_SECURITY_RATE;
+  const bonusSS = bonusSubjectSS * taxLimits.SOCIAL_SECURITY_RATE;
 
-  let bonusMedicare = bonusTaxableGross * TAX_LIMITS_2026.MEDICARE_RATE;
+  let bonusMedicare = bonusTaxableGross * taxLimits.MEDICARE_RATE;
   if (ficaGrossAnnual + bonusTaxableGross > addMedicareThreshold) {
     const amountInAddMedicare = Math.max(
       0,
       (ficaGrossAnnual + bonusTaxableGross) - Math.max(ficaGrossAnnual, addMedicareThreshold)
     );
-    bonusMedicare += amountInAddMedicare * TAX_LIMITS_2026.ADDITIONAL_MEDICARE_RATE;
+    bonusMedicare += amountInAddMedicare * taxLimits.ADDITIONAL_MEDICARE_RATE;
   }
   const bonusFicaTax = bonusSS + bonusMedicare;
 
@@ -265,6 +295,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
 
     preTax401kBiweekly,
     hsaBiweekly,
+    employerHsaBiweekly,
+    employerHsaAnnual,
     fsaBiweekly,
     preTaxDeductionsBiweekly,
     preTaxDeductionsAnnual,
@@ -299,6 +331,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
 
     netTakeHomePayBiweekly,
     netTakeHomePayAnnual,
+    netTakeHomeAfterPostTaxBiweekly,
+    netTakeHomeAfterPostTaxAnnual,
 
     // Annual Bonus Breakdown
     grossAnnualBonus,
@@ -685,12 +719,12 @@ export function generateSankeyData(
     }
   }
 
-  // Post-Tax Investments & Deductions
+  // Optional Post-Tax Investments & Deductions (Roth 401k/IRA, 529, Child Accounts, ESPP)
   const postTaxVal = val(res.postTaxContributionsBiweekly);
-  if (postTaxVal > 0) {
+  if (inputs.includePostTaxInSankey && postTaxVal > 0) {
     nodes.push({
       id: 'postTax',
-      name: 'Post-Tax & Child Allocations',
+      name: 'Post-Tax Accounts (Roth, 529, Child, ESPP)',
       category: 'postTax',
       valueBiweekly: res.postTaxContributionsBiweekly,
       valueAnnual: res.postTaxContributionsAnnual,
@@ -833,20 +867,23 @@ export function generateSankeyData(
 }
 
 export function getMaximizedInputs(current: UserFinancialInputs): UserFinancialInputs {
+  const taxLimits = getTaxLimitsForYear(current.taxYear || 2026);
   const grossBiweekly = current.grossSalary;
   const max401kAnnual = current.age >= 50
-    ? TAX_LIMITS_2026.TRADITIONAL_401K_MAX + TAX_LIMITS_2026.TRADITIONAL_401K_CATCHUP
-    : TAX_LIMITS_2026.TRADITIONAL_401K_MAX;
+    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
+    : taxLimits.TRADITIONAL_401K_MAX;
   const biweekly401k = Math.round((max401kAnnual / 26) * 100) / 100;
 
-  const maxHsaAnnual = current.hsaCoverage === 'family'
-    ? TAX_LIMITS_2026.HSA_FAMILY_MAX + (current.age >= 55 ? TAX_LIMITS_2026.HSA_CATCHUP : 0)
-    : TAX_LIMITS_2026.HSA_SINGLE_MAX + (current.age >= 55 ? TAX_LIMITS_2026.HSA_CATCHUP : 0);
-  const biweeklyHsa = Math.round((maxHsaAnnual / 26) * 100) / 100;
+  const employerHsaAnnual = current.employerHsaAnnual || 0;
+  const maxHsaStatutoryAnnual = current.hsaCoverage === 'family'
+    ? taxLimits.HSA_FAMILY_MAX + (current.age >= 55 ? taxLimits.HSA_CATCHUP : 0)
+    : taxLimits.HSA_SINGLE_MAX + (current.age >= 55 ? taxLimits.HSA_CATCHUP : 0);
+  const maxEmployeeHsaAnnual = Math.max(0, maxHsaStatutoryAnnual - employerHsaAnnual);
+  const biweeklyHsa = Math.round((maxEmployeeHsaAnnual / 26) * 100) / 100;
 
   const maxIraAnnual = current.age >= 50
-    ? TAX_LIMITS_2026.IRA_MAX + TAX_LIMITS_2026.IRA_CATCHUP
-    : TAX_LIMITS_2026.IRA_MAX;
+    ? taxLimits.IRA_MAX + taxLimits.IRA_CATCHUP
+    : taxLimits.IRA_MAX;
   const biweeklyIra = Math.round((maxIraAnnual / 26) * 100) / 100;
 
   return {

@@ -25,12 +25,14 @@ export interface UserFinancialInputs {
   state: string; // State code e.g. "CA", "NY", "TX"
   dependents: number;
   age: number;
+  taxYear?: number; // e.g. 2024, 2025, 2026, 2027
 
   // Pre-tax account elections
   traditional401k: number;
   traditional401kIsPercent: boolean;
   hsa: number; // biweekly dollar
   hsaCoverage: 'single' | 'family';
+  employerHsaAnnual?: number; // annual employer HSA contribution/seed (e.g. $850 single, $1,700 family)
   fsa: number; // biweekly dollar
 
   // Post-tax account elections
@@ -57,6 +59,7 @@ export interface UserFinancialInputs {
 
   // Sankey controls
   dissectTaxesInSankey: boolean;
+  includePostTaxInSankey?: boolean;
 }
 
 export interface TaxBreakdownResult {
@@ -74,6 +77,8 @@ export interface TaxBreakdownResult {
   // Pre-tax
   preTax401kBiweekly: number;
   hsaBiweekly: number;
+  employerHsaBiweekly: number;
+  employerHsaAnnual: number;
   fsaBiweekly: number;
   preTaxDeductionsBiweekly: number;
   preTaxDeductionsAnnual: number;
@@ -108,9 +113,11 @@ export interface TaxBreakdownResult {
   postTaxContributionsBiweekly: number;
   postTaxContributionsAnnual: number;
 
-  // Take home
+  // Take home (Default Net Income = Gross - PreTax 401k/HSA - Taxes)
   netTakeHomePayBiweekly: number;
   netTakeHomePayAnnual: number;
+  netTakeHomeAfterPostTaxBiweekly: number;
+  netTakeHomeAfterPostTaxAnnual: number;
 
   // Annual Bonus Breakdown
   grossAnnualBonus: number;

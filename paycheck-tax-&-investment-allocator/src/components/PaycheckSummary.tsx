@@ -33,7 +33,7 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Net Take-Home Paycheck</h3>
-            <p className="text-xs text-slate-400">Exact amount remaining after taxes and all investment elections</p>
+            <p className="text-xs text-slate-400">Net Income = Gross Income − Pre-Tax 401(k) − HSA − Taxes</p>
           </div>
         </div>
         <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-lg bg-green-950 text-green-300 border border-green-800/60">
@@ -56,6 +56,12 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
             <span>{taxResult.percentages.takeHome.toFixed(1)}% of Gross</span>
             <span className="font-mono text-slate-400">${(taxResult.netTakeHomePayAnnual).toLocaleString()}/yr</span>
           </div>
+          {taxResult.postTaxContributionsBiweekly > 0 && (
+            <div className="mt-1.5 pt-1 border-t border-green-900/40 text-[10px] text-slate-400 flex items-center justify-between font-mono">
+              <span>After Post-Tax:</span>
+              <span className="text-emerald-300 font-bold">{fmt(taxResult.netTakeHomeAfterPostTaxBiweekly)}</span>
+            </div>
+          )}
         </div>
 
         {/* Total Wealth Invested */}
