@@ -15,6 +15,7 @@ import { InvestmentControls } from './components/InvestmentControls';
 import { PaycheckSummary } from './components/PaycheckSummary';
 import { ChildWealthProjection } from './components/ChildWealthProjection';
 import { PaycheckScheduleTable } from './components/PaycheckScheduleTable';
+import { Step2RentVsBuyCTA } from './components/Step2RentVsBuyCTA';
 import { TaxTipsModal } from './components/TaxTipsModal';
 import { Sparkles, PieChart, Landmark, TrendingUp, Shield, Wallet, Baby, Calendar } from 'lucide-react';
 
@@ -251,6 +252,8 @@ export default function App() {
             </div>
 
             <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
+
+            <Step2RentVsBuyCTA inputs={inputs} taxResult={taxResult} />
           </div>
         )}
 
