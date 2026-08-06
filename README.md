@@ -8,7 +8,7 @@ I would like to thank [Jack](https://github.com/JiaKunUp) for his amazing work o
 
 This repository supports an automated, zero-config multi-microsite architecture:
 - **Root Site**: Jekyll powers the main portfolio landing page, blog, and navigation.
-- **Microsites**: Any root-level subfolder containing a `package.json` file is recognized as a microsite (e.g. `child-financial-investment-planner`, `paycheck-tax-&-investment-allocator`).
+- **Microsites**: Any root-level subfolder containing a `package.json` file is recognized as a microsite (e.g. `child-financial-investment-planner`, `paycheck-tax-investment-allocator`).
 
 ### Adding a New Microsite
 1. Create a subfolder with your Vite/React application (e.g., `my-new-tool`).
