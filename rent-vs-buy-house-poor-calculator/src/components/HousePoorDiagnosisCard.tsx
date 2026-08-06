@@ -209,6 +209,22 @@ export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ 
         </div>
       </div>
 
+      {/* Life-First Philosophy Banner */}
+      <div className="bg-slate-950 border border-amber-800/40 p-4 rounded-xl space-y-2">
+        <div className="flex items-center gap-2 text-amber-400 font-bold text-xs">
+          <span className="text-base">💡</span>
+          <span className="uppercase tracking-wider">The Life-First Philosophy: Modest Home vs "Dream Home"</span>
+        </div>
+        <p className="text-xs text-slate-300 leading-relaxed italic">
+          "Never restrict your quality of life, retirement savings, or child's future just to buy a house. It is 100% fine to buy a modest, smaller house (or rent) in ZIP {inputs.zipCode || '95113'} if it preserves your peace of mind and keeps your 401(k) and child 529 fully funded."
+        </p>
+        {analysis.verdictStatus === 'rent_recommended' && (
+          <div className="pt-2 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 font-sans">
+            <span>🏡 <strong>Right-Sized Actionable Choice:</strong> Scale down from {fmt(inputs.targetHomePrice)} to ~{fmt(analysis.maxSafeHomePrice)} (e.g. 3-bed / 1500 sqft instead of a 4-bed dream house) or rent to preserve your $1,500/mo cash cushion!</span>
+          </div>
+        )}
+      </div>
+
     </div>
   );
 };
