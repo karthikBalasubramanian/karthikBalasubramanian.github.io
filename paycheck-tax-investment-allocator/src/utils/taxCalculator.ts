@@ -521,26 +521,27 @@ export function generatePaycheckSchedule(
     ytdHsaTotal += hsa;
     const isHsaCapHit = (ytdHsaTotal >= maxHsaStatutoryAnnual);
 
-    // 4. FSA
+    // 4. FSA & Pre-Tax bases
     const fsa = inputs.fsa || 0;
     const totalPreTax = employee401k + hsa + fsa;
-    const taxableGross = Math.max(0, totalGross - totalPreTax);
+    const taxableGross = Math.max(0, totalGross - totalPreTax); // Income Tax Base (Fed & State)
+    const ficaTaxableGross = Math.max(0, totalGross - hsa - fsa); // FICA & SDI Base (401k does NOT lower FICA)
 
-    // 5. Taxes for Pay Period
+    // 5. Taxes for Pay Period (IRS FICA Rules)
     const remainingSSCap = Math.max(0, taxLimits.SOCIAL_SECURITY_WAGE_CAP - ytdSocialSecurityWages);
-    const ssSubject = Math.min(taxableGross, remainingSSCap);
+    const ssSubject = Math.min(ficaTaxableGross, remainingSSCap);
     const socialSecurity = ssSubject * taxLimits.SOCIAL_SECURITY_RATE;
 
-    if (ytdSocialSecurityWages < taxLimits.SOCIAL_SECURITY_WAGE_CAP && (ytdSocialSecurityWages + taxableGross >= taxLimits.SOCIAL_SECURITY_WAGE_CAP)) {
+    if (ytdSocialSecurityWages < taxLimits.SOCIAL_SECURITY_WAGE_CAP && (ytdSocialSecurityWages + ficaTaxableGross >= taxLimits.SOCIAL_SECURITY_WAGE_CAP)) {
       maxOutPayPeriodSS = p;
     }
-    ytdSocialSecurityWages += taxableGross;
+    ytdSocialSecurityWages += ficaTaxableGross;
     const isSocialSecurityCapHit = (ytdSocialSecurityWages >= taxLimits.SOCIAL_SECURITY_WAGE_CAP);
 
-    const medicare = taxableGross * taxLimits.MEDICARE_RATE;
+    const medicare = ficaTaxableGross * taxLimits.MEDICARE_RATE;
     let sdi = 0;
     if (stateInfo.hasSDI) {
-      sdi = taxableGross * stateInfo.sdiRate;
+      sdi = ficaTaxableGross * stateInfo.sdiRate;
     }
 
     const fedSalaryTax = taxResultWithoutSchedule.federalTaxBiweekly;
