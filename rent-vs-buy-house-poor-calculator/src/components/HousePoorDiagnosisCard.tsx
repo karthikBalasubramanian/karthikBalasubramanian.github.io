@@ -239,10 +239,10 @@ export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ 
           </div>
           <div>
             <span className="text-[10px] uppercase font-extrabold text-indigo-400 block tracking-wider">
-              Recommended Maximum Safe Home Purchase Price
+              Recommended Maximum Safe Home Purchase Price Today
             </span>
             <p className="text-xs text-slate-300">
-              The highest home price in ZIP {inputs.zipCode || '95113'} you can buy while keeping a $1,500/mo cash buffer.
+              The highest home price in ZIP {inputs.zipCode || '95113'} you can buy today while maintaining your {fmt(bufferTarget)}/mo rainy day buffer.
             </p>
           </div>
         </div>
@@ -266,9 +266,9 @@ export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ 
         <p className="text-xs text-slate-300 leading-relaxed italic">
           "Never restrict your quality of life, retirement savings, or child's future just to buy a house. It is 100% fine to buy a modest, smaller house (or rent) in ZIP {inputs.zipCode || '95113'} if it preserves your peace of mind and keeps your 401(k) and child 529 fully funded."
         </p>
-        {analysis.verdictStatus === 'rent_recommended' && (
-          <div className="pt-2 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 font-sans">
-            <span>🏡 <strong>Right-Sized Actionable Choice:</strong> Scale down from {fmt(inputs.targetHomePrice)} to ~{fmt(analysis.maxSafeHomePrice)} (e.g. 3-bed / 1500 sqft instead of a 4-bed dream house) or rent to preserve your $1,500/mo cash cushion!</span>
+        {!analysis.isReadyToBuyToday && (
+          <div className="pt-2 text-xs font-semibold text-emerald-300 flex items-center gap-1.5 font-sans bg-emerald-950/40 p-2.5 rounded-lg border border-emerald-800/50">
+            <span>🏡 <strong>Right-Sized Actionable Choice:</strong> Scale down from {fmt(inputs.targetHomePrice)} to ~{fmt(analysis.maxSafeHomePrice)} (e.g. 3-bed / 1500 sqft instead of a larger dream home) or rent today to preserve your {fmt(bufferTarget)}/mo rainy day cushion!</span>
           </div>
         )}
       </div>
