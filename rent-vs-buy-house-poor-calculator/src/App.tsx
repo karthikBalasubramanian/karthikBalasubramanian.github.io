@@ -31,7 +31,9 @@ export default function App() {
     loanTermYears: 30,
     propertyTaxRate: 1.25,
     homeInsuranceAnnual: 3800,
-    hoaMonthly: 150,
+    hasHoa: false,
+    hoaMonthly: 0,
+    includeMaintenanceInPiti: true,
     maintenancePercentAnnual: 1.0,
 
     lifestyle: {

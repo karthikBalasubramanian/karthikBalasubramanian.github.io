@@ -158,28 +158,43 @@ export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ 
           <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
             <span className="text-[10px] text-slate-400 font-sans block">Property Tax</span>
             <span className="font-bold text-rose-300">{fmt(mortgage.monthlyPropertyTax)}</span>
+            <span className="text-[9px] text-slate-500 font-sans block">Escrow Paid</span>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
             <span className="text-[10px] text-slate-400 font-sans block">Home Insurance</span>
             <span className="font-bold text-cyan-300">{fmt(mortgage.monthlyInsurance)}</span>
+            <span className="text-[9px] text-slate-500 font-sans block">Escrow Paid</span>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
             <span className="text-[10px] text-slate-400 font-sans block">PMI</span>
             <span className="font-bold text-purple-300">{fmt(mortgage.monthlyPmi)}</span>
+            <span className="text-[9px] text-slate-500 font-sans block">{mortgage.monthlyPmi > 0 ? 'Escrow Paid' : 'None ($0)'}</span>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
             <span className="text-[10px] text-slate-400 font-sans block">HOA Fee</span>
             <span className="font-bold text-amber-300">{fmt(mortgage.monthlyHoa)}</span>
+            <span className="text-[9px] text-slate-500 font-sans block">Direct Pay</span>
           </div>
 
           <div className="bg-slate-900 border border-slate-800 p-2.5 rounded-lg">
             <span className="text-[10px] text-slate-400 font-sans block">Maintenance (1%)</span>
             <span className="font-bold text-teal-300">{fmt(mortgage.monthlyMaintenance)}</span>
+            <span className="text-[9px] text-slate-500 font-sans block">Out-of-Pocket</span>
           </div>
 
+        </div>
+
+        {/* Escrow vs Out-of-Pocket Maintenance Reserve Note */}
+        <div className="bg-slate-900/60 p-2.5 rounded-lg border border-slate-800 text-[11px] text-slate-400 flex items-center justify-between flex-wrap gap-2 font-sans">
+          <span>
+            🏛️ <strong>Escrow Account Notice:</strong> Escrow automatically collects <strong>Property Taxes</strong> ({fmt(mortgage.monthlyPropertyTax)}/mo) and <strong>Home Insurance</strong> ({fmt(mortgage.monthlyInsurance)}/mo).
+          </span>
+          <span className="text-teal-300">
+            🛠️ <strong>Maintenance Fund ({fmt(mortgage.monthlyMaintenance)}/mo):</strong> Saved out-of-pocket (NOT in Escrow) for roof/HVAC repairs.
+          </span>
         </div>
       </div>
 

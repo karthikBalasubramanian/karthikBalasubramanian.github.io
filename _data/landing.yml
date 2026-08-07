@@ -1,14 +1,20 @@
-# index page sections
-- id: 'child-financial-planning'
-  i18n: 'nav.child_financial_planning'
-  name: 'Child Financial Planner'
-  tpl: 'child_financial_planning.html'
-  css: 'gray-section'
-
+# index page sections (Personal Wealth Operating System Roadmap)
 - id: 'paycheck-tax-allocator'
   i18n: 'nav.paycheck_tax_allocator'
-  name: 'Paycheck Tax Allocator'
+  name: 'Step 1: Paycheck Allocator'
   tpl: 'paycheck_tax_allocator.html'
+  css: ''
+
+- id: 'rent-vs-buy-calculator'
+  i18n: 'nav.rent_vs_buy_calculator'
+  name: 'Step 2: Rent vs Buy'
+  tpl: 'rent_vs_buy_calculator.html'
+  css: 'gray-section'
+
+- id: 'child-financial-planning'
+  i18n: 'nav.child_financial_planning'
+  name: 'Step 3: Child Planner'
+  tpl: 'child_financial_planning.html'
   css: ''
 
 - id: 'blog'
@@ -16,10 +22,3 @@
   name: 'Blog'
   tpl: 'blog.html'
   css: 'testimonials navy-section'
-
-# - id: 'links'
-#   i18n: 'nav.link'
-#   name: 'Links'
-#   tpl: 'links.html'
-#   css: 'contact'
-

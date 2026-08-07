@@ -27,16 +27,22 @@ export function calculateMortgagePiti(inputs: UserHousingInputs): MortgageBreakd
   const annualInsurance = inputs.homeInsuranceAnnual || Math.round(homePrice * 0.0045);
   const monthlyInsurance = annualInsurance / 12;
 
-  // PMI (Private Mortgage Insurance if down payment < 20%)
+  // PMI (Private Mortgage Insurance if down payment < 20% or custom PMI override)
   let monthlyPmi = 0;
-  if (downPaymentPercent < 20) {
+  if (inputs.customPmiPercent !== undefined) {
+    monthlyPmi = (loanAmount * (inputs.customPmiPercent / 100)) / 12;
+  } else if (downPaymentPercent < 20) {
     monthlyPmi = (loanAmount * 0.0075) / 12; // ~0.75% annual PMI rate
   }
 
-  // HOA & Maintenance
-  const monthlyHoa = inputs.hoaMonthly || 0;
+  // HOA (Toggleable on/off)
+  const monthlyHoa = (inputs.hasHoa ?? true) ? (inputs.hoaMonthly || 0) : 0;
+
+  // Maintenance Reserve (Toggleable out-of-pocket reserve fund)
   const annualMaintenanceRate = inputs.maintenancePercentAnnual ?? 1.0;
-  const monthlyMaintenance = (homePrice * (annualMaintenanceRate / 100)) / 12;
+  const monthlyMaintenance = (inputs.includeMaintenanceInPiti ?? true)
+    ? (homePrice * (annualMaintenanceRate / 100)) / 12
+    : 0;
 
   const totalMonthlyPiti =
     monthlyPrincipalAndInterest +

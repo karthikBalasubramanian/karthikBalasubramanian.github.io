@@ -28,12 +28,15 @@ export interface UserHousingInputs {
   targetHomePrice: number;
   downPaymentPercent: number; // e.g. 20
   interestRate: number; // e.g. 6.5
-  loanTermYears: number; // default 30
+  loanTermYears: number; // 15, 20, or 30 (default 30)
   
   propertyTaxRate: number; // e.g. 1.25 for 1.25%
   homeInsuranceAnnual: number;
+  hasHoa: boolean; // default true/false
   hoaMonthly: number;
+  includeMaintenanceInPiti: boolean; // default true
   maintenancePercentAnnual: number; // e.g. 1.0%
+  customPmiPercent?: number; // optional custom PMI % override
 
   // Non-Housing Lifestyle Expenses
   lifestyle: LifestyleExpenses;
