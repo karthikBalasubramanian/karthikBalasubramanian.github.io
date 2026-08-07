@@ -210,30 +210,37 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   let bonusCompanyMatch = 0;
 
   if (grossAnnualBonus > 0) {
-    // 1. Bonus 401(k) Contribution (capped by remaining $24,500 annual IRS limit)
+    // Paycheck #4 in February receives the annual performance bonus.
+    // Prior to Paycheck #4, 3 regular paychecks have occurred.
+    const priorPaycheckCount = 3;
+    const prior401kContrib = rawPreTax401kBiweekly * priorPaycheckCount;
+    const priorHsaContrib = rawHsaBiweekly * priorPaycheckCount;
+    const priorEsppContrib = rawEsppBiweekly * priorPaycheckCount;
+
+    // 1. Bonus 401(k) Contribution (capped by remaining annual IRS limit at Paycheck #4)
     if (includeBonusIn401k) {
-      const remaining401kCapacity = Math.max(0, max401kAnnual - (rawPreTax401kBiweekly * 26));
+      const remaining401kCapacity = Math.max(0, max401kAnnual - prior401kContrib);
       const desiredBonus401k = grossAnnualBonus * (employee401kPercent / 100);
       bonus401kContribution = Math.min(desiredBonus401k, remaining401kCapacity);
 
       const eligibleMatchPercent = Math.min(employee401kPercent, companyMatchUpToPercent);
-      const remainingMatchCompCapacity = Math.max(0, taxLimits.COMPENSATION_LIMIT_401K - eligibleSalaryForMatchAnnual);
+      const remainingMatchCompCapacity = Math.max(0, taxLimits.COMPENSATION_LIMIT_401K - (eligibleSalaryForMatchAnnual * (priorPaycheckCount / 26)));
       const eligibleBonusForMatch = Math.min(grossAnnualBonus, remainingMatchCompCapacity);
 
       bonusCompanyMatch = eligibleBonusForMatch * (eligibleMatchPercent / 100) * (companyMatchPercent / 100);
     }
 
-    // 2. Bonus HSA Contribution (capped by remaining statutory HSA limit)
+    // 2. Bonus HSA Contribution (capped by remaining statutory HSA limit at Paycheck #4)
     if (includeBonusInHsa) {
-      const remainingHsaCapacity = Math.max(0, maxEmployeeHsaAnnual - (rawHsaBiweekly * 26));
-      const hsaPct = grossBiweekly > 0 ? (rawHsaBiweekly / grossBiweekly) : 0.02;
+      const remainingHsaCapacity = Math.max(0, maxEmployeeHsaAnnual - priorHsaContrib);
+      const hsaPct = grossBiweekly > 0 ? (rawHsaBiweekly / grossBiweekly) : 0;
       const desiredBonusHsa = grossAnnualBonus * hsaPct;
       bonusHsaContribution = Math.min(desiredBonusHsa, remainingHsaCapacity);
     }
 
-    // 3. Bonus ESPP Contribution (capped by remaining $21,250 annual payroll contribution limit)
+    // 3. Bonus ESPP Contribution (capped by remaining $21,250 annual payroll contribution limit at Paycheck #4)
     if (includeBonusInEspp && rawEsppPct > 0) {
-      const remainingEsppCapacity = Math.max(0, 21250 - (rawEsppBiweekly * 26));
+      const remainingEsppCapacity = Math.max(0, 21250 - priorEsppContrib);
       const desiredBonusEspp = grossAnnualBonus * (rawEsppPct / 100);
       bonusEsppContribution = Math.min(desiredBonusEspp, remainingEsppCapacity);
     }

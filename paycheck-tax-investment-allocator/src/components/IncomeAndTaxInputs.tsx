@@ -271,62 +271,62 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
             </div>
 
             {/* Annual Bonus Section */}
-            <div className="mt-4 pt-4 border-t border-slate-800/80 bg-gradient-to-r from-slate-950 via-amber-950/20 to-slate-950 rounded-xl p-4 border border-amber-900/30">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="mt-4 pt-4 border-t border-slate-800 bg-slate-950 rounded-xl p-4 border border-amber-500/40 shadow-xl space-y-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-800 pb-3">
                 <div className="flex items-center gap-2">
-                  <div className="p-1.5 rounded-lg bg-amber-950 text-amber-400 border border-amber-800/50">
-                    <Sparkles className="w-4 h-4" />
+                  <div className="p-2 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h3 className="text-xs font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
+                    <h3 className="text-xs sm:text-sm font-bold text-amber-300 uppercase tracking-wider flex items-center gap-2">
                       Annual One-Time Bonus
-                      <span className="text-[10px] font-semibold text-amber-200/80 bg-amber-900/50 px-2 py-0.5 rounded-full border border-amber-700/50">
+                      <span className="text-[10px] font-extrabold text-amber-200 bg-amber-950 px-2.5 py-0.5 rounded-full border border-amber-700/60 font-mono">
                         +${bonusVal.toLocaleString()} / year
                       </span>
                     </h3>
-                    <p className="text-[11px] text-slate-300">
+                    <p className="text-xs text-slate-300 font-medium">
                       Lump-sum performance bonus paid once a year (taxed at supplemental withholding rates)
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 flex-wrap">
                   <button
                     onClick={() => onChange({ annualBonusPercent: 15, annualBonusIsPercent: true })}
-                    className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
                       (inputs.annualBonusIsPercent ?? true) && inputs.annualBonusPercent === 15
-                        ? 'bg-amber-900 text-amber-200 border-amber-600'
-                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        ? 'bg-amber-600 text-white border-amber-400 shadow'
+                        : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
                     }`}
                   >
                     15% Target
                   </button>
                   <button
                     onClick={() => onChange({ annualBonusPercent: 20, annualBonusIsPercent: true })}
-                    className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
                       (inputs.annualBonusIsPercent ?? true) && inputs.annualBonusPercent === 20
-                        ? 'bg-amber-900 text-amber-200 border-amber-600'
-                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        ? 'bg-amber-600 text-white border-amber-400 shadow'
+                        : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
                     }`}
                   >
                     20%
                   </button>
                   <button
                     onClick={() => onChange({ annualBonusPercent: 10, annualBonusIsPercent: true })}
-                    className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
                       (inputs.annualBonusIsPercent ?? true) && inputs.annualBonusPercent === 10
-                        ? 'bg-amber-900 text-amber-200 border-amber-600'
-                        : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+                        ? 'bg-amber-600 text-white border-amber-400 shadow'
+                        : 'bg-slate-900 text-slate-300 border-slate-700 hover:bg-slate-800'
                     }`}
                   >
                     10%
                   </button>
                   <button
                     onClick={() => onChange({ annualBonusPercent: 0, annualBonusIsPercent: true })}
-                    className={`text-[10px] font-bold px-2 py-1 rounded border transition-all ${
+                    className={`text-[10px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
                       inputs.annualBonusPercent === 0
                         ? 'bg-slate-700 text-white border-slate-500'
-                        : 'bg-slate-800 text-slate-400 border-slate-700'
+                        : 'bg-slate-900 text-slate-400 border-slate-800'
                     }`}
                   >
                     0% (No Bonus)
@@ -334,9 +334,9 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 items-center">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 items-center">
                 <div>
-                  <label className="block text-[10px] font-semibold text-slate-400 mb-1">
+                  <label className="block text-[11px] font-bold text-slate-200 mb-1">
                     Bonus Amount ({inputs.annualBonusIsPercent ? '% of Gross Salary' : 'Fixed $'})
                   </label>
                   <div className="relative">
@@ -354,57 +354,57 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
                           onChange({ annualBonusAmount: val });
                         }
                       }}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg py-1.5 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
+                      className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-amber-500"
                     />
-                    <span className="absolute right-3 top-1.5 text-slate-500 text-xs font-bold">
+                    <span className="absolute right-3 top-2 text-slate-400 text-xs font-bold">
                       {inputs.annualBonusIsPercent ? '%' : '$'}
                     </span>
                   </div>
                 </div>
 
-                <div className="space-y-2 col-span-1 sm:col-span-2 pt-2 sm:pt-0">
-                  <div className="flex items-center gap-2">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                <div className="space-y-2.5 col-span-1 sm:col-span-2 pt-1">
+                  <div className="flex items-center gap-2.5">
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={inputs.includeBonusIn401k ?? true}
                         onChange={(e) => onChange({ includeBonusIn401k: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-amber-600"></div>
+                      <div className="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-amber-500"></div>
                     </label>
-                    <span className="text-[11px] font-semibold text-slate-300">
-                      Apply 401(k) % & Match to Bonus (capped at $24.5k limit)
+                    <span className="text-xs font-bold text-slate-100">
+                      Apply 401(k) % &amp; Match to Bonus <span className="text-amber-300 font-mono font-semibold">(capped at $24.5k limit at Paycheck #4)</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={inputs.includeBonusInHsa ?? false}
                         onChange={(e) => onChange({ includeBonusInHsa: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-teal-600"></div>
+                      <div className="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-teal-500"></div>
                     </label>
-                    <span className="text-[11px] font-semibold text-slate-300">
-                      Apply HSA to Bonus (capped at $8.75k / $4.4k limit)
+                    <span className="text-xs font-bold text-slate-100">
+                      Apply HSA to Bonus <span className="text-teal-300 font-mono font-semibold">(capped at statutory limit at Paycheck #4)</span>
                     </span>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <label className="relative inline-flex items-center cursor-pointer">
+                  <div className="flex items-center gap-2.5">
+                    <label className="relative inline-flex items-center cursor-pointer shrink-0">
                       <input
                         type="checkbox"
                         checked={inputs.includeBonusInEspp ?? false}
                         onChange={(e) => onChange({ includeBonusInEspp: e.target.checked })}
                         className="sr-only peer"
                       />
-                      <div className="w-7 h-4 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-indigo-600"></div>
+                      <div className="w-8 h-4.5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-3.5 after:w-3.5 after:transition-all peer-checked:bg-indigo-500"></div>
                     </label>
-                    <span className="text-[11px] font-semibold text-slate-300">
-                      Apply ESPP % to Bonus (capped at $21.25k limit)
+                    <span className="text-xs font-bold text-slate-100">
+                      Apply ESPP % to Bonus <span className="text-indigo-300 font-mono font-semibold">(capped at $21.25k limit at Paycheck #4)</span>
                     </span>
                   </div>
                 </div>
