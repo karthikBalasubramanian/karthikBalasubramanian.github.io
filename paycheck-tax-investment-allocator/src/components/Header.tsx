@@ -1,7 +1,7 @@
 import React from 'react';
 import { PresetProfile, PayFrequency } from '../types';
 import { FINANCIAL_PRESETS } from '../data/presets';
-import { Wallet, Sparkles, HelpCircle, RotateCcw } from 'lucide-react';
+import { Wallet, Sparkles, HelpCircle, RotateCcw, Home } from 'lucide-react';
 
 interface HeaderProps {
   activePresetId: string;
@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-none flex items-center gap-2">
-                <span>Paycheck Tax & Investment Allocator</span>
+                <span>Paycheck Tax &amp; Investment Allocator</span>
                 <span className="text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full">
                   Step 1 of 3
                 </span>
@@ -43,36 +43,46 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Stepper Navigation (3-Step Roadmap) */}
-          <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
-            
-            {/* Step 1 (Active) */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950 whitespace-nowrap">
-              <span className="w-4 h-4 rounded-full bg-white text-emerald-700 text-[10px] flex items-center justify-center font-extrabold">1</span>
-              <span>Paycheck Allocator</span>
+          {/* Stepper Navigation (3-Step Roadmap) & Home Button */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <a
+              href="https://karthikbalasubramanian.github.io/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
+              title="Return to Main Website Home Page"
+            >
+              <Home className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Main Site Home</span>
+            </a>
+
+            <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
+              {/* Step 1 (Active) */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950 whitespace-nowrap">
+                <span className="w-4 h-4 rounded-full bg-white text-emerald-700 text-[10px] flex items-center justify-center font-extrabold">1</span>
+                <span>Paycheck Allocator</span>
+              </div>
+
+              <span className="text-slate-700 font-bold">→</span>
+
+              {/* Step 2 */}
+              <a
+                href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
+                <span>Rent vs Buy</span>
+              </a>
+
+              <span className="text-slate-700 font-bold">→</span>
+
+              {/* Step 3 */}
+              <a
+                href="https://karthikbalasubramanian.github.io/child-financial-investment-planner/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">3</span>
+                <span>Child 529 Planner</span>
+              </a>
             </div>
-
-            <span className="text-slate-700 font-bold">→</span>
-
-            {/* Step 2 */}
-            <a
-              href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
-            >
-              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
-              <span>Rent vs Buy</span>
-            </a>
-
-            <span className="text-slate-700 font-bold">→</span>
-
-            {/* Step 3 */}
-            <a
-              href="https://karthikbalasubramanian.github.io/child-financial-investment-planner/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
-            >
-              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">3</span>
-              <span>Child 529 Planner</span>
-            </a>
           </div>
 
         </div>

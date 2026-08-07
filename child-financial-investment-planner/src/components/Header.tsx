@@ -12,6 +12,7 @@ import {
   Calendar,
   Calculator,
   Baby,
+  Home,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -63,40 +64,50 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </h1>
               <p className="text-xs text-slate-400 font-medium">
-                Personal Wealth Operating System • 18-Year 529, Custodial IRA & Trump Account Engine
+                Personal Wealth Operating System • 18-Year 529, Custodial IRA &amp; Trump Account Engine
               </p>
             </div>
           </div>
 
-          {/* Stepper Navigation (3-Step Roadmap) */}
-          <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
-            
-            {/* Step 1 */}
+          {/* Stepper Navigation (3-Step Roadmap) & Home Button */}
+          <div className="flex items-center gap-2 flex-wrap">
             <a
-              href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+              href="https://karthikbalasubramanian.github.io/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
+              title="Return to Main Website Home Page"
             >
-              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">1</span>
-              <span>Paycheck Allocator</span>
+              <Home className="w-3.5 h-3.5 text-teal-400" />
+              <span>Main Site Home</span>
             </a>
 
-            <span className="text-slate-700 font-bold">→</span>
+            <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
+              {/* Step 1 */}
+              <a
+                href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">1</span>
+                <span>Paycheck Allocator</span>
+              </a>
 
-            {/* Step 2 */}
-            <a
-              href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
-            >
-              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
-              <span>Rent vs Buy</span>
-            </a>
+              <span className="text-slate-700 font-bold">→</span>
 
-            <span className="text-slate-700 font-bold">→</span>
+              {/* Step 2 */}
+              <a
+                href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+              >
+                <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
+                <span>Rent vs Buy</span>
+              </a>
 
-            {/* Step 3 (Active) */}
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white font-bold shadow-md shadow-teal-950 whitespace-nowrap">
-              <span className="w-4 h-4 rounded-full bg-white text-teal-700 text-[10px] flex items-center justify-center font-extrabold">3</span>
-              <span>Child 529 Planner</span>
+              <span className="text-slate-700 font-bold">→</span>
+
+              {/* Step 3 (Active) */}
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white font-bold shadow-md shadow-teal-950 whitespace-nowrap">
+                <span className="w-4 h-4 rounded-full bg-white text-teal-700 text-[10px] flex items-center justify-center font-extrabold">3</span>
+                <span>Child 529 Planner</span>
+              </div>
             </div>
           </div>
 
