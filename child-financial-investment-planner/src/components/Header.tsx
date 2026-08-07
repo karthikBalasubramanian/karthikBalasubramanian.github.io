@@ -1,7 +1,6 @@
 import React from 'react';
 import { ParentInputs } from '../types';
 import { US_STATES } from '../data/accountData';
-import { GlobalNavbar } from './GlobalNavbar';
 import {
   GraduationCap,
   TrendingUp,
@@ -12,6 +11,7 @@ import {
   DollarSign,
   Calendar,
   Calculator,
+  Baby,
 } from 'lucide-react';
 
 interface HeaderProps {
@@ -46,112 +46,111 @@ export const Header: React.FC<HeaderProps> = ({
   ];
 
   return (
-    <>
-      <GlobalNavbar currentAppName="Child Financial Planner" />
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 sticky top-0 z-30 shadow-xs">
-        {/* Top Banner */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-5">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* App Title & Metadata */}
+    <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-xl text-slate-100">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          
+          {/* Logo & Brand Title */}
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-teal-600 to-indigo-600 flex items-center justify-center text-white font-black shadow-lg">
+              <Baby className="w-5 h-5 text-white" />
+            </div>
             <div>
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 bg-[#1ab394] rounded-lg flex items-center justify-center text-white font-bold text-xs shadow-xs">
-                  KB
-                </div>
-                <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  Financial Strategy Suite
+              <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-none flex items-center gap-2">
+                <span>Child Financial Investment Planner</span>
+                <span className="text-[10px] font-mono uppercase bg-teal-500/20 text-teal-300 border border-teal-500/30 px-2 py-0.5 rounded-full">
+                  Step 3 of 3
                 </span>
-                <span className="text-slate-300 dark:text-slate-700">|</span>
-                <span className="text-xs text-slate-500 dark:text-slate-400">529 &amp; Custodial Wealth Engine</span>
-              </div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight mt-1.5">
-                Child Financial Investment Planner
               </h1>
-              <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5">
-                Compare 529 Plans, Trump Accounts, Custodial IRAs &amp; UTMA accounts. Strategic tax-advantaged compounding.
+              <p className="text-xs text-slate-400 font-medium">
+                Personal Wealth Operating System • 18-Year 529, Custodial IRA & Trump Account Engine
               </p>
             </div>
+          </div>
 
-            {/* Quick Actions & State Selector */}
-            <div className="flex flex-wrap items-center gap-3">
-              {/* State Selector for 529 tax deductions */}
-              <div className="flex flex-col">
-                <label className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-1">
-                  State Tax Rule
-                </label>
-                <select
-                  id="state-tax-rule-select"
-                  value={inputs.state}
-                  onChange={(e) => onUpdateInputs({ state: e.target.value })}
-                  className="text-xs px-3 py-1.5 rounded-md border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 text-slate-900 dark:text-slate-100 focus:outline-hidden focus:ring-2 focus:ring-[#1ab394] font-medium"
-                >
-                  {US_STATES.map((st) => (
-                    <option key={st.code} value={st.code}>
-                      {st.name} ({st.code})
-                    </option>
-                  ))}
-                </select>
-              </div>
+          {/* Stepper Navigation (3-Step Roadmap) */}
+          <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
+            
+            {/* Step 1 */}
+            <a
+              href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+            >
+              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">1</span>
+              <span>Paycheck Allocator</span>
+            </a>
 
-              {/* Export CSV Button */}
-              <button
-                id="export-csv-button"
-                onClick={onExportCSV}
-                className="mt-4 sm:mt-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-md bg-[#1ab394] hover:bg-[#18a689] text-white font-medium text-xs transition-colors shadow-xs"
-              >
-                <Download className="w-3.5 h-3.5" />
-                Export CSV
-              </button>
+            <span className="text-slate-700 font-bold">→</span>
+
+            {/* Step 2 */}
+            <a
+              href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
+            >
+              <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
+              <span>Rent vs Buy</span>
+            </a>
+
+            <span className="text-slate-700 font-bold">→</span>
+
+            {/* Step 3 (Active) */}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 text-white font-bold shadow-md shadow-teal-950 whitespace-nowrap">
+              <span className="w-4 h-4 rounded-full bg-white text-teal-700 text-[10px] flex items-center justify-center font-extrabold">3</span>
+              <span>Child 529 Planner</span>
             </div>
           </div>
 
-          {/* Quick Highlights Stats Bar */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 pt-4 border-t border-slate-100 dark:border-slate-800/80">
-            <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
-                <DollarSign className="w-3.5 h-3.5 text-[#1ab394]" />
-                Monthly Budget
-              </div>
-              <div className="text-lg font-bold font-mono text-slate-900 dark:text-white mt-1">
-                {formatCurrency(inputs.monthlyContribution)} <span className="text-xs font-normal text-slate-400 font-sans">/mo</span>
-              </div>
-            </div>
-
-            <div className="bg-slate-50 dark:bg-slate-800/40 p-3 rounded-xl border border-slate-200/80 dark:border-slate-800">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-400 uppercase tracking-wider font-semibold">
-                <Calendar className="w-3.5 h-3.5 text-slate-600 dark:text-slate-400" />
-                Child Age
-              </div>
-              <div className="text-lg font-bold font-mono text-slate-900 dark:text-white mt-1">
-                {inputs.childCurrentAge} <span className="text-xs font-normal text-slate-400 font-sans">yrs old</span>
-              </div>
-            </div>
-
-            <div className="bg-[#1ab394]/10 dark:bg-[#1ab394]/20 p-3 rounded-xl border border-[#1ab394]/20">
-              <div className="flex items-center gap-1.5 text-[11px] text-[#1ab394] uppercase tracking-wider font-semibold">
-                <GraduationCap className="w-3.5 h-3.5" />
-                Projected at Age 18
-              </div>
-              <div className="text-lg font-bold font-mono text-slate-900 dark:text-emerald-300 mt-1">
-                {formatCurrency(projectedAge18Mod)}
-              </div>
-            </div>
-
-            <div className="bg-[#2f4050] p-3 rounded-xl border border-slate-700 text-white">
-              <div className="flex items-center gap-1.5 text-[11px] text-slate-300 uppercase tracking-wider font-semibold">
-                <TrendingUp className="w-3.5 h-3.5 text-[#1ab394]" />
-                IRA Value at Age 60
-              </div>
-              <div className="text-lg font-bold font-mono text-[#1ab394] mt-1">
-                {formatCurrency(projectedAge60Mod)}
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 border-t border-slate-200 dark:border-slate-800">
-          <nav className="flex space-x-1 sm:space-x-3 overflow-x-auto py-2 no-scrollbar">
+        {/* Quick Highlights Bar */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3 pt-3 border-t border-slate-800/80 text-xs">
+          
+          <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Monthly Budget</span>
+              <span className="text-sm font-bold font-mono text-emerald-300">
+                {formatCurrency(inputs.monthlyContribution)}<span className="text-[10px] font-normal text-slate-400">/mo</span>
+              </span>
+            </div>
+            <DollarSign className="w-4 h-4 text-emerald-400" />
+          </div>
+
+          <div className="bg-slate-950 border border-slate-800 p-2.5 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-slate-400 block">Child Age</span>
+              <span className="text-sm font-bold font-mono text-slate-200">
+                {inputs.childCurrentAge} <span className="text-[10px] font-normal text-slate-400">yrs old</span>
+              </span>
+            </div>
+            <Calendar className="w-4 h-4 text-amber-400" />
+          </div>
+
+          <div className="bg-slate-950 border border-teal-800/60 p-2.5 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-teal-400 block">Age 18 College Fund</span>
+              <span className="text-sm font-bold font-mono text-teal-300">
+                {formatCurrency(projectedAge18Mod)}
+              </span>
+            </div>
+            <GraduationCap className="w-4 h-4 text-teal-400" />
+          </div>
+
+          <div className="bg-slate-950 border border-indigo-800/60 p-2.5 rounded-xl flex items-center justify-between">
+            <div>
+              <span className="text-[10px] uppercase font-bold text-indigo-400 block">Age 60 IRA Retirement</span>
+              <span className="text-sm font-bold font-mono text-indigo-300">
+                {formatCurrency(projectedAge60Mod)}
+              </span>
+            </div>
+            <TrendingUp className="w-4 h-4 text-indigo-400" />
+          </div>
+
+        </div>
+
+        {/* Navigation Tabs Sub-bar & Actions */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mt-3 pt-2.5 border-t border-slate-800/80">
+          
+          <nav className="flex space-x-1 overflow-x-auto py-0.5 no-scrollbar">
             {navTabs.map((tab) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
@@ -160,20 +159,48 @@ export const Header: React.FC<HeaderProps> = ({
                   key={tab.id}
                   id={`nav-tab-${tab.id}`}
                   onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center gap-2 px-3.5 py-2 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
+                  className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-lg whitespace-nowrap transition-all ${
                     isActive
-                      ? 'bg-[#1ab394] text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-800'
+                      ? 'bg-teal-600 text-white font-bold shadow-sm'
+                      : 'text-slate-400 hover:text-white hover:bg-slate-950'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+                  <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-white' : 'text-slate-400'}`} />
                   {tab.label}
                 </button>
               );
             })}
           </nav>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {/* State Tax Rule Selector */}
+            <select
+              id="state-tax-rule-select"
+              value={inputs.state}
+              onChange={(e) => onUpdateInputs({ state: e.target.value })}
+              className="text-xs px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 focus:outline-none font-mono font-bold"
+            >
+              {US_STATES.map((st) => (
+                <option key={st.code} value={st.code}>
+                  {st.name} ({st.code})
+                </option>
+              ))}
+            </select>
+
+            {/* Export CSV Button */}
+            <button
+              id="export-csv-button"
+              onClick={onExportCSV}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-teal-600 hover:bg-teal-500 text-white font-bold text-xs transition-all shadow-md"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+
         </div>
-      </header>
-    </>
+
+      </div>
+    </header>
   );
 };
