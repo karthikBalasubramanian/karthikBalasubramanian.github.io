@@ -50,6 +50,8 @@ export interface UserFinancialInputs {
   // 401(k) Employer Match
   companyMatchPercent: number; // e.g. 100 for 100%
   companyMatchUpToPercent: number; // e.g. 6 for 6% of salary
+  employerMatchPercent?: number;
+  employerMatchCapPercent?: number;
 
   // Annual Bonus
   annualBonusPercent: number; // e.g. 15 for 15%

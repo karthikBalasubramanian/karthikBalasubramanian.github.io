@@ -76,19 +76,19 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
 
           <div className="flex items-center gap-1.5 flex-wrap">
             <button
-              onClick={() => onChange({ employerMatchPercent: 50, employerMatchCapPercent: 6 })}
+              onClick={() => onChange({ companyMatchPercent: 50, employerMatchPercent: 50, companyMatchUpToPercent: 6, employerMatchCapPercent: 6 })}
               className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
             >
               50% for 6%
             </button>
             <button
-              onClick={() => onChange({ employerMatchPercent: 100, employerMatchCapPercent: 6 })}
+              onClick={() => onChange({ companyMatchPercent: 100, employerMatchPercent: 100, companyMatchUpToPercent: 6, employerMatchCapPercent: 6 })}
               className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
             >
               100% for 6%
             </button>
             <button
-              onClick={() => onChange({ employerMatchPercent: 100, employerMatchCapPercent: 4 })}
+              onClick={() => onChange({ companyMatchPercent: 100, employerMatchPercent: 100, companyMatchUpToPercent: 4, employerMatchCapPercent: 4 })}
               className="text-[10px] font-bold px-2 py-1 rounded bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700"
             >
               100% for 4%
@@ -103,7 +103,10 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
               <input
                 type="number"
                 value={matchPercent}
-                onChange={(e) => onChange({ employerMatchPercent: Math.max(0, parseFloat(e.target.value) || 0) })}
+                onChange={(e) => {
+                  const val = Math.max(0, parseFloat(e.target.value) || 0);
+                  onChange({ companyMatchPercent: val, employerMatchPercent: val });
+                }}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-emerald-500"
               />
               <span className="absolute right-3 top-1.5 text-slate-500 font-bold">%</span>
@@ -116,7 +119,10 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
               <input
                 type="number"
                 value={matchCapPercent}
-                onChange={(e) => onChange({ employerMatchCapPercent: Math.max(0, parseFloat(e.target.value) || 0) })}
+                onChange={(e) => {
+                  const val = Math.max(0, parseFloat(e.target.value) || 0);
+                  onChange({ companyMatchUpToPercent: val, employerMatchCapPercent: val });
+                }}
                 className="w-full bg-slate-900 border border-slate-700 rounded-lg py-1.5 px-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-emerald-500"
               />
               <span className="absolute right-3 top-1.5 text-slate-500 font-bold">% of Salary</span>
