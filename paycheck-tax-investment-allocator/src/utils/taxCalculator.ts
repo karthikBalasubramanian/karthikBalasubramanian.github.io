@@ -567,8 +567,9 @@ export function generatePaycheckSchedule(
     const childAccounts = (inputs.custodialAccount || 0) + (inputs.trumpAccount || 0);
     const totalPostTax = rothIra + plan529 + childAccounts + esppContribution;
 
-    const netTakeHomePay = Math.max(0, totalGross - totalPreTax - totalTaxes);
-    const netTakeHomeAfterPostTax = Math.max(0, netTakeHomePay - totalPostTax);
+    // Net Take-Home Paycheck in Hand (Total Gross - PreTax 401k/HSA/FSA - Taxes - ESPP Payroll Deduction)
+    const netTakeHomePay = Math.max(0, totalGross - totalPreTax - totalTaxes - esppContribution);
+    const netTakeHomeAfterPostTax = Math.max(0, netTakeHomePay - (rothIra + plan529 + childAccounts));
 
     ytdGross += totalGross;
 
