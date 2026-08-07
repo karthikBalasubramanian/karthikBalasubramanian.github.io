@@ -148,7 +148,7 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
             <label className="text-xs font-bold text-purple-300">401(k) Traditional</label>
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
-                onClick={() => onChange({ traditional401kBiweekly: max401kBiweekly, traditional401kPercent: 0 })}
+                onClick={() => onChange({ traditional401k: max401kBiweekly, traditional401kBiweekly: max401kBiweekly, traditional401kIsPercent: false })}
                 className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-purple-900/50 text-purple-300 border border-purple-700/50 hover:bg-purple-800/60 transition-all"
               >
                 Max (${max401kBiweekly}/bw)
@@ -160,8 +160,11 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
             <span className="absolute left-3 top-2 text-slate-500 font-bold">$</span>
             <input
               type="number"
-              value={inputs.traditional401kBiweekly || ''}
-              onChange={(e) => onChange({ traditional401kBiweekly: Math.max(0, parseFloat(e.target.value) || 0) })}
+              value={inputs.traditional401k ?? inputs.traditional401kBiweekly ?? ''}
+              onChange={(e) => {
+                const val = Math.max(0, parseFloat(e.target.value) || 0);
+                onChange({ traditional401k: val, traditional401kBiweekly: val, traditional401kIsPercent: false });
+              }}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-7 pr-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-purple-500"
               placeholder="Biweekly $"
             />
@@ -177,7 +180,7 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
             <label className="text-xs font-bold text-teal-300">HSA Health Savings</label>
             <div className="flex items-center gap-1.5 flex-wrap">
               <button
-                onClick={() => onChange({ hsaBiweekly: maxHsaBiweekly })}
+                onClick={() => onChange({ hsa: maxHsaBiweekly, hsaBiweekly: maxHsaBiweekly })}
                 className="text-[10px] font-bold px-2.5 py-1 rounded-lg bg-teal-900/50 text-teal-300 border border-teal-700/50 hover:bg-teal-800/60 transition-all"
               >
                 Max (${maxHsaBiweekly}/bw)
@@ -197,8 +200,11 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
             <span className="absolute left-3 top-2 text-slate-500 font-bold">$</span>
             <input
               type="number"
-              value={inputs.hsaBiweekly || ''}
-              onChange={(e) => onChange({ hsaBiweekly: Math.max(0, parseFloat(e.target.value) || 0) })}
+              value={inputs.hsa ?? inputs.hsaBiweekly ?? ''}
+              onChange={(e) => {
+                const val = Math.max(0, parseFloat(e.target.value) || 0);
+                onChange({ hsa: val, hsaBiweekly: val });
+              }}
               className="w-full bg-slate-900 border border-slate-700 rounded-lg py-2 pl-7 pr-3 text-xs font-mono font-bold text-white focus:outline-none focus:border-teal-500"
               placeholder="Biweekly $"
             />
