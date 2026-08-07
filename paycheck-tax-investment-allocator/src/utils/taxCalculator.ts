@@ -991,12 +991,12 @@ export function generateSankeyData(
     }
   }
 
-  // Optional Post-Tax Investments & Deductions (Roth 401k/IRA, 529, Child Accounts, ESPP)
+  // Post-Tax Investments & Deductions (Roth 401k/IRA, 529, Child Accounts, ESPP)
   const postTaxVal = val(res.postTaxContributionsBiweekly);
-  if (inputs.includePostTaxInSankey && postTaxVal > 0) {
+  if (postTaxVal > 0) {
     nodes.push({
       id: 'postTax',
-      name: 'Post-Tax Accounts (Roth, 529, Child, ESPP)',
+      name: 'Post-Tax & Child Allocations',
       category: 'postTax',
       valueBiweekly: res.postTaxContributionsBiweekly,
       valueAnnual: res.postTaxContributionsAnnual,
@@ -1115,7 +1115,7 @@ export function generateSankeyData(
   // Net Take-Home Pay Node (AFTER Post-Tax Contributions & Allocations)
   const netTakeHomeAfterPostTaxBiweekly = Math.max(
     0,
-    res.netTakeHomePayBiweekly - (inputs.includePostTaxInSankey ? res.postTaxContributionsBiweekly : 0)
+    res.netTakeHomePayBiweekly - res.postTaxContributionsBiweekly
   );
   const takeHomeVal = val(netTakeHomeAfterPostTaxBiweekly);
   const takeHomeAnnual = netTakeHomeAfterPostTaxBiweekly * 26;
