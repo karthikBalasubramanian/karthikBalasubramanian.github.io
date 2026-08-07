@@ -11,7 +11,7 @@ import { Header } from './components/Header';
 import { IncomeAndTaxInputs } from './components/IncomeAndTaxInputs';
 import { SankeyDiagram } from './components/SankeyDiagram';
 import { TaxDissectionCard } from './components/TaxDissectionCard';
-import { InvestmentControls } from './components/InvestmentControls';
+import { PreTaxDeductionsCard, PostTaxAllocationsCard } from './components/InvestmentControls';
 import { PaycheckSummary } from './components/PaycheckSummary';
 import { ChildWealthProjection } from './components/ChildWealthProjection';
 import { PaycheckScheduleTable } from './components/PaycheckScheduleTable';
@@ -243,12 +243,20 @@ export default function App() {
             <PaycheckSummary inputs={inputs} taxResult={taxResult} />
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              <TaxDissectionCard
-                inputs={inputs}
-                taxResult={taxResult}
-                onToggleDissectInSankey={handleToggleDissectTaxes}
-              />
-              <InvestmentControls inputs={inputs} onChange={handleInputChange} />
+              {/* Left Column: Tax Dissection Breakdown + Post-Tax Accounts */}
+              <div className="space-y-6">
+                <TaxDissectionCard
+                  inputs={inputs}
+                  taxResult={taxResult}
+                  onToggleDissectInSankey={handleToggleDissectTaxes}
+                />
+                <PostTaxAllocationsCard inputs={inputs} onChange={handleInputChange} />
+              </div>
+
+              {/* Right Column: Pre-Tax Deductions */}
+              <div className="space-y-6">
+                <PreTaxDeductionsCard inputs={inputs} onChange={handleInputChange} />
+              </div>
             </div>
 
             <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
