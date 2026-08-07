@@ -215,7 +215,7 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     const priorPaycheckCount = 3;
     const prior401kContrib = rawPreTax401kBiweekly * priorPaycheckCount;
     const priorHsaContrib = rawHsaBiweekly * priorPaycheckCount;
-    const priorEsppContrib = rawEsppBiweekly * priorPaycheckCount;
+    const priorEsppContrib = esppContributionBiweekly * priorPaycheckCount;
 
     // 1. Bonus 401(k) Contribution (capped by remaining annual IRS limit at Paycheck #4)
     if (includeBonusIn401k) {
