@@ -72,6 +72,8 @@ export function generateRedfinMlsUrl(zipCode: string, beds: number, baths: numbe
 
 export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnalysis {
   const monthlyNetTakeHome = inputs.monthlyTakeHome || 9048;
+  const rainyDayBufferTarget = inputs.rainyDayBufferTarget ?? 500;
+  const salaryRaisePct = inputs.annualSalaryRaisePercent ?? 3.0;
 
   // 1. Total Non-Housing Lifestyle Expenses
   const l = inputs.lifestyle;
@@ -86,12 +88,13 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
 
   const surplusCashBeforeHousing = Math.max(0, monthlyNetTakeHome - totalLifestyleExpenses);
 
-  // 2. Buy Costs & Buffer
+  // 2. Buy Costs & Buffer Today (Year 0)
   const mortgage = calculateMortgagePiti(inputs);
   const monthlyBuyHousingCost = mortgage.totalMonthlyPiti;
   const leftoverCashBufferBuy = surplusCashBeforeHousing - monthlyBuyHousingCost;
   const housingNetPercentBuy = monthlyNetTakeHome > 0 ? (monthlyBuyHousingCost / monthlyNetTakeHome) * 100 : 0;
-  const isHousePoorBuy = leftoverCashBufferBuy < 500 || housingNetPercentBuy > 45;
+  const isReadyToBuyToday = leftoverCashBufferBuy >= rainyDayBufferTarget;
+  const isHousePoorBuy = leftoverCashBufferBuy < rainyDayBufferTarget || housingNetPercentBuy > 45;
 
   // 3. Rent Costs & Buffer
   const monthlyRentHousingCost = inputs.currentRent || 3000;
@@ -101,28 +104,84 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
   // Monthly Cash Flow Difference (Buying Cost vs Renting Cost)
   const monthlyRentSavings = monthlyBuyHousingCost - monthlyRentHousingCost;
 
-  // 4. Decision Verdict Logic
+  // 4. Multi-Year Homeownership Readiness Simulation (Years 0 to 7)
+  const currentYear = new Date().getFullYear();
+  const homePrice = inputs.targetHomePrice || 850000;
+  const baseDownPayment = mortgage.downPaymentAmount;
+  const monthlySavingsWhileRenting = inputs.monthlyDownPaymentSavings ?? Math.max(500, monthlyRentSavings > 0 ? monthlyRentSavings : 1000);
+
+  const readinessTimeline = [];
+  let readinessYear = 0;
+  let foundReadiness = false;
+
+  for (let yr = 0; yr <= 7; yr++) {
+    const simTakeHome = Math.round(monthlyNetTakeHome * Math.pow(1 + salaryRaisePct / 100, yr));
+    const extraDownPayment = yr * 12 * monthlySavingsWhileRenting;
+    const simTotalDownPayment = baseDownPayment + extraDownPayment;
+    const simLoanAmount = Math.max(0, homePrice - simTotalDownPayment);
+
+    // Recalculate PITI with reduced loan amount
+    const annualInterestRate = inputs.interestRate || 6.5;
+    const monthlyRate = annualInterestRate / 100 / 12;
+    const totalPayments = (inputs.loanTermYears || 30) * 12;
+    let simPi = 0;
+    if (monthlyRate > 0 && totalPayments > 0 && simLoanAmount > 0) {
+      simPi = (simLoanAmount * (monthlyRate * Math.pow(1 + monthlyRate, totalPayments))) / (Math.pow(1 + monthlyRate, totalPayments) - 1);
+    }
+    const zipData = lookupZipCode(inputs.zipCode, inputs.state);
+    const simTax = (homePrice * ((inputs.propertyTaxRate || zipData.propertyTaxRate) / 100)) / 12;
+    const simIns = (inputs.homeInsuranceAnnual || Math.round(homePrice * 0.0045)) / 12;
+    const simPmi = (simTotalDownPayment / homePrice) < 0.2 ? (simLoanAmount * 0.0075) / 12 : 0;
+    const simHoa = (inputs.hasHoa ?? true) ? (inputs.hoaMonthly || 0) : 0;
+    const simMaint = (inputs.includeMaintenanceInPiti ?? true) ? (homePrice * ((inputs.maintenancePercentAnnual ?? 1.0) / 100)) / 12 : 0;
+
+    const simPiti = Math.round(simPi + simTax + simIns + simPmi + simHoa + simMaint);
+    const simSurplus = Math.round(simTakeHome - totalLifestyleExpenses - simPiti);
+    const isReady = simSurplus >= rainyDayBufferTarget;
+
+    if (isReady && !foundReadiness) {
+      readinessYear = yr;
+      foundReadiness = true;
+    }
+
+    readinessTimeline.push({
+      year: yr,
+      calendarYear: currentYear + yr,
+      monthlyTakeHome: simTakeHome,
+      totalDownPaymentSaved: Math.round(simTotalDownPayment),
+      loanAmount: Math.round(simLoanAmount),
+      monthlyPiti: simPiti,
+      lifestyleExpenses: totalLifestyleExpenses,
+      monthlyCashflowSurplus: simSurplus,
+      isReadyToBuy: isReady,
+    });
+  }
+
+  if (!foundReadiness) {
+    readinessYear = 7;
+  }
+
+  // 5. Decision Verdict Logic
   let verdictStatus: 'buy' | 'caution' | 'rent_recommended' = 'buy';
   let verdictTitle = '';
   let verdictMessage = '';
 
-  if (isHousePoorBuy) {
-    verdictStatus = 'rent_recommended';
-    verdictTitle = '🚫 RECOMMENDATION: KEEP RENTING!';
-    verdictMessage = `Buying this home at $${Math.round(monthlyBuyHousingCost).toLocaleString()}/mo will leave you HOUSE POOR with only $${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo in cash buffer. Renting at $${Math.round(monthlyRentHousingCost).toLocaleString()}/mo saves you $${Math.round(monthlyRentSavings).toLocaleString()}/mo in cash flow, which you can safely invest!`;
-  } else if (leftoverCashBufferBuy < 1500 || housingNetPercentBuy > 35) {
-    verdictStatus = 'caution';
-    verdictTitle = '🟡 PROCEED WITH CAUTION';
-    verdictMessage = `Buying this home takes ${housingNetPercentBuy.toFixed(1)}% of your net paycheck, leaving $${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo in cash buffer. You can afford it, but unexpected home repairs may feel tight.`;
-  } else {
+  if (isReadyToBuyToday) {
     verdictStatus = 'buy';
-    verdictTitle = '🟢 GREAT FIT: YOU CAN SAFELY BUY THIS HOME!';
-    verdictMessage = `Housing consumes only ${housingNetPercentBuy.toFixed(1)}% of your net income, leaving a healthy $${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo leftover cash buffer for savings and lifestyle!`;
+    verdictTitle = '🟢 YOU ARE READY TO BUY TODAY!';
+    verdictMessage = `Buying this home leaves you with a healthy +$${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo cashflow surplus after all PITI and lifestyle expenses (exceeding your $${rainyDayBufferTarget}/mo rainy day buffer target)!`;
+  } else if (foundReadiness) {
+    verdictStatus = 'caution';
+    verdictTitle = `🎯 HUMBLE ROADMAP: READY TO BUY IN YEAR ${readinessYear} (${currentYear + readinessYear})`;
+    verdictMessage = `Buying today leaves only $${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo in cash buffer. But with 3% annual salary raises and saving while renting, you will be 100% ready to buy comfortably in Year ${readinessYear} (${currentYear + readinessYear}) with a +$${Math.round(readinessTimeline[readinessYear]?.monthlyCashflowSurplus || 0).toLocaleString()}/mo surplus!`;
+  } else {
+    verdictStatus = 'rent_recommended';
+    verdictTitle = '🏠 RENT TODAY & BUILD DOWN PAYMENT';
+    verdictMessage = `Buying today leaves your monthly cashflow tight ($${Math.round(leftoverCashBufferBuy).toLocaleString()}/mo buffer). We recommend renting today while accumulating a larger down payment to reach comfortable ownership!`;
   }
 
-  // 5. Max Safe Purchase Price calculation (where PITI = Surplus Cash - $1,500 safety buffer)
-  const targetMaxMonthlyPiti = Math.max(1000, surplusCashBeforeHousing - 1500);
-  // Estimate max price using simple inverse ratio
+  // 6. Max Safe Purchase Price calculation (where PITI = Surplus Cash - rainyDayBufferTarget)
+  const targetMaxMonthlyPiti = Math.max(1000, surplusCashBeforeHousing - rainyDayBufferTarget);
   const maxSafeHomePrice = Math.round((inputs.targetHomePrice || 850000) * (targetMaxMonthlyPiti / Math.max(1, monthlyBuyHousingCost)));
 
   const mlsSearchUrl = generateRedfinMlsUrl(
@@ -136,6 +195,7 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     monthlyNetTakeHome,
     totalLifestyleExpenses,
     surplusCashBeforeHousing,
+    rainyDayBufferTarget,
     monthlyBuyHousingCost,
     leftoverCashBufferBuy,
     housingNetPercentBuy,
@@ -147,6 +207,9 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     verdictStatus,
     verdictTitle,
     verdictMessage,
+    isReadyToBuyToday,
+    readinessYear,
+    readinessTimeline,
     maxSafeHomePrice,
     mlsSearchUrl,
   };

@@ -5,11 +5,13 @@ import { AlertTriangle, ShieldCheck, ShieldAlert, ExternalLink, Zap } from 'luci
 
 interface HousePoorDiagnosisCardProps {
   inputs: UserHousingInputs;
+  onChange: (updated: Partial<UserHousingInputs>) => void;
 }
 
-export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ inputs }) => {
+export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ inputs, onChange }) => {
   const analysis = analyzeHousePoorStatus(inputs);
   const mortgage = calculateMortgagePiti(inputs);
+  const bufferTarget = inputs.rainyDayBufferTarget ?? 500;
 
   const fmt = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
@@ -17,6 +19,37 @@ export const HousePoorDiagnosisCard: React.FC<HousePoorDiagnosisCardProps> = ({ 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-6">
       
+      {/* Top Controls: Rainy Day Buffer Target Selector */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950 p-3.5 rounded-xl border border-slate-800">
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-bold text-slate-200">Desired Rainy Day Monthly Buffer Target:</span>
+          <span className="text-[11px] text-slate-400 font-sans">(Cash leftover after PITI + Lifestyle)</span>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => onChange({ rainyDayBufferTarget: 500 })}
+            className={`px-3 py-1 text-xs font-extrabold rounded-lg border transition-all ${
+              bufferTarget === 500
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-500/30'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+          >
+            +$500 / month
+          </button>
+          <button
+            onClick={() => onChange({ rainyDayBufferTarget: 1000 })}
+            className={`px-3 py-1 text-xs font-extrabold rounded-lg border transition-all ${
+              bufferTarget === 1000
+                ? 'bg-emerald-600 text-white border-emerald-400 shadow-md ring-2 ring-emerald-500/30'
+                : 'bg-slate-800 text-slate-300 border-slate-700 hover:bg-slate-700'
+            }`}
+          >
+            +$1,000 / month
+          </button>
+        </div>
+      </div>
+
       {/* Dynamic Verdict Banner Header */}
       <div
         className={`p-5 rounded-2xl border transition-all ${

@@ -40,6 +40,23 @@ export interface UserHousingInputs {
 
   // Non-Housing Lifestyle Expenses
   lifestyle: LifestyleExpenses;
+
+  // Homeownership Readiness Levers
+  rainyDayBufferTarget?: number; // default $500 or $1000
+  annualSalaryRaisePercent?: number; // default 3%
+  monthlyDownPaymentSavings?: number; // monthly down payment savings while renting
+}
+
+export interface HomeReadinessPoint {
+  year: number;
+  calendarYear: number;
+  monthlyTakeHome: number;
+  totalDownPaymentSaved: number;
+  loanAmount: number;
+  monthlyPiti: number;
+  lifestyleExpenses: number;
+  monthlyCashflowSurplus: number; // Take Home - Lifestyle - PITI
+  isReadyToBuy: boolean;
 }
 
 export interface MortgageBreakdown {
@@ -59,6 +76,9 @@ export interface HousePoorAnalysis {
   totalLifestyleExpenses: number;
   surplusCashBeforeHousing: number;
 
+  // Rainy Day Buffer Target
+  rainyDayBufferTarget: number;
+
   // Buying metrics
   monthlyBuyHousingCost: number;
   leftoverCashBufferBuy: number;
@@ -77,6 +97,11 @@ export interface HousePoorAnalysis {
   verdictStatus: 'buy' | 'caution' | 'rent_recommended';
   verdictTitle: string;
   verdictMessage: string;
+
+  // Readiness Roadmap
+  isReadyToBuyToday: boolean;
+  readinessYear: number; // 0 = today, 1 = year 1, etc.
+  readinessTimeline: HomeReadinessPoint[];
 
   // Safe Max Home Price
   maxSafeHomePrice: number;

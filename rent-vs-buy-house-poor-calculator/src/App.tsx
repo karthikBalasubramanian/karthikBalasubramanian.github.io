@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import type { UserHousingInputs } from './types';
+import { analyzeHousePoorStatus } from './utils/calculator';
 import { Header } from './components/Header';
 import { NetTakeHomeBanner } from './components/NetTakeHomeBanner';
 import { LifestyleBudgetInputs } from './components/LifestyleBudgetInputs';
 import { PropertySearchInputs } from './components/PropertySearchInputs';
 import { HousePoorDiagnosisCard } from './components/HousePoorDiagnosisCard';
-import { RentVsBuyComparisonChart } from './components/RentVsBuyComparisonChart';
+import { HomeReadinessTimelineChart } from './components/HomeReadinessTimelineChart';
 import { Step3ChildPlannerCTA } from './components/Step3ChildPlannerCTA';
 
 export default function App() {
@@ -35,6 +36,9 @@ export default function App() {
     hoaMonthly: 0,
     includeMaintenanceInPiti: true,
     maintenancePercentAnnual: 1.0,
+
+    rainyDayBufferTarget: 500,
+    annualSalaryRaisePercent: 3.0,
 
     lifestyle: {
       groceries: 1000,
@@ -70,6 +74,8 @@ export default function App() {
     setInputs((prev) => ({ ...prev, ...updated }));
   };
 
+  const analysis = analyzeHousePoorStatus(inputs);
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 font-sans antialiased pb-20">
       {/* App Header with 3-Step Navigation */}
@@ -97,10 +103,16 @@ export default function App() {
         />
 
         {/* Primary Decision Engine: House Poor Diagnosis Card */}
-        <HousePoorDiagnosisCard inputs={inputs} />
+        <HousePoorDiagnosisCard
+          inputs={inputs}
+          onChange={handleInputChange}
+        />
 
-        {/* 10-Year Net Worth Trajectory Comparison Chart */}
-        <RentVsBuyComparisonChart inputs={inputs} />
+        {/* Homeownership Readiness & Cashflow Roadmap Chart */}
+        <HomeReadinessTimelineChart
+          inputs={inputs}
+          analysis={analysis}
+        />
 
         {/* Step 3 Cue Banner -> Child Financial Investment Planner */}
         <Step3ChildPlannerCTA inputs={inputs} />
