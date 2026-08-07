@@ -268,6 +268,55 @@ export const PaycheckScheduleTable: React.FC<PaycheckScheduleTableProps> = ({
               );
             })}
           </tbody>
+          <tfoot>
+            {(() => {
+              const totGross = periods.reduce((acc, p) => acc + p.totalGross, 0);
+              const tot401k = periods.reduce((acc, p) => acc + p.employee401k, 0);
+              const totMatch = periods.reduce((acc, p) => acc + p.employerMatch, 0);
+              const totHsa = periods.reduce((acc, p) => acc + p.hsa, 0);
+              const totTaxes = periods.reduce((acc, p) => acc + p.totalTaxes, 0);
+              const totEspp = periods.reduce((acc, p) => acc + p.esppContribution, 0);
+              const totNet = periods.reduce((acc, p) => acc + p.netTakeHomePay, 0);
+
+              return (
+                <tr className="bg-slate-950 border-t-2 border-purple-500/50 text-white font-extrabold text-xs">
+                  <td className="p-3 font-sans text-purple-400 uppercase tracking-wider font-extrabold">
+                    ANNUAL TOTAL (26 Paychecks)
+                  </td>
+                  <td className="p-3 text-right text-slate-100 font-bold">
+                    ${Math.round(totGross).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-purple-300 font-bold">
+                    -${Math.round(tot401k).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-emerald-400 font-bold">
+                    +${Math.round(totMatch).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-teal-300 font-bold">
+                    -${Math.round(totHsa).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-rose-400 font-bold">
+                    -${Math.round(totTaxes).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-indigo-300 font-bold">
+                    -${Math.round(totEspp).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right font-black text-green-400 text-sm bg-purple-950/60 border-l border-r border-purple-500/30">
+                    ${Math.round(totNet).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-purple-300 font-bold">
+                    ${Math.round(tot401k).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-teal-300 font-bold">
+                    ${Math.round(totHsa).toLocaleString()}
+                  </td>
+                  <td className="p-3 text-right text-indigo-300 font-bold">
+                    ${Math.round(totEspp).toLocaleString()}
+                  </td>
+                </tr>
+              );
+            })()}
+          </tfoot>
         </table>
       </div>
 
