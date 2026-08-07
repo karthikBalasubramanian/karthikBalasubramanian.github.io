@@ -92,8 +92,13 @@ export const TaxDissectionCard: React.FC<TaxDissectionCardProps> = ({
             <Landmark className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-base font-bold text-white">Tax Dissection Breakdown</h3>
-            <p className="text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-white">Tax Dissection Breakdown</h3>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-md bg-rose-950/80 text-rose-300 border border-rose-800/60">
+                Annualized Biweekly Avg
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
               Total Taxes: <span className="text-rose-400 font-bold font-mono">{fmt(taxResult.totalTaxesBiweekly)}</span> ({taxResult.percentages.taxes.toFixed(1)}% of gross)
             </p>
           </div>
