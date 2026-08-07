@@ -25,40 +25,41 @@
                     </span>
                 </div>
 
-                <!-- Swimlane Cards Grid -->
-                <div class="row" style="position: relative;">
+                <!-- Swimlane Cards Grid (Flexbox Row for 100% Equal Heights) -->
+                <div class="row" style="position: relative; display: flex; flex-wrap: wrap; align-items: stretch;">
 
                     <!-- Swimlane Connecting Line (Desktop) -->
                     <div class="hidden-xs hidden-sm" style="position: absolute; top: 40px; left: 15%; right: 15%; height: 4px; background: linear-gradient(90deg, #10b981 0%, #f43f5e 50%, #14b8a6 100%); z-index: 1; border-radius: 2px;"></div>
 
                     <!-- STEP 1 SWIMLANE LANE -->
-                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px;">
-                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
-                            
-                            <!-- Phase Badge -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                                <span style="background: #064e3b; color: #34d399; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #059669;">
-                                    STEP 1 • PAYCHECK
-                                </span>
-                                <span style="font-size: 24px; font-weight: 900; color: #10b981;">01</span>
+                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px; display: flex; flex-direction: column;">
+                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
+                            <div>
+                                <!-- Phase Badge -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                    <span style="background: #064e3b; color: #34d399; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #059669;">
+                                        STEP 1 • PAYCHECK
+                                    </span>
+                                    <span style="font-size: 24px; font-weight: 900; color: #10b981;">01</span>
+                                </div>
+
+                                <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
+                                    Net Take-Home & Wealth Allocator
+                                </h3>
+
+                                <!-- User Directive Box -->
+                                <div style="background: #0f172a; border-left: 3px solid #10b981; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
+                                    <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
+                                        <strong style="color: #34d399;">Goal:</strong> First, decide what liquid net pay you want in hand after maxing 401(k), HSA, & ESPP.
+                                    </p>
+                                </div>
+
+                                <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
+                                    <li>Dynamic Tax Dissection (Federal, State, FICA, SDI)</li>
+                                    <li>401(k) Match & ESPP $21.25k cap calculator</li>
+                                    <li>26-Paycheck Chronological Cash Flow Timeline</li>
+                                </ul>
                             </div>
-
-                            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
-                                Net Take-Home & Wealth Allocator
-                            </h3>
-
-                            <!-- User Directive Box -->
-                            <div style="background: #0f172a; border-left: 3px solid #10b981; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
-                                <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
-                                    <strong style="color: #34d399;">Goal:</strong> First, decide what liquid net pay you want in hand after maxing 401(k), HSA, & ESPP.
-                                </p>
-                            </div>
-
-                            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
-                                <li>Dynamic Tax Dissection (Federal, State, FICA, SDI)</li>
-                                <li>401(k) Match & ESPP $21.25k cap calculator</li>
-                                <li>26-Paycheck Chronological Cash Flow Timeline</li>
-                            </ul>
 
                             <a href="/paycheck-tax-investment-allocator/" class="btn btn-primary" style="width: 100%; font-weight: 700; border-radius: 10px; padding: 12px; background: linear-gradient(135deg, #059669 0%, #0d9488 100%); border: none; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);">
                                 Launch Paycheck Allocator &rarr;
@@ -67,33 +68,34 @@
                     </div>
 
                     <!-- STEP 2 SWIMLANE LANE -->
-                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px;">
-                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
-                            
-                            <!-- Phase Badge -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                                <span style="background: #881337; color: #fda4af; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #e11d48;">
-                                    STEP 2 • HOUSING
-                                </span>
-                                <span style="font-size: 24px; font-weight: 900; color: #f43f5e;">02</span>
+                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px; display: flex; flex-direction: column;">
+                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
+                            <div>
+                                <!-- Phase Badge -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                    <span style="background: #881337; color: #fda4af; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #e11d48;">
+                                        STEP 2 • HOUSING
+                                    </span>
+                                    <span style="font-size: 24px; font-weight: 900; color: #f43f5e;">02</span>
+                                </div>
+
+                                <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
+                                    Rent vs Buy & House Poor Tester
+                                </h3>
+
+                                <!-- User Directive Box -->
+                                <div style="background: #0f172a; border-left: 3px solid #f43f5e; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
+                                    <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
+                                        <strong style="color: #fda4af;">Goal:</strong> Next, input your non-housing lifestyle budget to see if buying leaves you house poor.
+                                    </p>
+                                </div>
+
+                                <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
+                                    <li>ZIP code property tax & PITI mortgage engine</li>
+                                    <li>Life-First manifesto & Right-Sized Home calculator</li>
+                                    <li>10-Year Net Worth Trajectory comparison</li>
+                                </ul>
                             </div>
-
-                            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
-                                Rent vs Buy & House Poor Tester
-                            </h3>
-
-                            <!-- User Directive Box -->
-                            <div style="background: #0f172a; border-left: 3px solid #f43f5e; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
-                                <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
-                                    <strong style="color: #fda4af;">Goal:</strong> Next, input your non-housing lifestyle budget to see if buying leaves you house poor.
-                                </p>
-                            </div>
-
-                            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
-                                <li>ZIP code property tax & PITI mortgage engine</li>
-                                <li>Life-First manifesto & Right-Sized Home calculator</li>
-                                <li>10-Year Net Worth Trajectory comparison</li>
-                            </ul>
 
                             <a href="/rent-vs-buy-house-poor-calculator/" class="btn btn-danger" style="width: 100%; font-weight: 700; border-radius: 10px; padding: 12px; background: linear-gradient(135deg, #e11d48 0%, #be123c 100%); border: none; box-shadow: 0 4px 12px rgba(225, 29, 72, 0.3);">
                                 Launch Rent vs Buy Tester &rarr;
@@ -102,33 +104,34 @@
                     </div>
 
                     <!-- STEP 3 SWIMLANE LANE -->
-                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px;">
-                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; height: 100%; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
-                            
-                            <!-- Phase Badge -->
-                            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                                <span style="background: #134e4a; color: #5eead4; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #0d9488;">
-                                    STEP 3 • FAMILY
-                                </span>
-                                <span style="font-size: 24px; font-weight: 900; color: #14b8a6;">03</span>
+                    <div class="col-md-4 col-sm-12" style="position: relative; z-index: 2; margin-bottom: 30px; display: flex; flex-direction: column;">
+                        <div class="swimlane-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 25px; display: flex; flex-direction: column; justify-content: space-between; flex: 1; transition: all 0.3s ease; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.4);">
+                            <div>
+                                <!-- Phase Badge -->
+                                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                                    <span style="background: #134e4a; color: #5eead4; font-weight: 800; font-size: 12px; padding: 4px 12px; border-radius: 20px; border: 1px solid #0d9488;">
+                                        STEP 3 • FAMILY
+                                    </span>
+                                    <span style="font-size: 24px; font-weight: 900; color: #14b8a6;">03</span>
+                                </div>
+
+                                <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
+                                    Child 529 & Wealth Growth Planner
+                                </h3>
+
+                                <!-- User Directive Box -->
+                                <div style="background: #0f172a; border-left: 3px solid #14b8a6; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
+                                    <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
+                                        <strong style="color: #5eead4;">Goal:</strong> Finally, project 18-year growth for your child's 529, UTMA, and Trump account.
+                                    </p>
+                                </div>
+
+                                <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
+                                    <li>State 529 tax deduction optimizer</li>
+                                    <li>Age 18 college fund vs Age 60 Roth Rollover</li>
+                                    <li>Custodial UTMA & Trump account compounding</li>
+                                </ul>
                             </div>
-
-                            <h3 style="font-size: 18px; font-weight: 800; color: #ffffff; margin-top: 0; margin-bottom: 12px;">
-                                Child 529 & Wealth Growth Planner
-                            </h3>
-
-                            <!-- User Directive Box -->
-                            <div style="background: #0f172a; border-left: 3px solid #14b8a6; padding: 12px 14px; border-radius: 6px; margin-bottom: 15px;">
-                                <p style="font-size: 13px; color: #cbd5e1; margin: 0; font-weight: 500; line-height: 1.5;">
-                                    <strong style="color: #5eead4;">Goal:</strong> Finally, project 18-year growth for your child's 529, UTMA, and Trump account.
-                                </p>
-                            </div>
-
-                            <ul style="font-size: 12px; color: #94a3b8; padding-left: 18px; margin-bottom: 25px; line-height: 1.8;">
-                                <li>State 529 tax deduction optimizer</li>
-                                <li>Age 18 college fund vs Age 60 Roth Rollover</li>
-                                <li>Custodial UTMA & Trump account compounding</li>
-                            </ul>
 
                             <a href="/child-financial-investment-planner/" class="btn btn-info" style="width: 100%; font-weight: 700; border-radius: 10px; padding: 12px; background: linear-gradient(135deg, #0d9488 0%, #0284c7 100%); border: none; box-shadow: 0 4px 12px rgba(13, 148, 136, 0.3);">
                                 Launch Child 529 Planner &rarr;
