@@ -261,9 +261,28 @@ export const PostTaxAllocationsCard: React.FC<InvestmentControlsProps> = ({ inpu
   const esppContrib = (biweeklyGross * esppPct) / 100;
   const discountFrac = (inputs.esppDiscountPercent || 15) / 100;
   const maxEsppAnnualPayroll = 25000 * (1 - discountFrac); // $21,250 for 15% discount
-  const annualEsppContribProjected = esppContrib * 26;
+
+  // Include Bonus ESPP Contribution in annual capping calculations
+  const annualGrossComp = inputs.payFrequency === 'annual' ? inputs.grossSalary : inputs.grossSalary * 26;
+  const annualBonusGross = inputs.annualBonusIsPercent
+    ? (annualGrossComp * (inputs.annualBonusPercent / 100))
+    : (inputs.annualBonusAmount || 0);
+
+  const bonusEsppContrib = (inputs.includeBonusInEspp ?? false) && esppPct > 0
+    ? Math.min(annualBonusGross * (esppPct / 100), maxEsppAnnualPayroll)
+    : 0;
+
+  const annualEsppContribProjected = (esppContrib * 26) + bonusEsppContrib;
   const isEsppAnnualCapped = annualEsppContribProjected > maxEsppAnnualPayroll;
-  const esppCapPaycheckCount = esppContrib > 0 ? Math.ceil(maxEsppAnnualPayroll / esppContrib) : 26;
+
+  // Paycheck count calculation taking bonus at Paycheck #4 into account
+  const prior3PaychecksEspp = esppContrib * 3;
+  const remainingCapAfterBonus = Math.max(0, maxEsppAnnualPayroll - (prior3PaychecksEspp + bonusEsppContrib));
+  const remainingPaychecksNeeded = esppContrib > 0 ? Math.ceil(remainingCapAfterBonus / esppContrib) : 26;
+  const finalEsppCapPaycheckCount = bonusEsppContrib > 0
+    ? Math.min(26, 4 + remainingPaychecksNeeded)
+    : (esppContrib > 0 ? Math.ceil(maxEsppAnnualPayroll / esppContrib) : 26);
+
   const esppGain = esppContrib > 0 ? esppContrib * (discountFrac / (1 - discountFrac)) : 0;
 
   return (
@@ -490,7 +509,7 @@ export const PostTaxAllocationsCard: React.FC<InvestmentControlsProps> = ({ inpu
                 <span className="font-bold font-mono text-white text-sm">${esppContrib.toFixed(0)}/bw ({esppPct}% of gross)</span>
                 {isEsppAnnualCapped && (
                   <span className="text-[10px] text-amber-400 font-bold">
-                    Reaches IRS $21,250/yr cap at Paycheck #{esppCapPaycheckCount}
+                    Reaches IRS $21,250/yr cap at Paycheck #{finalEsppCapPaycheckCount}
                   </span>
                 )}
               </div>
