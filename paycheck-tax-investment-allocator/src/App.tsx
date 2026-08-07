@@ -46,8 +46,10 @@ export default function App() {
     esppPercent: 10,
     esppDiscountPercent: 15,
 
-    companyMatchPercent: 100,
+    companyMatchPercent: 50,
     companyMatchUpToPercent: 6,
+    employerMatchPercent: 50,
+    employerMatchCapPercent: 6,
 
     // Annual Bonus
     annualBonusPercent: 15,

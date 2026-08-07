@@ -53,8 +53,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   }
 
   // 401(k) Employer Match Calculation with IRS §401(a)(17) Annual Compensation Limit
-  const companyMatchPercent = inputs.companyMatchPercent ?? inputs.employerMatchPercent ?? 50;
-  const companyMatchUpToPercent = inputs.companyMatchUpToPercent ?? inputs.employerMatchCapPercent ?? 6;
+  const companyMatchPercent = inputs.employerMatchPercent ?? inputs.companyMatchPercent ?? 50;
+  const companyMatchUpToPercent = inputs.employerMatchCapPercent ?? inputs.companyMatchUpToPercent ?? 6;
 
   const employee401kBiweekly = preTax401kBiweekly + roth401kBiweekly;
   const employee401kPercent = grossBiweekly > 0 ? (employee401kBiweekly / grossBiweekly) * 100 : 0;
