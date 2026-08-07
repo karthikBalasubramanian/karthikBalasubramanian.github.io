@@ -98,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
-                <span>Rent vs Buy</span>
+                <span>Lifestyle (Rent vs Buy)</span>
               </a>
 
               <span className="text-slate-700 font-bold">→</span>

@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
               {/* Step 2 (Active) */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold shadow-md shadow-rose-950 whitespace-nowrap">
                 <span className="w-4 h-4 rounded-full bg-white text-rose-700 text-[10px] flex items-center justify-center font-extrabold">2</span>
-                <span>Rent vs Buy (House Poor)</span>
+                <span>Lifestyle (Rent vs Buy)</span>
               </div>
 
               <span className="text-slate-700 font-bold">→</span>
