@@ -170,8 +170,7 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const custodialIraBiweekly = (inputs.custodialIra || 0);
 
   const rawEsppPct = Math.min(Math.max(0, inputs.esppPercent || 0), 25);
-  const rawEsppBiweekly = grossBiweekly * (rawEsppPct / 100);
-  const esppContributionBiweekly = Math.min(rawEsppBiweekly, 21250 / 26);
+  const esppContributionBiweekly = grossBiweekly * (rawEsppPct / 100);
   const esppDiscountGainBiweekly = esppContributionBiweekly * ((inputs.esppDiscountPercent || 15) / 100);
 
   const postTaxContributionsBiweekly =

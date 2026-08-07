@@ -32,14 +32,14 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
   const maxIraBiweekly = Math.round((maxIraAnnual / payPeriods) * 100) / 100;
 
   // ESPP Benefit calculation with 25% paycheck cap and $21,250 payroll limit ($25,000 IRS annual FMV purchase limit with 15% discount)
-  const biweeklyGross = inputs.grossSalary;
+  const biweeklyGross = inputs.payFrequency === 'annual' ? inputs.grossSalary / 26 : inputs.grossSalary;
   const esppPct = Math.min(Math.max(0, inputs.esppPercent || 0), 25);
-  const uncappedEsppContrib = (biweeklyGross * esppPct) / 100;
+  const esppContrib = (biweeklyGross * esppPct) / 100;
   const discountFrac = (inputs.esppDiscountPercent || 15) / 100;
   const maxEsppAnnualPayroll = 25000 * (1 - discountFrac); // $21,250 for 15% discount
-  const maxEsppBiweekly = maxEsppAnnualPayroll / payPeriods;
-  const esppContrib = Math.min(uncappedEsppContrib, maxEsppBiweekly);
-  const isEsppAnnualCapped = uncappedEsppContrib > maxEsppBiweekly;
+  const annualEsppContribProjected = esppContrib * 26;
+  const isEsppAnnualCapped = annualEsppContribProjected > maxEsppAnnualPayroll;
+  const esppCapPaycheckCount = esppContrib > 0 ? Math.ceil(maxEsppAnnualPayroll / esppContrib) : 26;
   const esppGain = esppContrib > 0 ? esppContrib * (discountFrac / (1 - discountFrac)) : 0;
 
   // Company Match Calculation with IRS §401(a)(17) Compensation Limit ($360,000 in 2026)
@@ -509,9 +509,11 @@ export const InvestmentControls: React.FC<InvestmentControlsProps> = ({ inputs, 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                 <div className="bg-slate-900 p-2.5 rounded-lg border border-slate-800 text-xs flex flex-col justify-center space-y-0.5">
                   <span className="text-slate-400 text-[10px]">Biweekly Contribution:</span>
-                  <span className="font-bold font-mono text-white text-sm">${esppContrib.toFixed(0)}/bw</span>
+                  <span className="font-bold font-mono text-white text-sm">${esppContrib.toFixed(0)}/bw ({esppPct}% of gross)</span>
                   {isEsppAnnualCapped && (
-                    <span className="text-[10px] text-amber-400 font-bold">Capped at IRS $21,250/yr limit</span>
+                    <span className="text-[10px] text-amber-400 font-bold">
+                      Reaches IRS $21,250/yr cap at Paycheck #{esppCapPaycheckCount}
+                    </span>
                   )}
                 </div>
 
