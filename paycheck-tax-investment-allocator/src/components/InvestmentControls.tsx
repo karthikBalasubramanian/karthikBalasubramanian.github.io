@@ -24,9 +24,16 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
   const maxEmployeeHsaAnnual = Math.max(0, maxHsaStatutoryAnnual - employerHsaAnnual);
   const maxHsaBiweekly = Math.round((maxEmployeeHsaAnnual / payPeriods) * 100) / 100;
 
+  const biweeklyGross = inputs.payFrequency === 'annual' ? inputs.grossSalary / 26 : inputs.grossSalary;
   const matchPercent = inputs.employerMatchPercent ?? 50;
   const matchCapPercent = inputs.employerMatchCapPercent ?? 6;
-  const employee401kPercent = inputs.traditional401kPercent || 0;
+
+  // Compute effective employee 401(k) % from either % or biweekly $ input
+  let employee401kPercent = inputs.traditional401kPercent || 0;
+  if (!employee401kPercent && inputs.traditional401kBiweekly && biweeklyGross > 0) {
+    employee401kPercent = (inputs.traditional401kBiweekly / biweeklyGross) * 100;
+  }
+
   const matchedPercent = Math.min(employee401kPercent, matchCapPercent);
 
   const annualGrossComp = inputs.payFrequency === 'annual' ? inputs.grossSalary : inputs.grossSalary * 26;
