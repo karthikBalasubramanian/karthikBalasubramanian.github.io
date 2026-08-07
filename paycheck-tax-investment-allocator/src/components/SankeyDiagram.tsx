@@ -76,19 +76,16 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
     return () => observer.disconnect();
   }, []);
 
-  const height = 480;
-  const isBiweekly = inputs.payFrequency !== 'annual';
-
-  // Format monetary values
-  const fmt = (val: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
-
   // Layout calculations with d3-sankey
-  const { nodes, links } = useMemo(() => {
+  const { nodes, links, height } = useMemo(() => {
     const raw = generateSankeyData(inputs, taxResult);
     if (!raw.nodes.length || !raw.links.length) {
-      return { nodes: [], links: [] };
+      return { nodes: [], links: [], height: 680 };
     }
+
+    const nodeCount = raw.nodes.length;
+    // Calculate generous dynamic height to eliminate vertical label smudging
+    const calcHeight = Math.max(700, nodeCount * 55);
 
     // Clone deep to avoid d3 mutating original
     const nodesCopy: CustomNode[] = raw.nodes.map((n) => ({ ...n }));
@@ -113,14 +110,14 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
       })
       .filter((l): l is NonNullable<typeof l> => l !== null) as unknown as CustomLink[];
 
-    const margin = { top: 25, right: 160, bottom: 25, left: 160 };
+    const margin = { top: 30, right: 185, bottom: 30, left: 180 };
 
     const sankeyGenerator = sankey<CustomNode, CustomLink>()
-      .nodeWidth(20)
-      .nodePadding(22)
+      .nodeWidth(22)
+      .nodePadding(28)
       .extent([
         [margin.left, margin.top],
-        [containerWidth - margin.right, height - margin.bottom],
+        [containerWidth - margin.right, calcHeight - margin.bottom],
       ]);
 
     try {
@@ -128,12 +125,16 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
         nodes: nodesCopy,
         links: mappedLinks,
       });
-      return { nodes: graph.nodes, links: graph.links };
+      return { nodes: graph.nodes, links: graph.links, height: calcHeight };
     } catch (e) {
       console.warn('Sankey layout error:', e);
-      return { nodes: [], links: [] };
+      return { nodes: [], links: [], height: calcHeight };
     }
   }, [inputs, taxResult, containerWidth]);
+
+  const isBiweekly = inputs.payFrequency !== 'annual';
+  const fmt = (val: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
   const handleMouseMove = (e: React.MouseEvent) => {
     if (!containerRef.current) return;
