@@ -8,7 +8,8 @@ interface Step2RentVsBuyCTAProps {
 }
 
 export const Step2RentVsBuyCTA: React.FC<Step2RentVsBuyCTAProps> = ({ inputs, taxResult }) => {
-  const monthlyNet = Math.round(taxResult.netTakeHomePayBiweekly * (26 / 12));
+  const annualNetTimeline = taxResult.schedule?.totalNetTakeHomeAnnual || (taxResult.netTakeHomePayBiweekly * 26);
+  const monthlyNet = Math.round(annualNetTimeline / 12);
   const fmt = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 

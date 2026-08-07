@@ -22,6 +22,10 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
     (taxResult.preTaxDeductionsBiweekly + taxResult.postTaxContributionsBiweekly) * mul;
   const totalInvestedPct = taxResult.percentages.preTax + taxResult.percentages.postTax;
 
+  const annualNetTotal = Math.round(taxResult.schedule?.totalNetTakeHomeAnnual || taxResult.netTakeHomePayAnnual);
+  const monthlyNetAverage = Math.round(annualNetTotal / 12);
+  const displayBiweeklyNet = taxResult.schedule?.earlyPhaseNetBiweekly || taxResult.netTakeHomePayBiweekly;
+
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl text-slate-100 space-y-5">
       
@@ -33,7 +37,7 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
           </div>
           <div>
             <h3 className="text-base font-bold text-white">Net Take-Home Paycheck</h3>
-            <p className="text-xs text-slate-400">Net Income = Gross Income − Pre-Tax 401(k) − HSA − Taxes</p>
+            <p className="text-xs text-slate-400">Net Cash in Hand = Gross Income − Pre-Tax Deductions − Taxes − ESPP</p>
           </div>
         </div>
         <span className="text-xs font-bold font-mono px-2.5 py-1 rounded-lg bg-green-950 text-green-300 border border-green-800/60">
@@ -48,19 +52,19 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
         <div className="bg-gradient-to-br from-green-950/80 via-slate-900 to-slate-950 border-2 border-green-500/50 rounded-2xl p-4 shadow-lg space-y-1 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="text-xs font-semibold text-green-300 uppercase tracking-wider">
-              Payroll Net Pay
+              Net Cash in Hand
             </span>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-900/60 text-green-200 border border-green-700/50">
-              Before Post-Tax
+              Paycheck #1
             </span>
           </div>
 
           <div className="text-2xl sm:text-3xl font-black font-mono text-green-400">
-            {fmt(taxResult.netTakeHomePayBiweekly)}
+            {fmt(displayBiweeklyNet)}
           </div>
           <div className="text-xs text-slate-300 flex items-center justify-between pt-1 border-t border-green-900/50">
-            <span>{taxResult.percentages.takeHome.toFixed(1)}% of Gross</span>
-            <span className="font-mono text-slate-400">${(taxResult.netTakeHomePayAnnual).toLocaleString()}/yr</span>
+            <span className="text-emerald-300 font-bold font-mono">${monthlyNetAverage.toLocaleString()}/mo avg</span>
+            <span className="font-mono text-slate-400">${annualNetTotal.toLocaleString()}/yr</span>
           </div>
 
           {taxResult.postTaxContributionsBiweekly > 0 ? (
