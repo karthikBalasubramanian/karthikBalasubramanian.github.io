@@ -242,23 +242,20 @@ export default function App() {
           <div className="space-y-6">
             <PaycheckSummary inputs={inputs} taxResult={taxResult} />
 
+            {/* Top Grid: Pre-Tax Deductions (Left) and Post-Tax Accounts (Right) Side-by-Side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-              {/* Left Column: Tax Dissection Breakdown + Post-Tax Accounts */}
-              <div className="space-y-6">
-                <TaxDissectionCard
-                  inputs={inputs}
-                  taxResult={taxResult}
-                  onToggleDissectInSankey={handleToggleDissectTaxes}
-                />
-                <PostTaxAllocationsCard inputs={inputs} onChange={handleInputChange} />
-              </div>
-
-              {/* Right Column: Pre-Tax Deductions */}
-              <div className="space-y-6">
-                <PreTaxDeductionsCard inputs={inputs} onChange={handleInputChange} />
-              </div>
+              <PreTaxDeductionsCard inputs={inputs} onChange={handleInputChange} />
+              <PostTaxAllocationsCard inputs={inputs} onChange={handleInputChange} />
             </div>
 
+            {/* Middle Section: Full-Width Horizontal Tax Dissection Breakdown */}
+            <TaxDissectionCard
+              inputs={inputs}
+              taxResult={taxResult}
+              onToggleDissectInSankey={handleToggleDissectTaxes}
+            />
+
+            {/* Bottom Section: 26-Paycheck Chronological Schedule Table */}
             <PaycheckScheduleTable inputs={inputs} taxResult={taxResult} onChange={handleInputChange} />
 
             <Step2RentVsBuyCTA inputs={inputs} taxResult={taxResult} />
