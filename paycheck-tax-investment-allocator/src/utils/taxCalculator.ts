@@ -506,10 +506,8 @@ export function generatePaycheckSchedule(
     ytd401kEmployee += employee401k;
     const is401kCapHit = (ytd401kEmployee >= max401kAnnual);
 
-    // 2. Employer Match
-    const matchPct = Math.min(taxResultWithoutSchedule.employee401kPercent, inputs.companyMatchUpToPercent);
-    const eligibleComp = Math.min(totalGross, taxLimits.COMPENSATION_LIMIT_401K / 26);
-    const employerMatch = eligibleComp * (matchPct / 100) * (inputs.companyMatchPercent / 100);
+    // 2. Employer Match (Uses exact company match computed for paycheck)
+    const employerMatch = taxResultWithoutSchedule.companyMatchBiweekly + (isBonusPeriod ? taxResultWithoutSchedule.bonusCompanyMatch : 0);
 
     // 3. HSA Contribution
     const remainingHsaCap = Math.max(0, maxHsaStatutoryAnnual - ytdHsaTotal);
@@ -1114,16 +1112,23 @@ export function generateSankeyData(
     }
   }
 
-  // Net Take-Home Pay Node
-  const takeHomeVal = val(res.netTakeHomePayBiweekly);
+  // Net Take-Home Pay Node (AFTER Post-Tax Contributions & Allocations)
+  const netTakeHomeAfterPostTaxBiweekly = Math.max(
+    0,
+    res.netTakeHomePayBiweekly - (inputs.includePostTaxInSankey ? res.postTaxContributionsBiweekly : 0)
+  );
+  const takeHomeVal = val(netTakeHomeAfterPostTaxBiweekly);
+  const takeHomeAnnual = netTakeHomeAfterPostTaxBiweekly * 26;
+  const takeHomePct = res.grossBiweekly > 0 ? (netTakeHomeAfterPostTaxBiweekly / res.grossBiweekly) * 100 : 0;
+
   if (takeHomeVal > 0) {
     nodes.push({
       id: 'takeHome',
-      name: 'Net Paycheck (Bank Account)',
+      name: 'Net Liquid Cash in Hand',
       category: 'takeHome',
-      valueBiweekly: res.netTakeHomePayBiweekly,
-      valueAnnual: res.netTakeHomePayAnnual,
-      percentageOfGross: res.percentages.takeHome,
+      valueBiweekly: netTakeHomeAfterPostTaxBiweekly,
+      valueAnnual: takeHomeAnnual,
+      percentageOfGross: takeHomePct,
       color: '#16a34a', // bright green
     });
 
@@ -1132,7 +1137,7 @@ export function generateSankeyData(
       target: 'takeHome',
       value: takeHomeVal,
       formattedValue: formatCurrency(takeHomeVal),
-      percentage: res.percentages.takeHome,
+      percentage: takeHomePct,
       color: '#86efac',
     });
   }
