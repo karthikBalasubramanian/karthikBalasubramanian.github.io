@@ -103,11 +103,47 @@ export interface HousePoorAnalysis {
   readinessYear: number; // 0 = today, 1 = year 1, etc.
   readinessTimeline: HomeReadinessPoint[];
 
+  // 4-Stage Multi-Variable Model Metrics
+  hedonicSpecMapping: HedonicSpecMapping;
+  expenseOptimization: ExpenseOptimizationRecommendation;
+  stressTestMetrics: StressTestMetrics;
+
   // Safe Max Home Price
   maxSafeHomePrice: number;
 
   // Live MLS URL
   mlsSearchUrl: string;
+}
+
+export interface HedonicSpecMapping {
+  affordableSqFt: number;
+  estimatedBeds: number;
+  estimatedBaths: number;
+  pricePerSqFt: number;
+  zipCode: string;
+  cityName: string;
+}
+
+export interface CategoryTrimRecommendation {
+  category: string;
+  label: string;
+  currentAmount: number;
+  recommendedTrim: number;
+  newAmount: number;
+}
+
+export interface ExpenseOptimizationRecommendation {
+  monthlyPaymentGap: number;
+  categoryTrims: CategoryTrimRecommendation[];
+  totalTrimmed: number;
+  canBridgeGap100Percent: boolean;
+}
+
+export interface StressTestMetrics {
+  reserveBufferMonths: number;
+  housingExpenseRatio: number; // HER = PITI / Gross
+  riskLevel: 'low' | 'moderate' | 'house_poor';
+  riskLabel: string;
 }
 
 export interface NetWorthProjectionPoint {

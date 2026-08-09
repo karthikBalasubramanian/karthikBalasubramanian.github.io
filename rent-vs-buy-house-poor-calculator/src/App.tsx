@@ -6,6 +6,7 @@ import { NetTakeHomeBanner } from './components/NetTakeHomeBanner';
 import { LifestyleBudgetInputs } from './components/LifestyleBudgetInputs';
 import { PropertySearchInputs } from './components/PropertySearchInputs';
 import { HousePoorDiagnosisCard } from './components/HousePoorDiagnosisCard';
+import { BuyOptimizationEngine } from './components/BuyOptimizationEngine';
 import { HomeReadinessTimelineChart } from './components/HomeReadinessTimelineChart';
 import { Step3ChildPlannerCTA } from './components/Step3ChildPlannerCTA';
 
@@ -105,6 +106,13 @@ export default function App() {
         {/* Primary Decision Engine: House Poor Diagnosis Card */}
         <HousePoorDiagnosisCard
           inputs={inputs}
+          onChange={handleInputChange}
+        />
+
+        {/* 4-Stage Buy-Optimization & Sensitivity Engine */}
+        <BuyOptimizationEngine
+          inputs={inputs}
+          analysis={analysis}
           onChange={handleInputChange}
         />
 

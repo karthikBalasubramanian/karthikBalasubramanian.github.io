@@ -1,4 +1,12 @@
-import type { UserHousingInputs, MortgageBreakdown, HousePoorAnalysis, NetWorthProjectionPoint } from '../types';
+import type {
+  UserHousingInputs,
+  MortgageBreakdown,
+  HousePoorAnalysis,
+  NetWorthProjectionPoint,
+  HedonicSpecMapping,
+  ExpenseOptimizationRecommendation,
+  StressTestMetrics,
+} from '../types';
 import { lookupZipCode } from '../data/zipDatabase';
 
 export function calculateMortgagePiti(inputs: UserHousingInputs): MortgageBreakdown {
@@ -184,6 +192,105 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
   const targetMaxMonthlyPiti = Math.max(1000, surplusCashBeforeHousing - rainyDayBufferTarget);
   const maxSafeHomePrice = Math.round((inputs.targetHomePrice || 850000) * (targetMaxMonthlyPiti / Math.max(1, monthlyBuyHousingCost)));
 
+  // 7. Stage 1 & 2: Hedonic Physical Spec Mapping
+  const zipRegionData = lookupZipCode(inputs.zipCode, inputs.state);
+  const ppsqft = zipRegionData.avgPricePerSqFt || 450;
+  const affordableSqFt = Math.round(maxSafeHomePrice / ppsqft);
+  let estimatedBeds = 3;
+  let estimatedBaths = 2;
+
+  if (affordableSqFt < 1000) {
+    estimatedBeds = 1;
+    estimatedBaths = 1;
+  } else if (affordableSqFt < 1400) {
+    estimatedBeds = 2;
+    estimatedBaths = 2;
+  } else if (affordableSqFt < 2000) {
+    estimatedBeds = 3;
+    estimatedBaths = 2;
+  } else if (affordableSqFt < 2800) {
+    estimatedBeds = 4;
+    estimatedBaths = 2.5;
+  } else {
+    estimatedBeds = 4;
+    estimatedBaths = 3.5;
+  }
+
+  const hedonicSpecMapping: HedonicSpecMapping = {
+    affordableSqFt,
+    estimatedBeds,
+    estimatedBaths,
+    pricePerSqFt: ppsqft,
+    zipCode: zipRegionData.zip,
+    cityName: zipRegionData.city,
+  };
+
+  // 8. Stage 3: Lifestyle Expense Optimization Matrix
+  const monthlyPaymentGap = Math.max(0, monthlyBuyHousingCost + rainyDayBufferTarget - surplusCashBeforeHousing);
+  const discretionaryCategories = [
+    { category: 'diningOutEntertainment', label: 'Dining Out & Entertainment', currentAmount: l.diningOutEntertainment || 0 },
+    { category: 'subscriptionsStreaming', label: 'Subscriptions & Streaming', currentAmount: l.subscriptionsStreaming || 0 },
+    { category: 'otherMisc', label: 'Other Miscellaneous Spend', currentAmount: l.otherMisc || 0 },
+    { category: 'groceries', label: 'Groceries (Optimization)', currentAmount: l.groceries || 0 },
+  ];
+
+  let remainingGapToBridge = monthlyPaymentGap;
+  const categoryTrims = [];
+  let totalTrimmed = 0;
+
+  for (const cat of discretionaryCategories) {
+    if (remainingGapToBridge <= 0 || cat.currentAmount <= 0) {
+      categoryTrims.push({
+        ...cat,
+        recommendedTrim: 0,
+        newAmount: cat.currentAmount,
+      });
+      continue;
+    }
+
+    const maxTrimPossible = Math.round(cat.currentAmount * 0.6);
+    const trimAmount = Math.min(remainingGapToBridge, maxTrimPossible);
+    remainingGapToBridge -= trimAmount;
+    totalTrimmed += trimAmount;
+
+    categoryTrims.push({
+      ...cat,
+      recommendedTrim: trimAmount,
+      newAmount: cat.currentAmount - trimAmount,
+    });
+  }
+
+  const expenseOptimization: ExpenseOptimizationRecommendation = {
+    monthlyPaymentGap: Math.round(monthlyPaymentGap),
+    categoryTrims,
+    totalTrimmed: Math.round(totalTrimmed),
+    canBridgeGap100Percent: remainingGapToBridge <= 0,
+  };
+
+  // 9. Stage 4: Stress Test & Reserve Buffer Metrics
+  const grossMonthlyIncomeEst = monthlyNetTakeHome / 0.70;
+  const housingExpenseRatio = (monthlyBuyHousingCost / grossMonthlyIncomeEst) * 100;
+  const totalMonthlyLivingCost = monthlyBuyHousingCost + totalLifestyleExpenses;
+  const reserveBufferMonths = leftoverCashBufferBuy > 0 ? (leftoverCashBufferBuy * 12) / totalMonthlyLivingCost : 0;
+
+  let riskLevel: 'low' | 'moderate' | 'house_poor' = 'low';
+  let riskLabel = 'Low Risk — Safe Cash Cushion';
+
+  if (leftoverCashBufferBuy < 0 || housingExpenseRatio > 45) {
+    riskLevel = 'house_poor';
+    riskLabel = 'High Risk — Cashflow Deficit / House Poor';
+  } else if (leftoverCashBufferBuy < rainyDayBufferTarget || housingExpenseRatio > 35) {
+    riskLevel = 'moderate';
+    riskLabel = 'Moderate Risk — Tight Daily Buffer';
+  }
+
+  const stressTestMetrics: StressTestMetrics = {
+    reserveBufferMonths: Math.round(reserveBufferMonths * 10) / 10,
+    housingExpenseRatio: Math.round(housingExpenseRatio * 10) / 10,
+    riskLevel,
+    riskLabel,
+  };
+
   const mlsSearchUrl = generateRedfinMlsUrl(
     inputs.zipCode,
     inputs.targetBeds,
@@ -210,6 +317,9 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     isReadyToBuyToday,
     readinessYear,
     readinessTimeline,
+    hedonicSpecMapping,
+    expenseOptimization,
+    stressTestMetrics,
     maxSafeHomePrice,
     mlsSearchUrl,
   };
