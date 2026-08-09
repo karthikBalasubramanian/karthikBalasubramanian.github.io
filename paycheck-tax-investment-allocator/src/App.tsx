@@ -284,7 +284,8 @@ export default function App() {
 
         {activeTab === 'investments' && (
           <div className="space-y-6">
-            <InvestmentControls inputs={inputs} onChange={handleInputChange} />
+            <PreTaxDeductionsCard inputs={inputs} onChange={handleInputChange} />
+            <PostTaxAllocationsCard inputs={inputs} onChange={handleInputChange} />
             <PaycheckSummary inputs={inputs} taxResult={taxResult} />
           </div>
         )}
@@ -292,7 +293,8 @@ export default function App() {
         {activeTab === 'child_wealth' && (
           <div className="space-y-6">
             <ChildWealthProjection inputs={inputs} taxResult={taxResult} />
-            <InvestmentControls inputs={inputs} onChange={handleInputChange} />
+            <PreTaxDeductionsCard inputs={inputs} onChange={handleInputChange} />
+            <PostTaxAllocationsCard inputs={inputs} onChange={handleInputChange} />
           </div>
         )}
 

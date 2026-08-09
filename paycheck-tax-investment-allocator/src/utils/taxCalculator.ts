@@ -31,8 +31,8 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
 
   // 1. Pre-Tax Deductions
   const rawPreTax401kBiweekly = inputs.traditional401kIsPercent
-    ? (grossBiweekly * (inputs.traditional401k || inputs.traditional401kPercent || 0)) / 100
-    : (inputs.traditional401k ?? inputs.traditional401kBiweekly ?? 0);
+    ? (grossBiweekly * (inputs.traditional401k || 0)) / 100
+    : (inputs.traditional401k || 0);
   
   const age = inputs.age || 30;
   const max401kAnnual = age >= 50
@@ -78,7 +78,7 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     : taxLimits.HSA_SINGLE_MAX + (age >= 55 ? taxLimits.HSA_CATCHUP : 0);
   const maxEmployeeHsaAnnual = Math.max(0, maxHsaStatutoryAnnual - employerHsaAnnual);
 
-  const rawHsaBiweekly = inputs.hsa ?? inputs.hsaBiweekly ?? 0;
+  const rawHsaBiweekly = inputs.hsa || 0;
   let hsaBiweekly = rawHsaBiweekly;
   if (hsaBiweekly * 26 > maxEmployeeHsaAnnual) {
     hsaBiweekly = maxEmployeeHsaAnnual / 26;

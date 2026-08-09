@@ -8,10 +8,15 @@ export interface LifestyleExpenses {
   otherMisc: number;
 }
 
+export type AssetCategory = 'primary_home' | 'second_home' | 'luxury_car' | 'yacht' | 'custom';
+
 export interface UserHousingInputs {
   monthlyTakeHome: number; // Liquid net cash in hand per month
   payFrequency: 'monthly' | 'biweekly';
   state: string;
+
+  // Selected Asset Category
+  assetType: AssetCategory;
 
   // Rent Info
   isRenter: boolean;

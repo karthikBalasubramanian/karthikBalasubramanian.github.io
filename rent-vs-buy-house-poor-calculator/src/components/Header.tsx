@@ -14,13 +14,13 @@ export const Header: React.FC = () => {
             </div>
             <div>
               <h1 className="text-base sm:text-lg font-extrabold text-white tracking-tight leading-none flex items-center gap-2">
-                <span>Rent vs Buy & House Poor Stress Tester</span>
+                <span>Big Purchase Affordability & Lifestyle Planner</span>
                 <span className="text-[10px] font-mono uppercase bg-rose-500/20 text-rose-300 border border-rose-500/30 px-2 py-0.5 rounded-full">
                   Step 2 of 3
                 </span>
               </h1>
               <p className="text-xs text-slate-400 font-medium">
-                Personal Wealth Operating System • Evaluates if buying a home will leave you House Poor
+                Personal Wealth Operating System • Stress-tests Homes, 2nd Homes, Luxury Cars & Major Assets
               </p>
             </div>
           </div>
@@ -51,7 +51,7 @@ export const Header: React.FC = () => {
               {/* Step 2 (Active) */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-600 text-white font-bold shadow-md shadow-rose-950 whitespace-nowrap">
                 <span className="w-4 h-4 rounded-full bg-white text-rose-700 text-[10px] flex items-center justify-center font-extrabold">2</span>
-                <span>Lifestyle (Rent vs Buy)</span>
+                <span>Big Purchase Planner</span>
               </div>
 
               <span className="text-slate-700 font-bold">→</span>

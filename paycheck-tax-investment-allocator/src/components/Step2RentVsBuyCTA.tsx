@@ -33,11 +33,11 @@ export const Step2RentVsBuyCTA: React.FC<Step2RentVsBuyCTAProps> = ({ inputs, ta
             </div>
 
             <h3 className="text-lg font-extrabold text-white">
-              Now do you want to determine what money is left after groceries, quality of life spend, & subscriptions?
+              Now evaluate how much major assets (Homes, 2nd Homes, Cars, Yachts) fit your lifestyle budget!
             </h3>
 
             <p className="text-xs text-slate-300 max-w-2xl leading-relaxed">
-              You have <strong className="text-emerald-400 font-mono">{fmt(monthlyNet)}/month</strong> in net take-home cash. Evaluate if buying a home in your target ZIP Code will leave you <strong className="text-rose-300">House Poor</strong> vs <strong className="text-amber-300">Renting</strong>!
+              You have <strong className="text-emerald-400 font-mono">{fmt(monthlyNet)}/month</strong> in net take-home cash. Stress-test your purchasing power and optimize lifestyle spend with our <strong className="text-rose-300">Big Purchase Affordability & Lifestyle Planner</strong>!
             </p>
           </div>
         </div>
@@ -45,10 +45,10 @@ export const Step2RentVsBuyCTA: React.FC<Step2RentVsBuyCTAProps> = ({ inputs, ta
         {/* CTA Button */}
         <a
           href={targetUrl}
-          className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-rose-600 via-purple-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-extrabold text-xs shadow-xl transition-all shrink-0 font-sans border border-rose-300/30 hover:scale-105"
+          className="flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-xl bg-gradient-to-r from-rose-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white font-extrabold text-sm shadow-xl transition-all border border-rose-400/30 group shrink-0"
         >
-          <span>Continue to Step 2: Rent vs Buy Stress Tester</span>
-          <ArrowRight className="w-4 h-4" />
+          <span>Continue to Step 2: Big Purchase Planner</span>
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
         </a>
 
       </div>

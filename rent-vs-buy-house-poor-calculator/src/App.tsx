@@ -3,6 +3,7 @@ import type { UserHousingInputs } from './types';
 import { analyzeHousePoorStatus } from './utils/calculator';
 import { Header } from './components/Header';
 import { NetTakeHomeBanner } from './components/NetTakeHomeBanner';
+import { AssetTypeSelector } from './components/AssetTypeSelector';
 import { LifestyleBudgetInputs } from './components/LifestyleBudgetInputs';
 import { PropertySearchInputs } from './components/PropertySearchInputs';
 import { HousePoorDiagnosisCard } from './components/HousePoorDiagnosisCard';
@@ -16,6 +17,8 @@ export default function App() {
     monthlyTakeHome: 9048, // Default $9,048/mo net cash
     payFrequency: 'biweekly',
     state: 'CA',
+
+    assetType: 'primary_home',
 
     isRenter: true,
     currentRent: 3000,
@@ -89,6 +92,12 @@ export default function App() {
           inputs={inputs}
           onChange={handleInputChange}
           fromPaycheckApp={fromPaycheckApp}
+        />
+
+        {/* Big Purchase Asset Category Selector (Homes, 2nd Homes, Cars, Yachts) */}
+        <AssetTypeSelector
+          inputs={inputs}
+          onChange={handleInputChange}
         />
 
         {/* Non-Housing Lifestyle Budget Inputs */}
