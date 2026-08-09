@@ -113,11 +113,39 @@ export interface HousePoorAnalysis {
   expenseOptimization: ExpenseOptimizationRecommendation;
   stressTestMetrics: StressTestMetrics;
 
+  // 5 Institutional-Grade Layers
+  institutional: InstitutionalAnalysis;
+
   // Safe Max Home Price
   maxSafeHomePrice: number;
 
   // Live MLS URL
   mlsSearchUrl: string;
+}
+
+export interface InstitutionalAnalysis {
+  // Layer 1: Unrecoverable Costs
+  unrecoverableBuyMonthly: number;
+  unrecoverableRentMonthly: number;
+  unrecoverableDeltaMonthly: number; // Buy Unrecoverable - Rent Unrecoverable
+  capitalOpportunityCostMonthly: number;
+  principalEquityPaydownMonthly: number; // Forced Savings
+
+  // Layer 2: Dynamic Tax Shield
+  taxShieldMonthlyRefund: number;
+  afterTaxMonthlyPiti: number;
+
+  // Layer 3: Crossover Horizon (T*)
+  crossoverBreakEvenYear: number;
+
+  // Layer 4: Terminal Net Worth NPV Differential (10-Yr)
+  terminalNetWorthBuy10Yr: number;
+  terminalNetWorthRent10Yr: number;
+  terminalNetWorthDelta10Yr: number;
+
+  // Layer 5: Monte Carlo Simulation
+  monteCarloConfidenceScore: number; // e.g. 86 (%)
+  monteCarloIterations: number; // 1000
 }
 
 export interface HedonicSpecMapping {

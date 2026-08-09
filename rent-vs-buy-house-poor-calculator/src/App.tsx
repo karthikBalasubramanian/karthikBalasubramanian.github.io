@@ -8,6 +8,7 @@ import { LifestyleBudgetInputs } from './components/LifestyleBudgetInputs';
 import { PropertySearchInputs } from './components/PropertySearchInputs';
 import { HousePoorDiagnosisCard } from './components/HousePoorDiagnosisCard';
 import { BuyOptimizationEngine } from './components/BuyOptimizationEngine';
+import { InstitutionalDecisionEngine } from './components/InstitutionalDecisionEngine';
 import { HomeReadinessTimelineChart } from './components/HomeReadinessTimelineChart';
 import { Step3ChildPlannerCTA } from './components/Step3ChildPlannerCTA';
 
@@ -123,6 +124,12 @@ export default function App() {
           inputs={inputs}
           analysis={analysis}
           onChange={handleInputChange}
+        />
+
+        {/* 5 Wall-Street Institutional Decision Engine */}
+        <InstitutionalDecisionEngine
+          inputs={inputs}
+          analysis={analysis}
         />
 
         {/* Homeownership Readiness & Cashflow Roadmap Chart */}

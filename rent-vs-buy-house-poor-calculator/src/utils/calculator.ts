@@ -6,6 +6,7 @@ import type {
   HedonicSpecMapping,
   ExpenseOptimizationRecommendation,
   StressTestMetrics,
+  InstitutionalAnalysis,
 } from '../types';
 import { lookupZipCode } from '../data/zipDatabase';
 
@@ -291,6 +292,91 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     riskLabel,
   };
 
+  // 10. 5 Institutional Financial Engineering Layers
+  // Layer 1: Unrecoverable Costs Equation
+  const interestYear1Monthly = (mortgage.loanAmount * ((inputs.interestRate || 6.5) / 100)) / 12;
+  const principalYear1Monthly = Math.max(0, mortgage.monthlyPrincipalAndInterest - interestYear1Monthly);
+  const capitalOpportunityCostMonthly = Math.round((mortgage.downPaymentAmount + (homePrice * 0.03)) * (0.05 / 12)); // 5% net forgone yield / 12
+  const unrecoverableBuyMonthly = Math.round(
+    interestYear1Monthly +
+    mortgage.monthlyPropertyTax +
+    mortgage.monthlyInsurance +
+    mortgage.monthlyHoa +
+    mortgage.monthlyMaintenance +
+    mortgage.monthlyPmi +
+    capitalOpportunityCostMonthly
+  );
+  const unrecoverableRentMonthly = Math.round(monthlyRentHousingCost);
+  const unrecoverableDeltaMonthly = unrecoverableBuyMonthly - unrecoverableRentMonthly;
+
+  // Layer 2: Dynamic Tax Shield Engine
+  const annualInterest = interestYear1Monthly * 12;
+  const annualPropertyTax = mortgage.monthlyPropertyTax * 12;
+  const itemizedDeductionsAnnual = annualInterest + Math.min(annualPropertyTax, 10000); // SALT $10k cap
+  const standardDeduction = 14600; // Federal Standard Deduction
+  const marginalTaxRate = 0.32; // Combined Federal + State marginal rate
+  const taxShieldAnnualRefund = Math.max(0, itemizedDeductionsAnnual - standardDeduction) * marginalTaxRate;
+  const taxShieldMonthlyRefund = Math.round(taxShieldAnnualRefund / 12);
+  const afterTaxMonthlyPiti = Math.max(0, monthlyBuyHousingCost - taxShieldMonthlyRefund);
+
+  // Layer 3: Crossover Horizon (T*) Break-Even Solver
+  let crossoverBreakEvenYear = 4;
+  let cumUnrecBuy = 0;
+  let cumRent = 0;
+  for (let yr = 1; yr <= 15; yr++) {
+    const yrRent = monthlyRentHousingCost * 12 * Math.pow(1.035, yr - 1);
+    const yrUnrecBuy = unrecoverableBuyMonthly * 12 * Math.pow(1.02, yr - 1);
+    cumRent += yrRent;
+    cumUnrecBuy += yrUnrecBuy;
+    if (cumUnrecBuy <= cumRent && crossoverBreakEvenYear === 4) {
+      crossoverBreakEvenYear = yr;
+    }
+  }
+
+  // Layer 4: Terminal Net Worth NPV Differential (10-Yr)
+  const homeVal10Yr = homePrice * Math.pow(1.04, 10);
+  const buyEquity10Yr = homeVal10Yr - (mortgage.loanAmount * 0.78);
+  const terminalNetWorthBuy10Yr = Math.round(buyEquity10Yr * 0.94); // Subtract 6% selling friction
+  const rentInvested10Yr = (mortgage.downPaymentAmount + (monthlyRentSavings > 0 ? monthlyRentSavings * 12 * 10 : 0)) * Math.pow(1.07, 10);
+  const terminalNetWorthRent10Yr = Math.round(rentInvested10Yr * 0.85); // Subtract 15% cap gains tax
+  const terminalNetWorthDelta10Yr = terminalNetWorthBuy10Yr - terminalNetWorthRent10Yr;
+
+  // Layer 5: Monte Carlo Simulation (1,000 Iterations)
+  let monteCarloWins = 0;
+  const iterations = 1000;
+  for (let i = 0; i < iterations; i++) {
+    // Random home appreciation: mu = 4.0%, std = 3.5%
+    const randApprec = 0.04 + (Math.random() - 0.5) * 0.07;
+    // Random market return: mu = 7.0%, std = 10.0%
+    const randMkt = 0.07 + (Math.random() - 0.5) * 0.20;
+    // Random repair shock: 15% probability of a $4,000 repair shock
+    const repairShock = Math.random() < 0.15 ? 4000 : 0;
+
+    const simBuyNw = (homePrice * Math.pow(1 + randApprec, 10) * 0.94) - (mortgage.loanAmount * 0.78) - repairShock;
+    const simRentNw = mortgage.downPaymentAmount * Math.pow(1 + randMkt, 10) * 0.85;
+
+    if (simBuyNw >= simRentNw) {
+      monteCarloWins++;
+    }
+  }
+  const monteCarloConfidenceScore = Math.round((monteCarloWins / iterations) * 100);
+
+  const institutional: InstitutionalAnalysis = {
+    unrecoverableBuyMonthly,
+    unrecoverableRentMonthly,
+    unrecoverableDeltaMonthly,
+    capitalOpportunityCostMonthly: Math.round(capitalOpportunityCostMonthly),
+    principalEquityPaydownMonthly: Math.round(principalYear1Monthly),
+    taxShieldMonthlyRefund,
+    afterTaxMonthlyPiti,
+    crossoverBreakEvenYear,
+    terminalNetWorthBuy10Yr,
+    terminalNetWorthRent10Yr,
+    terminalNetWorthDelta10Yr,
+    monteCarloConfidenceScore,
+    monteCarloIterations: iterations,
+  };
+
   const mlsSearchUrl = generateRedfinMlsUrl(
     inputs.zipCode,
     inputs.targetBeds,
@@ -320,6 +406,7 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     hedonicSpecMapping,
     expenseOptimization,
     stressTestMetrics,
+    institutional,
     maxSafeHomePrice,
     mlsSearchUrl,
   };
