@@ -1,6 +1,6 @@
 ---
 layout: post
-title: "The Great AI Compromise: Why Your GPU Idles So You Don't Have To"
+title: "The Great AI Compromise: How Autonomous Agents Will Reclaim Our Idling GPUs"
 date: 2026-08-26
 desc: "An exploration of FLOPs, memory bandwidth, MFU across GPT-2 to Claude 3.5 Sonnet, and how long-horizon autonomous agents will unlock maximum GPU throughput."
 keywords: "AI, LLM, GPU, FLOPs, Latency, Throughput, MFU, GPT-4, Claude Sonnet, Autonomous Agents, Systems"
