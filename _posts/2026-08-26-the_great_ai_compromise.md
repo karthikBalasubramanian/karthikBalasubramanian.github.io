@@ -9,8 +9,6 @@ tags: [blog, AI, LLM, GPU, Machine Learning, Systems, Agents]
 icon: fa-pencil
 ---
 
-# The Great AI Compromise: Why Your GPU Idles So You Don't Have To
-
 Imagine hiring an Olympic-class speed-reader who can process 1,000 pages every second. You sit down in front of them, hand over a single index card with one sentence, wait for them to read it, and then hand over another card five seconds later.
 
 Your reader is capable of staggering throughput, but they spend 99% of their day twiddling their thumbs waiting for you to pass the next sheet.
