@@ -60,7 +60,6 @@ The fundamental rule of thumb for standard Transformer models relates parameters
 * **To generate 1 token (Inference):** $\approx 2N \text{ FLOPs}$
 * *Why?* Each parameter in the network participates in one multiply-accumulate operation ($a \times b + c = 2\text{ FLOPs}$) during the forward pass.
 
-
 * **To train on 1 token (Training):** $\approx 6N \text{ FLOPs}$
 * *Why?* You run the forward pass ($2N$) plus the backward pass ($4N$, because calculating gradients with respect to both weights and activations takes roughly double the math).
 
@@ -72,8 +71,9 @@ Let's plug in real-world models to see what this scale actually looks like:
 
 | Model Size ($N$) | Inference (FLOPs / Token) | Training (FLOPs / Token) | Training on 2 Trillion Tokens (Total FLOPs) |
 | --- | --- | --- | --- |
-| **7 Billion (7B)** | $2 \times 7\text{B} = \mathbf{14\text{ Billion}}$ | $6 \times 7\text{B} = \mathbf{42\text{ Billion}}$ | $42 \times 10^9 \times 2 \times 10^{12} = \mathbf{8.4 \times 10^{22} \text{ FLOPs}}$ |
-| **70 Billion (70B)** | $2 \times 70\text{B} = \mathbf{140\text{ Billion}}$ | $6 \times 70\text{B} = \mathbf{420\text{ Billion}}$ | $420 \times 10^9 \times 2 \times 10^{12} = \mathbf{8.4 \times 10^{23} \text{ FLOPs}}$ |
+| **7 Billion (7B)** | 2 × 7B = **14 Billion** | 6 × 7B = **42 Billion** | 42 × 10⁹ × 2 × 10¹² = **8.4 × 10²² FLOPs** |
+| **70 Billion (70B)** | 2 × 70B = **140 Billion** | 6 × 70B = **420 Billion** | 420 × 10⁹ × 2 × 10¹² = **8.4 × 10²³ FLOPs** |
+{: .table .table-bordered .table-striped}
 
 If you have a 1-TFLOPS GPU ($10^{12} \text{ FLOP/s}$) and run a 7B model:
 
@@ -150,6 +150,7 @@ To see how severe this bottleneck has been across AI history, consider the real-
 | **GPT-3 (175B)** | 175B Dense | ~2% – 5% | ~40% – 50% | **10x – 15x** |
 | **GPT-4 (MoE)** | ~220B Active / Token | ~4% – 8% | ~45% – 55% | **6x – 10x** |
 | **Claude 3.5 Sonnet** | GQA MoE / Dense | ~8% – 12% | ~55% – 65% | **5x – 8x** |
+{: .table .table-bordered .table-striped}
 
 #### Why MFU Evolved Across Generations:
 * **GPT-2 (1.5B):** On V100 GPUs, single-token generation was constrained by memory bandwidth. In low-batch interactive mode, MFU hovered around a dismal 1–3%.

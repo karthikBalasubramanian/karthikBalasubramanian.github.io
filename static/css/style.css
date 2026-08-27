@@ -6222,3 +6222,28 @@ body.rtls .top-navigation #page-wrapper,body.rtls .top-navigation .footer.fixed,
 .rtls #right-sidebar.sidebar-open {
     left:0
 }
+
+/* Markdown Table Styling */
+.ibox-content table, .blog table, .article table {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin-top: 15px !important;
+    margin-bottom: 25px !important;
+    border-collapse: collapse !important;
+    border: 1px solid #e7e7e7 !important;
+}
+.ibox-content table th, .blog table th, .article table th,
+.ibox-content table td, .blog table td, .article table td {
+    padding: 10px 14px !important;
+    border: 1px solid #e7e7e7 !important;
+    vertical-align: middle !important;
+}
+.ibox-content table th, .blog table th, .article table th {
+    background-color: #f5f5f6 !important;
+    font-weight: 600 !important;
+    color: #333 !important;
+}
+.ibox-content table tr:nth-child(even), .blog table tr:nth-child(even), .article table tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+}
+
