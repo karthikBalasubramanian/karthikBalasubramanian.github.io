@@ -106,9 +106,19 @@ export const PropertySearchInputs: React.FC<PropertySearchInputsProps> = ({
               placeholder="850000"
             />
           </div>
-          <span className="text-[10px] text-slate-400 block font-mono">
-            {fmt(inputs.targetHomePrice)} listing price
-          </span>
+          <div className="text-[10px] text-slate-400 font-mono flex items-center justify-between gap-1 flex-wrap">
+            <span>{fmt(inputs.targetHomePrice)} listing price</span>
+            {zipData.medianPrice && zipData.medianPrice > 0 && inputs.targetHomePrice !== zipData.medianPrice && (
+              <button
+                type="button"
+                onClick={() => onChange({ targetHomePrice: zipData.medianPrice! })}
+                className="text-[10px] text-emerald-400 hover:text-emerald-300 font-sans underline cursor-pointer"
+                title="Click to set target price to Redfin median sale price for this ZIP"
+              >
+                Use Redfin Median (${zipData.medianPrice.toLocaleString()})
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Down Payment % */}
