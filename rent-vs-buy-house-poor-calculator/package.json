@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "update-redfin": "node scripts/update-redfin-data.js",
     "lint": "oxlint",
     "preview": "vite preview"
   },
