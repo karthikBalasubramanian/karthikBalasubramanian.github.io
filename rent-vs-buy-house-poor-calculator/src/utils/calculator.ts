@@ -334,11 +334,33 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
   }
 
   // Layer 4: Terminal Net Worth NPV Differential (10-Yr)
-  const homeVal10Yr = homePrice * Math.pow(1.04, 10);
-  const buyEquity10Yr = homeVal10Yr - (mortgage.loanAmount * 0.78);
-  const terminalNetWorthBuy10Yr = Math.round(buyEquity10Yr * 0.94); // Subtract 6% selling friction
-  const rentInvested10Yr = (mortgage.downPaymentAmount + (monthlyRentSavings > 0 ? monthlyRentSavings * 12 * 10 : 0)) * Math.pow(1.07, 10);
-  const terminalNetWorthRent10Yr = Math.round(rentInvested10Yr * 0.85); // Subtract 15% cap gains tax
+  const rMkt = 0.07;
+  const rHome = 0.04;
+  const upfrontCapital = mortgage.downPaymentAmount + Math.round(homePrice * 0.03);
+
+  // Rent Portfolio calculation (Upfront capital + monthly savings invested in stocks)
+  const rentMonthlySavings = Math.max(0, monthlyRentSavings);
+  const rentAnnualSavings = rentMonthlySavings * 12;
+  const rentSavingsFv = rMkt > 0 
+    ? rentAnnualSavings * ((Math.pow(1 + rMkt, 10) - 1) / rMkt)
+    : rentAnnualSavings * 10;
+  const upfrontCap10Yr = upfrontCapital * Math.pow(1 + rMkt, 10);
+  const totalRentVal = upfrontCap10Yr + rentSavingsFv;
+  const totalRentCapitalInvested = upfrontCapital + (rentAnnualSavings * 10);
+  const rentCapGains = Math.max(0, totalRentVal - totalRentCapitalInvested);
+  const terminalNetWorthRent10Yr = Math.round(totalRentCapitalInvested + (rentCapGains * 0.85));
+
+  // Buy Portfolio calculation (Home equity post-selling fee + buy monthly savings if rent > buy)
+  const homeVal10Yr = homePrice * Math.pow(1 + rHome, 10);
+  const buyEquity10Yr = (homeVal10Yr * 0.94) - (mortgage.loanAmount * 0.78);
+  const buyMonthlySavings = Math.max(0, -monthlyRentSavings);
+  const buyAnnualSavings = buyMonthlySavings * 12;
+  const buySavingsFv = rMkt > 0 
+    ? buyAnnualSavings * ((Math.pow(1 + rMkt, 10) - 1) / rMkt)
+    : buyAnnualSavings * 10;
+  const buyCapGains = Math.max(0, buySavingsFv - (buyAnnualSavings * 10));
+  const buySavingsPostTax = (buyAnnualSavings * 10) + (buyCapGains * 0.85);
+  const terminalNetWorthBuy10Yr = Math.round(buyEquity10Yr + buySavingsPostTax);
   const terminalNetWorthDelta10Yr = terminalNetWorthBuy10Yr - terminalNetWorthRent10Yr;
 
   // Layer 5: Monte Carlo Simulation (1,000 Iterations)
@@ -348,12 +370,28 @@ export function analyzeHousePoorStatus(inputs: UserHousingInputs): HousePoorAnal
     // Random home appreciation: mu = 4.0%, std = 3.5%
     const randApprec = 0.04 + (Math.random() - 0.5) * 0.07;
     // Random market return: mu = 7.0%, std = 10.0%
-    const randMkt = 0.07 + (Math.random() - 0.5) * 0.20;
+    const randMkt = Math.max(-0.05, 0.07 + (Math.random() - 0.5) * 0.20);
     // Random repair shock: 15% probability of a $4,000 repair shock
     const repairShock = Math.random() < 0.15 ? 4000 : 0;
 
-    const simBuyNw = (homePrice * Math.pow(1 + randApprec, 10) * 0.94) - (mortgage.loanAmount * 0.78) - repairShock;
-    const simRentNw = mortgage.downPaymentAmount * Math.pow(1 + randMkt, 10) * 0.85;
+    // Rent Simulation with market return
+    const simRentUpfront = upfrontCapital * Math.pow(1 + randMkt, 10);
+    const simRentSavingsFv = randMkt !== 0
+      ? rentAnnualSavings * ((Math.pow(1 + randMkt, 10) - 1) / randMkt)
+      : rentAnnualSavings * 10;
+    const simRentTotal = simRentUpfront + simRentSavingsFv;
+    const simRentCapGains = Math.max(0, simRentTotal - totalRentCapitalInvested);
+    const simRentNw = totalRentCapitalInvested + (simRentCapGains * 0.85);
+
+    // Buy Simulation with home appreciation and stock return on surplus cash
+    const simBuyHomeVal = homePrice * Math.pow(1 + randApprec, 10);
+    const simBuyEquity = (simBuyHomeVal * 0.94) - (mortgage.loanAmount * 0.78) - repairShock;
+    const simBuySavingsFv = randMkt !== 0
+      ? buyAnnualSavings * ((Math.pow(1 + randMkt, 10) - 1) / randMkt)
+      : buyAnnualSavings * 10;
+    const simBuyCapGains = Math.max(0, simBuySavingsFv - (buyAnnualSavings * 10));
+    const simBuySavingsPostTax = (buyAnnualSavings * 10) + (simBuyCapGains * 0.85);
+    const simBuyNw = simBuyEquity + simBuySavingsPostTax;
 
     if (simBuyNw >= simRentNw) {
       monteCarloWins++;

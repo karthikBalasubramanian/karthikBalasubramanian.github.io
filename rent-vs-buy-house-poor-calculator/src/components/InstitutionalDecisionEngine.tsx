@@ -40,7 +40,11 @@ export const InstitutionalDecisionEngine: React.FC<InstitutionalDecisionEnginePr
           <Dices className="w-5 h-5 text-purple-400 shrink-0" />
           <div>
             <span className="text-[10px] text-purple-300 font-sans block font-bold">Monte Carlo Confidence (1k Sims)</span>
-            <span className="font-extrabold text-sm text-emerald-400">{inst.monteCarloConfidenceScore}% Win Rate</span>
+            <span className={`font-extrabold text-sm ${inst.monteCarloConfidenceScore >= 50 ? 'text-emerald-400' : 'text-cyan-300'}`}>
+              {inst.monteCarloConfidenceScore >= 50
+                ? `${inst.monteCarloConfidenceScore}% Buy Win Rate`
+                : `${100 - inst.monteCarloConfidenceScore}% Rent Win Rate`}
+            </span>
           </div>
         </div>
       </div>
@@ -189,7 +193,11 @@ export const InstitutionalDecisionEngine: React.FC<InstitutionalDecisionEnginePr
               <span>Explanation:</span>
             </div>
             <p className="text-[11px] text-slate-300 leading-relaxed font-sans">
-              Instead of assuming sunny financial weather, we simulated 1,000 financial weather forecasts (repair shocks, stock market swings). Result: You have an <strong className="text-emerald-300">{inst.monteCarloConfidenceScore}% probability of sun</strong> (outperforming renting) over 10 years!
+              Instead of assuming sunny financial weather, we simulated 1,000 financial weather forecasts (repair shocks, stock market swings). Result: {inst.monteCarloConfidenceScore >= 50 ? (
+                <>Buying outperforms renting in <strong className="text-emerald-300">{inst.monteCarloConfidenceScore}% of simulated forecasts</strong> over 10 years!</>
+              ) : (
+                <>Renting & investing surplus cash outperforms buying in <strong className="text-cyan-300">{100 - inst.monteCarloConfidenceScore}% of simulated forecasts</strong> over 10 years!</>
+              )}
             </p>
           </div>
         </div>
