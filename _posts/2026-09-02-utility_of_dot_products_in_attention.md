@@ -77,15 +77,18 @@ This is **Cosine Similarity**. A value of $+1$ means complete alignment, $0$ mea
 
 ---
 
-### Part 2: The Magic Trick — Why Don't We Worry About Angles in Code?
+### Part 2: The Magic Trick — How Code Computes Angles Without Trigonometry
 
-When you write `matrix_a.dot(matrix_b)` or `torch.matmul(A, B)` in Python, you don't calculate any angles. You don't call `math.acos()`, nor do you draw triangles. 
+> **A Quick Clarification**: In Part 1, we learned that **direction (the angle $\theta$)** is precisely what we want to measure. But when you look at PyTorch code, you never see `math.cos(theta)` or degree calculations. Why don't we need trigonometric functions in software to compute geometric angles?
 
-Instead, the computer calculates:
+When you write `matrix_a.dot(matrix_b)` or `torch.matmul(A, B)` in Python, you don't calculate any angles explicitly. You don't call `math.acos()`, nor do you draw triangles. 
+
+Instead, the computer calculates simple component arithmetic:
 
 $$\mathbf{u} \cdot \mathbf{v} = \sum_{i=1}^{n} u_i v_i = u_1 v_1 + u_2 v_2 + \dots + u_n v_n$$
 
 Why does multiplying coordinates along perpendicular axes and adding them up **automatically** compute $\|\mathbf{u}\| \|\mathbf{v}\| \cos\theta$?
+
 
 Think of any 2D vector as a step along the $X$-axis plus a step along the $Y$-axis:
 $$\mathbf{u} = u_x \hat{i} + u_y \hat{j}$$
@@ -158,7 +161,18 @@ The model pays **75% of its attention** to **"Starts"**!
 
 Using this weighted percentage, it blends the Value vectors ($V$) of all tokens together, creating an enriched contextual embedding for "Journey" that explicitly encodes *that the journey is starting*.
 
+#### Why Scaled Dot Products Instead of Pure Unit Normalization?
+
+You might notice a subtle distinction here: *In Part 1, we said normalizing vectors to unit length isolates pure direction ($\cos\theta$). Why does standard Transformer attention use matrix multiplication on unnormalized vectors ($Q K^T$) rather than pure unit-normalized cosine similarity?*
+
+This is a deliberate design trade-off in deep learning:
+
+1. **Magnitude Represents Confidence**: In a neural network, the length of a Query or Key vector isn't useless noise—it represents **feature magnitude or confidence**. A token with a larger vector norm can signal *"I am an essential keyword in this sequence!"* Pure unit normalization would erase this confidence signal.
+2. **The High-Dimension Variance Problem**: However, in high dimensions (e.g., $d_k = 128$), unnormalized dot products grow large in variance ($O(d_k)$). Extremely large dot products push Softmax into regions with near-zero gradients (saturation).
+3. **The Compromise ($\frac{1}{\sqrt{d_k}}$)**: By dividing $Q K^T$ by $\sqrt{d_k}$, Transformers get the best of both worlds: they control magnitude explosion so Softmax doesn't saturate, while still allowing $Q$ and $K$ to use relative magnitude as a signal of feature importance!
+
 ---
+
 
 ### Part 4: The Self-Attention Mystery: Why Doesn't a Word Just Attend 100% to Itself?
 
