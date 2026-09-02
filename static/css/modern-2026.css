@@ -214,3 +214,22 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   color: #1ab394;
   border-color: rgba(26, 179, 148, 0.25);
 }
+
+/* ==========================================================================
+   Homepage Blog Cards (Latest 2 Posts)
+   ========================================================================== */
+.blog-home-card:hover {
+  transform: translateY(-5px);
+  background: rgba(255, 255, 255, 0.09) !important;
+  border-color: rgba(26, 179, 148, 0.45) !important;
+  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.3);
+}
+
+.blog-home-card:hover .blog-title-link {
+  color: #1ab394 !important;
+}
+
+.blog-home-card:hover .read-article-link {
+  color: #38ef7d !important;
+}
+

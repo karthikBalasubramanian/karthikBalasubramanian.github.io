@@ -1,9 +1,58 @@
-<div class="container">
+<div class="container" id="i18_blog">
+    <div class="row m-b-lg">
+        <div class="col-lg-12 text-center">
+            <div class="navy-line"></div>
+            <h2 style="font-size: 2.2rem; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+                <span>Latest Writing</span>
+            </h2>
+            <p style="color: #94a3b8; font-size: 1.05rem; margin-bottom: 40px;">Deep dives into ML systems, engineering architecture, and first-principles math.</p>
+        </div>
+    </div>
+
+    <div class="row" style="margin-bottom: 30px;">
+        {% for post in site.posts limit:2 %}
+        <div class="col-md-6 col-sm-12" style="margin-bottom: 25px;">
+            <div class="blog-home-card" style="background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 28px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;">
+                <div>
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
+                        <span style="background: rgba(26, 179, 148, 0.18); color: #1ab394; border: 1px solid rgba(26, 179, 148, 0.35); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
+                            {% if post.categories.first %}{{ post.categories.first }}{% else %}ML{% endif %}
+                        </span>
+                        <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
+                            <i class="fa fa-clock-o" style="margin-right: 5px;"></i>{{ post.date | date: "%b %-d, %Y" }}
+                        </span>
+                    </div>
+
+                    <h3 style="font-size: 1.35rem; font-weight: 700; margin-top: 10px; margin-bottom: 12px; line-height: 1.35;">
+                        <a href="{{ post.url | prepend: site.baseurl }}" style="color: #ffffff; text-decoration: none; transition: color 0.2s ease;" class="blog-title-link">
+                            {{ post.title }}
+                        </a>
+                    </h3>
+
+                    <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                        {% if post.desc %}
+                            {{ post.desc | truncatewords: 28 }}
+                        {% else %}
+                            {{ post.excerpt | strip_html | truncatewords: 28 }}
+                        {% endif %}
+                    </p>
+                </div>
+
+                <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; margin-top: 10px;">
+                    <a href="{{ post.url | prepend: site.baseurl }}" style="display: inline-flex; align-items: center; gap: 8px; color: #1ab394; font-weight: 600; font-size: 0.9rem; text-decoration: none;" class="read-article-link">
+                        Read Article <i class="fa fa-arrow-right"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
     <div class="row">
-        <div class="col-lg-12 text-center wow zoomIn" id="i18_blog">
-            <div style="height: 80px;"></div>
-            <a class="btn btn-lg btn-default btn-rounded btn-outline wow bounceIn" href="/blog/"><span data-i18n="blog.my_blog">My Blog</span></a>
-            <div style="height: 80px;"></div>
+        <div class="col-lg-12 text-center" style="margin-top: 10px; margin-bottom: 40px;">
+            <a class="btn btn-lg hero-btn-primary wow bounceIn" href="/blog/" style="padding: 12px 32px; font-size: 1rem;">
+                <i class="fa fa-book" style="margin-right: 8px;"></i><span data-i18n="blog.my_blog">View All Posts</span>
+            </a>
         </div>
     </div>
 </div>
