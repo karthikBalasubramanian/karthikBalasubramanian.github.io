@@ -217,17 +217,20 @@ Why can't we just take raw word embeddings $X$ and compute $X \cdot X^T$? Why do
 ```
  Raw Input Vectors (X)
          │
-         ▼  (Multiply by Random Weights)
- Projection Spaces: Q = X·W_Q,  K = X·W_K
+         ▼  (Multiply by Random Weight Matrices)
+ Projection Spaces: Q = X·W_Q,  K = X·W_K,  V = X·W_V
          │
          ▼  (Compute Dot Products & Softmax)
  Attention Scores: Softmax(Q·Kᵀ / √d)
+         │
+         ▼  (Blend Value Payload: Context = Σ Score_j · V_j)
+ Context Vector Output
          │
          ▼  (Forward Pass Output vs Ground Truth)
  Calculate Error (Loss)
          │
          ▼  (Backpropagation Chain Rule)
- Derivatives: ∂Loss / ∂W_Q,  ∂Loss / ∂W_K
+ Derivatives: ∂Loss / ∂W_Q,  ∂Loss / ∂W_K,  ∂Loss / ∂W_V
          │
          ▼  (Gradient Descent Update)
  Updated Weights: W ← W - η (∂Loss / ∂W)
@@ -249,29 +252,49 @@ Because they are random, the initial dot products are completely meaningless:
 
 However, these random weights serve a vital purpose: **they break symmetry**, providing the network with adjustable high-dimensional projection dials to begin exploring feature space.
 
-#### 3. Derivatives Are the Tuning Dials of Attention
+#### 3. Where Does $W_V$ (the Value Matrix) Fit In?
 
-How do random weights transform into precision-crafted linguistic search filters? Through **Backpropagation** and **Derivatives**.
+While $W_Q$ and $W_K$ act as the **Matchmaker Engine** (calculating *where* to look and *how much percentage attention* to assign), **$W_V$ is the Payload Extractor**:
 
-When the model makes a prediction error, we compute the gradient of the Loss with respect to every weight parameter:
+$$\text{Value Vector } V = X \cdot W_V$$
+
+Think of it like a library:
+* **$W_Q$ (Query)** is your search question: *"Find me books about journey actions."*
+* **$W_K$ (Key)** is the library index card: *"This book covers movement verbs."*
+* **$W_V$ (Value)** is **the actual content inside the book** that you pull off the shelf!
+
+Once Softmax calculates the attention percentages ($75\%$ to "Starts", $15\%$ to "Journey"), the model uses these percentages to blend the Value vectors together:
+
+$$\text{Context Vector} = 0.75 \times V_{\text{Starts}} + 0.15 \times V_{\text{Journey}} + 0.05 \times V_{\text{Your}} + 0.05 \times V_{\text{Here}}$$
+
+Without $W_V$, the model would pass raw, unfiltered token embeddings $X$ forward. $W_V$ filters raw word vectors down to *only the features relevant for the next layer*.
+
+#### 4. Derivatives Are the Tuning Dials of Attention
+
+How do random weights transform into precision-crafted search filters and payload extractors? Through **Backpropagation** and **Derivatives**.
+
+When the model makes a prediction error, we compute gradients for all three weight matrices:
 
 $$\frac{\partial \text{Loss}}{\partial W_Q}, \quad \frac{\partial \text{Loss}}{\partial W_K}, \quad \frac{\partial \text{Loss}}{\partial W_V}$$
 
-What does a derivative like $\frac{\partial \text{Loss}}{\partial W_Q}$ actually tell us in plain English?
+What do these derivatives tell us in plain English?
 
-It is a precise mathematical feedback signal that says:
-> *"If you tilt the Query matrix $W_Q$ by a tiny fraction of a degree in direction $\Delta$, the Query vector $Q_{\text{Journey}}$ will rotate slightly closer to $K_{\text{Starts}}$. That tiny rotation will boost their dot product, assign more attention weight to the correct word, and lower the model's total error!"*
+* **$\frac{\partial \text{Loss}}{\partial W_Q}$ and $\frac{\partial \text{Loss}}{\partial W_K}$ (Tuning Where to Look)**:
+  > *"Tilt $W_Q$ and $W_K$ slightly so that $Q_{\text{Journey}}$ aligns closer to $K_{\text{Starts}}$. That will boost their dot product, assigning $75\%$ attention to 'Starts' instead of a random comma!"*
 
-#### 4. Gradient Descent Sculpting the Space
+* **$\frac{\partial \text{Loss}}{\partial W_V}$ (Tuning What Payload to Pass)**:
+  > *"You assigned $75\%$ attention to 'Starts', but the Value vector $V_{\text{Starts}}$ delivered too much syntactic clutter. Rotate $W_V$ so that $V_{\text{Starts}}$ extracts sharper action/tense features to pass into the context vector!"*
 
-Using Gradient Descent, we update the weights at every training step:
+#### 5. Gradient Descent Sculpting the Space
 
-$$W_Q \leftarrow W_Q - \eta \frac{\partial \text{Loss}}{\partial W_Q}$$
+Using Gradient Descent, we update all three weight matrices at every training step:
+
+$$W_Q \leftarrow W_Q - \eta \frac{\partial \text{Loss}}{\partial W_Q}, \quad W_K \leftarrow W_K - \eta \frac{\partial \text{Loss}}{\partial W_K}, \quad W_V \leftarrow W_V - \eta \frac{\partial \text{Loss}}{\partial W_V}$$
 
 Over millions of training steps across trillions of tokens:
-1. Derivatives continuously tilt and rotate $W_Q$ and $W_K$.
-2. High-dimensional vector space bends, aligns, and organizes.
-3. Random matrices transform into sharp, specialized feature detectors.
+1. Derivatives continuously tilt $W_Q$ and $W_K$ to perfect the **attention matching scores**.
+2. Derivatives continuously tune $W_V$ to extract the **ideal information payload**.
+3. Random matrices organize into sharp, specialized neural intelligence.
 
 Without backpropagation pushing weights along the path of steepest derivative descent, dot products would just be blind arithmetic on random vectors. **Derivatives are the force that sculpts random dot products into meaningful semantic intelligence.**
 
