@@ -4,8 +4,9 @@
 title: "Karthik Balasubramanian"
 description: "Karthik's blog"
 keywords: "Karthik B, Karthik CMU MISM, Karthik Balasubramanian, Karthik Adobe"
-baseurl: "/"
+baseurl: ""
 #url: "http://karthikBalasubramanian.github.io"
+
 url: "http://127.0.0.1:4000"
 
 # author

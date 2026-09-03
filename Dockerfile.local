@@ -17,19 +17,24 @@ RUN find . -maxdepth 2 -name "package.json" -not -path "*/node_modules/*" -not -
       echo "Building microsite: $dir..."; \
       ( \
         cd "$dir" && \
-        (npm ci || npm install) && \
+        npm install --include=optional && \
         npm run build \
       ); \
     done
 
+
 # ------------------------------------------------------------------------------
-# Stage 2: Build Jekyll Root Site
+# Stage 2: Build Jekyll Root Site (GitHub Pages Image)
 # ------------------------------------------------------------------------------
-FROM jekyll/jekyll:latest AS jekyll-builder
+FROM jekyll/jekyll:pages AS jekyll-builder
 WORKDIR /srv/jekyll
 
+
 COPY --chown=jekyll:jekyll . .
-RUN jekyll build --destination ./_site
+RUN bundle install
+RUN bundle exec jekyll build --destination ./_site
+
+
 
 # ------------------------------------------------------------------------------
 # Stage 3: Assemble & Serve with Nginx
