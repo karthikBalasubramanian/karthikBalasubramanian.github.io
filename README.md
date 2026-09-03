@@ -19,4 +19,21 @@ This repository supports an automated, zero-config multi-microsite architecture:
 
 GitHub Actions will automatically discover your app, run `npm run build`, and deploy it to `https://<username>.github.io/my-new-tool/`.
 
+---
+
+## Local Development (Docker & Makefile)
+
+To build and run the entire site locally (mimicking the exact GitHub Actions deployment workflow):
+
+```bash
+# Build the multi-stage Docker container (Jekyll site + all Vite microsites)
+make build
+
+# Start the local server at http://localhost:4000
+make serve
+
+# Stop the local container
+make down
+```
+
 

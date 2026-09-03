@@ -1,0 +1,53 @@
+# ==============================================================================
+# Multi-Stage Dockerfile for Local Build & Serve (Mimicking GitHub Actions)
+# ==============================================================================
+
+# ------------------------------------------------------------------------------
+# Stage 1: Build Node.js / Vite Microsites
+# ------------------------------------------------------------------------------
+FROM node:22-alpine AS microsite-builder
+WORKDIR /app
+
+# Copy root workspace files
+COPY . .
+
+# Build each discovered microsite
+RUN find . -maxdepth 2 -name "package.json" -not -path "*/node_modules/*" -not -path "*/bower_components/*" -not -path "./package.json" | while read -r pkg; do \
+      dir=$(dirname "$pkg" | sed 's|^\./||'); \
+      echo "Building microsite: $dir..."; \
+      ( \
+        cd "$dir" && \
+        (npm ci || npm install) && \
+        npm run build \
+      ); \
+    done
+
+# ------------------------------------------------------------------------------
+# Stage 2: Build Jekyll Root Site
+# ------------------------------------------------------------------------------
+FROM jekyll/jekyll:latest AS jekyll-builder
+WORKDIR /srv/jekyll
+
+COPY --chown=jekyll:jekyll . .
+RUN jekyll build --destination ./_site
+
+# ------------------------------------------------------------------------------
+# Stage 3: Assemble & Serve with Nginx
+# ------------------------------------------------------------------------------
+FROM nginx:alpine AS runner
+WORKDIR /usr/share/nginx/html
+
+# Remove default nginx static assets
+RUN rm -rf ./*
+
+# Copy compiled Jekyll site
+COPY --from=jekyll-builder /srv/jekyll/_site .
+
+# Copy compiled Vite microsite dist outputs into their respective subfolders
+COPY --from=microsite-builder /app/paycheck-tax-investment-allocator/dist ./paycheck-tax-investment-allocator
+COPY --from=microsite-builder /app/rent-vs-buy-house-poor-calculator/dist ./rent-vs-buy-house-poor-calculator
+COPY --from=microsite-builder /app/child-financial-investment-planner/dist ./child-financial-investment-planner
+
+EXPOSE 80
+
+CMD ["nginx", "-g", "daemon off;"]

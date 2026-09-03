@@ -1,0 +1,11 @@
+version: '3.8'
+
+services:
+  site:
+    build:
+      context: .
+      dockerfile: Dockerfile.local
+    container_name: karthik_website_local
+    ports:
+      - "4000:80"
+    restart: unless-stopped
