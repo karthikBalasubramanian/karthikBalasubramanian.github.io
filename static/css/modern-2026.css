@@ -255,11 +255,62 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 }
 
 
+/* Responsive Adjustments for Mobile Devices & Tablets */
 @media (max-width: 768px) {
+  .article {
+    padding: 15px 0 30px !important;
+  }
+
   .article .ibox-content {
-    padding: 25px 20px !important;
+    padding: 24px 18px !important;
+    border-radius: 12px !important;
+  }
+
+  .article-title h1 {
+    font-size: 2.1rem !important;
+    line-height: 1.25 !important;
+  }
+
+  .article .ibox-content p {
+    font-size: 1.15rem !important;
+    line-height: 1.75 !important;
+    margin-bottom: 20px !important;
+  }
+
+  .article .ibox-content h2,
+  .article .ibox-content h3 {
+    font-size: 1.55rem !important;
+    margin-top: 36px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .article .ibox-content h4 {
+    font-size: 1.3rem !important;
+  }
+
+  .article .ibox-content ul,
+  .article .ibox-content ol {
+    font-size: 1.125rem !important;
+    padding-left: 20px !important;
+  }
+
+  .article .ibox-content blockquote {
+    padding: 16px 18px !important;
+    font-size: 1.1rem !important;
+    margin: 24px 0 !important;
+  }
+
+  .MathJax_Display {
+    font-size: 1.15rem !important;
+    padding: 14px 16px !important;
+  }
+
+  .article .ibox-content pre {
+    font-size: 0.95rem !important;
+    padding: 16px 18px !important;
   }
 }
+
 
 /* Article Title & Meta Header */
 .article-title {
@@ -269,73 +320,73 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 }
 
 .article-title h1 {
-  font-size: 2.5rem !important;
+  font-size: 3.1rem !important;
   font-weight: 800 !important;
-  line-height: 1.25 !important;
+  line-height: 1.22 !important;
   color: #0f172a !important;
   margin-top: 15px !important;
-  margin-bottom: 15px !important;
-  letter-spacing: -0.02em !important;
+  margin-bottom: 18px !important;
+  letter-spacing: -0.025em !important;
 }
 
 .article-title .text-muted {
-  font-size: 0.95rem !important;
+  font-size: 1.05rem !important;
   color: #64748b !important;
   font-weight: 500 !important;
 }
 
 /* Body Text & Paragraphs */
 .article .ibox-content p {
-  font-size: 1.15rem !important;
+  font-size: 1.35rem !important;
   line-height: 1.85 !important;
   color: #1e293b !important;
-  margin-bottom: 24px !important;
+  margin-bottom: 26px !important;
   font-weight: 400 !important;
 }
 
 /* Headings within Blog Post */
 .article .ibox-content h2,
 .article .ibox-content h3 {
-  font-size: 1.65rem !important;
+  font-size: 1.95rem !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  margin-top: 48px !important;
-  margin-bottom: 20px !important;
-  line-height: 1.35 !important;
-  letter-spacing: -0.01em !important;
-  border-bottom: 2px solid rgba(26, 179, 148, 0.25) !important;
-  padding-bottom: 10px !important;
+  margin-top: 52px !important;
+  margin-bottom: 22px !important;
+  line-height: 1.3 !important;
+  letter-spacing: -0.015em !important;
+  border-bottom: 2px solid rgba(26, 179, 148, 0.3) !important;
+  padding-bottom: 12px !important;
 }
 
 .article .ibox-content h4 {
-  font-size: 1.35rem !important;
+  font-size: 1.55rem !important;
   font-weight: 700 !important;
   color: #0f172a !important;
-  margin-top: 32px !important;
-  margin-bottom: 14px !important;
-  line-height: 1.4 !important;
+  margin-top: 36px !important;
+  margin-bottom: 16px !important;
+  line-height: 1.35 !important;
 }
 
 .article .ibox-content h5 {
-  font-size: 1.15rem !important;
+  font-size: 1.3rem !important;
   font-weight: 600 !important;
   color: #334155 !important;
-  margin-top: 24px !important;
-  margin-bottom: 10px !important;
+  margin-top: 28px !important;
+  margin-bottom: 12px !important;
 }
 
 /* Lists */
 .article .ibox-content ul,
 .article .ibox-content ol {
-  font-size: 1.125rem !important;
+  font-size: 1.3rem !important;
   line-height: 1.8 !important;
   color: #1e293b !important;
-  margin-bottom: 28px !important;
-  padding-left: 28px !important;
+  margin-bottom: 30px !important;
+  padding-left: 30px !important;
 }
 
 .article .ibox-content li {
-  margin-bottom: 10px !important;
+  margin-bottom: 12px !important;
 }
 
 .article .ibox-content li strong {
@@ -345,19 +396,19 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 /* Blockquotes & Callout Boxes */
 .article .ibox-content blockquote {
   background: #f0fdf4 !important;
-  border-left: 4px solid #1ab394 !important;
-  border-radius: 0 12px 12px 0 !important;
-  padding: 20px 24px !important;
-  margin: 32px 0 !important;
-  font-size: 1.1rem !important;
-  line-height: 1.7 !important;
+  border-left: 5px solid #1ab394 !important;
+  border-radius: 0 14px 14px 0 !important;
+  padding: 22px 28px !important;
+  margin: 36px 0 !important;
+  font-size: 1.25rem !important;
+  line-height: 1.75 !important;
   color: #166534 !important;
 }
 
 .article .ibox-content blockquote p {
   color: #166534 !important;
   margin-bottom: 0 !important;
-  font-size: 1.1rem !important;
+  font-size: 1.25rem !important;
 }
 
 .article .ibox-content blockquote strong {
@@ -366,19 +417,19 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 
 /* MathJax Formulas Visibility */
 .MathJax_Display {
-  font-size: 1.25rem !important;
-  margin: 28px 0 !important;
-  padding: 18px 22px !important;
+  font-size: 1.45rem !important;
+  margin: 32px 0 !important;
+  padding: 22px 26px !important;
   background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 12px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 14px !important;
   overflow-x: auto !important;
   color: #0f172a !important;
   box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
 }
 
 .MathJax {
-  font-size: 1.15em !important;
+  font-size: 1.3em !important;
   color: #0f172a !important;
 }
 
@@ -386,15 +437,16 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .article .ibox-content pre {
   background: #0f172a !important;
   color: #f8fafc !important;
-  border-radius: 12px !important;
-  padding: 22px 26px !important;
-  font-size: 0.98rem !important;
-  line-height: 1.65 !important;
+  border-radius: 14px !important;
+  padding: 24px 28px !important;
+  font-size: 1.1rem !important;
+  line-height: 1.7 !important;
   border: none !important;
-  margin: 28px 0 !important;
+  margin: 32px 0 !important;
   overflow-x: auto !important;
   box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
 }
+
 
 .article .ibox-content code {
   font-family: 'Fira Code', 'Consolas', 'Courier New', monospace !important;
