@@ -233,3 +233,190 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   color: #38ef7d !important;
 }
 
+/* ==========================================================================
+   High-Visibility Article & Blog Post Typography Overhaul
+   ========================================================================== */
+
+/* Article Container */
+.article {
+  padding: 40px 0 60px !important;
+  background-color: #f8fafc !important;
+}
+
+.article .ibox-content {
+  background: #ffffff !important;
+  border-radius: 20px !important;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.03) !important;
+  border: 1px solid #e2e8f0 !important;
+  padding: 50px 60px !important;
+  max-width: 900px !important;
+  margin: 0 auto !important;
+  font-family: var(--font-body) !important;
+}
+
+@media (max-width: 768px) {
+  .article .ibox-content {
+    padding: 25px 20px !important;
+  }
+}
+
+/* Article Title & Meta Header */
+.article-title {
+  margin-bottom: 40px !important;
+  padding-bottom: 25px !important;
+  border-bottom: 1px solid #e2e8f0 !important;
+}
+
+.article-title h1 {
+  font-size: 2.5rem !important;
+  font-weight: 800 !important;
+  line-height: 1.25 !important;
+  color: #0f172a !important;
+  margin-top: 15px !important;
+  margin-bottom: 15px !important;
+  letter-spacing: -0.02em !important;
+}
+
+.article-title .text-muted {
+  font-size: 0.95rem !important;
+  color: #64748b !important;
+  font-weight: 500 !important;
+}
+
+/* Body Text & Paragraphs */
+.article .ibox-content p {
+  font-size: 1.15rem !important;
+  line-height: 1.85 !important;
+  color: #1e293b !important;
+  margin-bottom: 24px !important;
+  font-weight: 400 !important;
+}
+
+/* Headings within Blog Post */
+.article .ibox-content h2,
+.article .ibox-content h3 {
+  font-size: 1.65rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-top: 48px !important;
+  margin-bottom: 20px !important;
+  line-height: 1.35 !important;
+  letter-spacing: -0.01em !important;
+  border-bottom: 2px solid rgba(26, 179, 148, 0.25) !important;
+  padding-bottom: 10px !important;
+}
+
+.article .ibox-content h4 {
+  font-size: 1.35rem !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  margin-top: 32px !important;
+  margin-bottom: 14px !important;
+  line-height: 1.4 !important;
+}
+
+.article .ibox-content h5 {
+  font-size: 1.15rem !important;
+  font-weight: 600 !important;
+  color: #334155 !important;
+  margin-top: 24px !important;
+  margin-bottom: 10px !important;
+}
+
+/* Lists */
+.article .ibox-content ul,
+.article .ibox-content ol {
+  font-size: 1.125rem !important;
+  line-height: 1.8 !important;
+  color: #1e293b !important;
+  margin-bottom: 28px !important;
+  padding-left: 28px !important;
+}
+
+.article .ibox-content li {
+  margin-bottom: 10px !important;
+}
+
+.article .ibox-content li strong {
+  color: #0f172a !important;
+}
+
+/* Blockquotes & Callout Boxes */
+.article .ibox-content blockquote {
+  background: #f0fdf4 !important;
+  border-left: 4px solid #1ab394 !important;
+  border-radius: 0 12px 12px 0 !important;
+  padding: 20px 24px !important;
+  margin: 32px 0 !important;
+  font-size: 1.1rem !important;
+  line-height: 1.7 !important;
+  color: #166534 !important;
+}
+
+.article .ibox-content blockquote p {
+  color: #166534 !important;
+  margin-bottom: 0 !important;
+  font-size: 1.1rem !important;
+}
+
+.article .ibox-content blockquote strong {
+  color: #14532d !important;
+}
+
+/* MathJax Formulas Visibility */
+.MathJax_Display {
+  font-size: 1.25rem !important;
+  margin: 28px 0 !important;
+  padding: 18px 22px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+  overflow-x: auto !important;
+  color: #0f172a !important;
+  box-shadow: inset 0 1px 2px rgba(0,0,0,0.02) !important;
+}
+
+.MathJax {
+  font-size: 1.15em !important;
+  color: #0f172a !important;
+}
+
+/* Pre & Code Blocks */
+.article .ibox-content pre {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 22px 26px !important;
+  font-size: 0.98rem !important;
+  line-height: 1.65 !important;
+  border: none !important;
+  margin: 28px 0 !important;
+  overflow-x: auto !important;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;
+}
+
+.article .ibox-content code {
+  font-family: 'Fira Code', 'Consolas', 'Courier New', monospace !important;
+  font-size: 0.92em !important;
+  background: #f1f5f9 !important;
+  color: #0f172a !important;
+  padding: 3px 8px !important;
+  border-radius: 6px !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+.article .ibox-content pre code {
+  background: transparent !important;
+  color: #f8fafc !important;
+  padding: 0 !important;
+  border: none !important;
+  font-size: 0.98rem !important;
+}
+
+/* Horizontal Dividers */
+.article .ibox-content hr {
+  border: 0 !important;
+  height: 1px !important;
+  background: linear-gradient(90deg, transparent, #cbd5e1, transparent) !important;
+  margin: 40px 0 !important;
+}
