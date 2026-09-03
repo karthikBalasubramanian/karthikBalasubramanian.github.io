@@ -173,6 +173,11 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
   const esppContributionBiweekly = grossBiweekly * (rawEsppPct / 100);
   const esppDiscountGainBiweekly = esppContributionBiweekly * ((inputs.esppDiscountPercent || 15) / 100);
 
+  // IRS Section 423 annual ESPP payroll deduction cap ($21,250 max for 15% discount on $25,000 FMV)
+  const discountFrac = (inputs.esppDiscountPercent || 15) / 100;
+  const maxEsppAnnualPayroll = 25000 * (1 - discountFrac);
+  const esppContributionAnnual = Math.min(esppContributionBiweekly * 26, maxEsppAnnualPayroll);
+
   const postTaxContributionsBiweekly =
     roth401kBiweekly +
     iraBiweekly +
@@ -182,7 +187,14 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     trumpAccountBiweekly +
     custodialIraBiweekly +
     esppContributionBiweekly;
-  const postTaxContributionsAnnual = postTaxContributionsBiweekly * 26;
+  const postTaxContributionsAnnual =
+    (roth401kBiweekly +
+      iraBiweekly +
+      rothIraBiweekly +
+      plan529Biweekly +
+      custodialAccountBiweekly +
+      trumpAccountBiweekly +
+      custodialIraBiweekly) * 26 + esppContributionAnnual;
 
   // Default Net Income = Gross Income - Pre-Tax Deductions (401k, HSA, FSA) - Taxes
   const netTakeHomePayBiweekly = Math.max(0, grossBiweekly - preTaxDeductionsBiweekly - totalTaxesBiweekly);

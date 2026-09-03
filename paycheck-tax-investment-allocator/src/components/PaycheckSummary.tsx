@@ -11,20 +11,28 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
   const isBiweekly = inputs.payFrequency !== 'annual';
   const mul = isBiweekly ? 1 : 26;
 
-  const fmt = (val: number) =>
-    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(
-      val * mul
-    );
+  const formatCurrency = (amt: number) =>
+    new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(amt);
+
+  const fmt = (val: number) => formatCurrency(val * mul);
 
   const netPay = taxResult.netTakeHomePayBiweekly * mul;
   const grossPay = taxResult.grossBiweekly * mul;
-  const totalInvested =
-    (taxResult.preTaxDeductionsBiweekly + taxResult.postTaxContributionsBiweekly) * mul;
-  const totalInvestedPct = taxResult.percentages.preTax + taxResult.percentages.postTax;
 
   const annualNetTotal = Math.round(taxResult.schedule?.totalNetTakeHomeAnnual || taxResult.netTakeHomePayAnnual);
   const monthlyNetAverage = Math.round(annualNetTotal / 12);
   const displayBiweeklyNet = taxResult.schedule?.earlyPhaseNetBiweekly || taxResult.netTakeHomePayBiweekly;
+
+  const totalInvestedAnnual = taxResult.preTaxDeductionsAnnual + taxResult.postTaxContributionsAnnual;
+  const totalInvestedDisplay = isBiweekly
+    ? taxResult.preTaxDeductionsBiweekly + taxResult.postTaxContributionsBiweekly
+    : totalInvestedAnnual;
+
+  const postTaxDisplay = isBiweekly
+    ? taxResult.postTaxContributionsBiweekly
+    : taxResult.postTaxContributionsAnnual;
+
+  const totalInvestedPct = taxResult.percentages.preTax + (taxResult.grossAnnual > 0 ? (taxResult.postTaxContributionsAnnual / taxResult.grossAnnual) * 100 : 0);
 
   return (
     <div className="bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl text-slate-100 space-y-5">
@@ -55,12 +63,12 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
               Net Cash in Hand
             </span>
             <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-green-900/60 text-green-200 border border-green-700/50">
-              Paycheck #1
+              {isBiweekly ? 'Paycheck #1' : 'Annual Cash'}
             </span>
           </div>
 
           <div className="text-2xl sm:text-3xl font-black font-mono text-green-400">
-            {fmt(displayBiweeklyNet)}
+            {isBiweekly ? fmt(displayBiweeklyNet) : formatCurrency(annualNetTotal)}
           </div>
           <div className="text-xs text-slate-300 flex items-center justify-between pt-1 border-t border-green-900/50">
             <span className="text-emerald-300 font-bold font-mono">${monthlyNetAverage.toLocaleString()}/mo avg</span>
@@ -70,7 +78,11 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
           {taxResult.postTaxContributionsBiweekly > 0 ? (
             <div className="mt-1.5 pt-1.5 border-t border-green-900/60 text-xs text-slate-300 flex items-center justify-between font-mono bg-emerald-950/50 -mx-4 -mb-4 p-2.5">
               <span className="text-[11px] font-sans text-slate-300">Remaining After Post-Tax:</span>
-              <span className="text-emerald-300 font-bold text-sm">{fmt(taxResult.netTakeHomeAfterPostTaxBiweekly)}</span>
+              <span className="text-emerald-300 font-bold text-sm">
+                {isBiweekly
+                  ? fmt(taxResult.netTakeHomeAfterPostTaxBiweekly)
+                  : formatCurrency(Math.max(0, annualNetTotal - taxResult.postTaxContributionsAnnual))}
+              </span>
             </div>
           ) : (
             <div className="mt-1.5 pt-1 text-[10px] text-slate-400 font-sans italic">
@@ -85,11 +97,11 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
             <TrendingUp className="w-3.5 h-3.5" /> Total Wealth Invested
           </span>
           <div className="text-2xl font-black font-mono text-indigo-400">
-            {fmt(taxResult.preTaxDeductionsBiweekly + taxResult.postTaxContributionsBiweekly)}
+            {formatCurrency(totalInvestedDisplay)}
           </div>
           <div className="text-xs text-slate-400 flex items-center justify-between pt-1 border-t border-slate-800">
             <span>{totalInvestedPct.toFixed(1)}% of Gross</span>
-            <span className="font-mono text-slate-400">${((taxResult.preTaxDeductionsAnnual + taxResult.postTaxContributionsAnnual)).toLocaleString()}/yr</span>
+            <span className="font-mono text-slate-400">${totalInvestedAnnual.toLocaleString()}/yr</span>
           </div>
           {taxResult.companyMatchBiweekly > 0 && (
             <div className="mt-1 pt-1 border-t border-indigo-950 flex items-center justify-between text-[10px] text-emerald-400 font-bold">
@@ -292,13 +304,13 @@ export const PaycheckSummary: React.FC<PaycheckSummaryProps> = ({ inputs, taxRes
 
         <div className="flex justify-between py-2 text-green-400 font-bold text-sm border-t border-slate-800 bg-slate-900/60 px-2 rounded-lg mt-1">
           <span className="font-sans">Final Net Take-Home Pay (Bank Account)</span>
-          <span>{fmt(taxResult.netTakeHomePayBiweekly)}</span>
+          <span>{isBiweekly ? fmt(taxResult.netTakeHomePayBiweekly) : formatCurrency(annualNetTotal)}</span>
         </div>
 
         {taxResult.postTaxContributionsBiweekly > 0 && (
           <div className="flex justify-between py-1 text-emerald-300/80 pl-4 border-l-2 border-emerald-800/50 text-[11px]">
             <span>Less: Post-Tax Allocations (Roth/529/Child/ESPP)</span>
-            <span>-{fmt(taxResult.postTaxContributionsBiweekly)}</span>
+            <span>-{formatCurrency(postTaxDisplay)}</span>
           </div>
         )}
 
