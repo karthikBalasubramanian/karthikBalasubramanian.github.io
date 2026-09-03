@@ -241,6 +241,18 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
   color: #38ef7d !important;
 }
 
+/* Blog List Cards (on /blog/ and category pages) */
+.blog-list-card:hover {
+  transform: translateY(-4px) !important;
+  border-color: rgba(26, 179, 148, 0.4) !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08) !important;
+}
+
+.blog-list-card:hover .blog-title-link {
+  color: #1ab394 !important;
+}
+
+
 
 /* ==========================================================================
    High-Visibility Article & Blog Post Typography Overhaul
