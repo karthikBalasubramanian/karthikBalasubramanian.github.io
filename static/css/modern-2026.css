@@ -216,13 +216,21 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 }
 
 /* ==========================================================================
-   Homepage Blog Cards (Latest 2 Posts)
+   Homepage Blog Section Overhaul (High-Contrast & Large Fonts)
    ========================================================================== */
+.blog-section-2026 {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+  color: #ffffff !important;
+  padding: 80px 0 60px !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
 .blog-home-card:hover {
-  transform: translateY(-5px);
-  background: rgba(255, 255, 255, 0.09) !important;
-  border-color: rgba(26, 179, 148, 0.45) !important;
-  box-shadow: 0 16px 35px rgba(0, 0, 0, 0.3);
+  transform: translateY(-6px) !important;
+  background: #243347 !important;
+  border-color: rgba(26, 179, 148, 0.6) !important;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.4), 0 0 25px rgba(26, 179, 148, 0.15) !important;
 }
 
 .blog-home-card:hover .blog-title-link {
@@ -232,6 +240,7 @@ h1, h2, h3, h4, h5, h6, .navbar-brand {
 .blog-home-card:hover .read-article-link {
   color: #38ef7d !important;
 }
+
 
 /* ==========================================================================
    High-Visibility Article & Blog Post Typography Overhaul

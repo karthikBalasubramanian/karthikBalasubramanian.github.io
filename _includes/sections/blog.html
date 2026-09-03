@@ -1,45 +1,47 @@
-<div class="container" id="i18_blog">
+<div class="container" id="i18_blog" style="padding: 40px 0 20px;">
     <div class="row m-b-lg">
         <div class="col-lg-12 text-center">
-            <div class="navy-line"></div>
-            <h2 style="font-size: 2.2rem; font-weight: 700; color: #ffffff; margin-bottom: 10px;">
+            <div class="navy-line" style="margin-bottom: 20px;"></div>
+            <h2 style="font-size: 3.2rem; font-weight: 800; color: #ffffff; margin-bottom: 16px; letter-spacing: -0.02em;">
                 <span>Latest Writing</span>
             </h2>
-            <p style="color: #94a3b8; font-size: 1.05rem; margin-bottom: 40px;">Deep dives into ML systems, engineering architecture, and first-principles math.</p>
+            <p style="color: #cbd5e1; font-size: 1.25rem; max-width: 680px; margin: 0 auto 50px; line-height: 1.6;">
+                Deep dives into ML systems, engineering architecture, and first-principles math.
+            </p>
         </div>
     </div>
 
-    <div class="row" style="margin-bottom: 30px;">
+    <div class="row" style="margin-bottom: 40px;">
         {% for post in site.posts limit:2 %}
-        <div class="col-md-6 col-sm-12" style="margin-bottom: 25px;">
-            <div class="blog-home-card" style="background: rgba(255, 255, 255, 0.06); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 16px; padding: 28px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s ease;">
+        <div class="col-md-6 col-sm-12" style="margin-bottom: 30px;">
+            <div class="blog-home-card" style="background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 36px 32px; height: 100%; display: flex; flex-direction: column; justify-content: space-between; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); box-shadow: 0 10px 30px rgba(0,0,0,0.25);">
                 <div>
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 15px;">
-                        <span style="background: rgba(26, 179, 148, 0.18); color: #1ab394; border: 1px solid rgba(26, 179, 148, 0.35); padding: 4px 12px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em;">
+                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                        <span style="background: rgba(26, 179, 148, 0.18); color: #38ef7d; border: 1px solid rgba(26, 179, 148, 0.4); padding: 5px 14px; border-radius: 20px; font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em;">
                             {% if post.categories.first %}{{ post.categories.first }}{% else %}ML{% endif %}
                         </span>
-                        <span style="color: #94a3b8; font-size: 0.85rem; font-weight: 500;">
-                            <i class="fa fa-clock-o" style="margin-right: 5px;"></i>{{ post.date | date: "%b %-d, %Y" }}
+                        <span style="color: #94a3b8; font-size: 0.95rem; font-weight: 600;">
+                            <i class="fa fa-clock-o" style="margin-right: 6px;"></i>{{ post.date | date: "%b %-d, %Y" }}
                         </span>
                     </div>
 
-                    <h3 style="font-size: 1.35rem; font-weight: 700; margin-top: 10px; margin-bottom: 12px; line-height: 1.35;">
+                    <h3 style="font-size: 1.75rem; font-weight: 700; margin-top: 10px; margin-bottom: 16px; line-height: 1.35; letter-spacing: -0.01em;">
                         <a href="{{ post.url | prepend: site.baseurl }}" style="color: #ffffff; text-decoration: none; transition: color 0.2s ease;" class="blog-title-link">
                             {{ post.title }}
                         </a>
                     </h3>
 
-                    <p style="color: #cbd5e1; font-size: 0.95rem; line-height: 1.6; margin-bottom: 20px;">
+                    <p style="color: #cbd5e1; font-size: 1.15rem; line-height: 1.65; margin-bottom: 24px;">
                         {% if post.desc %}
-                            {{ post.desc | truncatewords: 28 }}
+                            {{ post.desc | truncatewords: 26 }}
                         {% else %}
-                            {{ post.excerpt | strip_html | truncatewords: 28 }}
+                            {{ post.excerpt | strip_html | truncatewords: 26 }}
                         {% endif %}
                     </p>
                 </div>
 
-                <div style="border-top: 1px solid rgba(255, 255, 255, 0.08); padding-top: 15px; margin-top: 10px;">
-                    <a href="{{ post.url | prepend: site.baseurl }}" style="display: inline-flex; align-items: center; gap: 8px; color: #1ab394; font-weight: 600; font-size: 0.9rem; text-decoration: none;" class="read-article-link">
+                <div style="border-top: 1px solid rgba(255, 255, 255, 0.1); padding-top: 18px; margin-top: 10px;">
+                    <a href="{{ post.url | prepend: site.baseurl }}" style="display: inline-flex; align-items: center; gap: 8px; color: #1ab394; font-weight: 700; font-size: 1.05rem; text-decoration: none;" class="read-article-link">
                         Read Article <i class="fa fa-arrow-right"></i>
                     </a>
                 </div>
@@ -49,9 +51,9 @@
     </div>
 
     <div class="row">
-        <div class="col-lg-12 text-center" style="margin-top: 10px; margin-bottom: 40px;">
-            <a class="btn btn-lg hero-btn-primary wow bounceIn" href="/blog/" style="padding: 12px 32px; font-size: 1rem;">
-                <i class="fa fa-book" style="margin-right: 8px;"></i><span data-i18n="blog.my_blog">View All Posts</span>
+        <div class="col-lg-12 text-center" style="margin-top: 10px; margin-bottom: 50px;">
+            <a class="btn btn-lg hero-btn-primary wow bounceIn" href="/blog/" style="padding: 14px 38px; font-size: 1.1rem; font-weight: 700;">
+                <i class="fa fa-book" style="margin-right: 10px;"></i><span data-i18n="blog.my_blog">View All Blog Posts</span>
             </a>
         </div>
     </div>
