@@ -125,10 +125,10 @@ Let's walk through how this works in a Transformer's Attention mechanism.
 
 Consider the sequence: **"Your Journey Starts Here"**
 
-Every word in this sentence gets transformed into three distinct roles:
-1. **Query ($Q$)**: *"What am I looking for in this sentence?"*
-2. **Key ($K$)**: *"What information do I contain?"*
-3. **Value ($V$)**: *"What actual content do I pass along if selected?"*
+Every word in this sentence gets transformed into three distinct roles—think of it like a library search:
+1. **Query ($Q$)**: The search question (*"What am I looking for in this sentence?"*).
+2. **Key ($K$)**: The library catalog card (*"What information do I contain?"*).
+3. **Value ($V$)**: The book content on the shelf (*"What actual payload do I pass along if selected?"*).
 
 Let's focus on the word **"Journey"** acting as our **Query ($Q_{\text{Journey}}$)**.
 
@@ -254,20 +254,15 @@ However, these random weights serve a vital purpose: **they break symmetry**, pr
 
 #### 3. Where Does $W_V$ (the Value Matrix) Fit In?
 
-While $W_Q$ and $W_K$ act as the **Matchmaker Engine** (calculating *where* to look and *how much percentage attention* to assign), **$W_V$ is the Payload Extractor**:
+While $W_Q$ and $W_K$ act as the **Matchmaker Engine** (matching Queries to Keys to calculate *where* to look and *how much percentage attention* to assign), **$W_V$ is the Payload Extractor**:
 
 $$\text{Value Vector } V = X \cdot W_V$$
 
-Think of it like a library:
-* **$W_Q$ (Query)** is your search question: *"Find me books about journey actions."*
-* **$W_K$ (Key)** is the library index card: *"This book covers movement verbs."*
-* **$W_V$ (Value)** is **the actual content inside the book** that you pull off the shelf!
-
-Once Softmax calculates the attention percentages ($75\%$ to "Starts", $15\%$ to "Journey"), the model uses these percentages to blend the Value vectors together:
+Once Softmax calculates the attention percentages ($75\%$ to "Starts", $15\%$ to "Journey"), the model uses these percentages to pull and blend the Value vectors together into a single context vector:
 
 $$\text{Context Vector} = 0.75 \times V_{\text{Starts}} + 0.15 \times V_{\text{Journey}} + 0.05 \times V_{\text{Your}} + 0.05 \times V_{\text{Here}}$$
 
-Without $W_V$, the model would pass raw, unfiltered token embeddings $X$ forward. $W_V$ filters raw word vectors down to *only the features relevant for the next layer*.
+Without $W_V$, the model would pass raw, unfiltered token embeddings $X$ forward. $W_V$ acts as a learned feature filter that distills raw word vectors down to *only the payload features relevant for the next layer*.
 
 #### 4. Derivatives Are the Tuning Dials of Attention
 
