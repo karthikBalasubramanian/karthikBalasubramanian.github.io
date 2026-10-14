@@ -10,7 +10,7 @@ import { StrategyTable } from './components/StrategyTable';
 import { SectorComparison } from './components/SectorComparison';
 import { GameMode } from './components/GameMode';
 import { BehavioralGuide } from './components/BehavioralGuide';
-import { Shield, Sparkles, Heart, AlertTriangle, Info, Calendar } from 'lucide-react';
+import { Shield, Sparkles, Heart, AlertTriangle, Info, Calendar, Home } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'game' | 'guide'>('dashboard');
@@ -183,14 +183,36 @@ export function App() {
 
       {/* Footer */}
       <footer className="bg-slate-900/80 border-t border-slate-800 py-8 text-center text-xs text-slate-400 mt-12">
-        <div className="max-w-7xl mx-auto px-4 space-y-2">
+        <div className="max-w-7xl mx-auto px-4 space-y-3">
           <div className="flex items-center justify-center gap-2 text-slate-300 font-semibold">
             <Shield className="w-4 h-4 text-emerald-400" /> Personal Lifestyle & Wealth Planner Series
           </div>
           <p className="max-w-2xl mx-auto text-slate-400">
             Designed for public company employees to make informed, evidence-based equity divestment decisions using historical market data. We do not collect, store, or sell your data.
           </p>
-          <p className="text-slate-400 pt-2">
+          <div className="pt-1 flex flex-wrap items-center justify-center gap-3 sm:gap-4 text-xs font-semibold">
+            <a
+              href="https://karthikbalasubramanian.github.io/"
+              className="text-emerald-400 hover:text-emerald-300 flex items-center gap-1.5 transition-colors"
+            >
+              <Home className="w-3.5 h-3.5" /> Return to Main Site Home
+            </a>
+            <span className="text-slate-700 hidden sm:inline">•</span>
+            <a
+              href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Paycheck Tax Allocator
+            </a>
+            <span className="text-slate-700 hidden sm:inline">•</span>
+            <a
+              href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+              className="text-slate-400 hover:text-slate-200 transition-colors"
+            >
+              Rent vs Buy Calculator
+            </a>
+          </div>
+          <p className="text-slate-400 pt-2 text-[11px]">
             Built with React 19, TypeScript, Tailwind CSS v4, and Recharts.
           </p>
         </div>

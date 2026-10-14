@@ -1,6 +1,6 @@
 import React from 'react';
 import { POPULAR_TICKERS } from '../services/stockApi';
-import { Shield, TrendingUp, Gamepad2, BookOpen, Sparkles } from 'lucide-react';
+import { Shield, TrendingUp, Gamepad2, BookOpen, Sparkles, Home } from 'lucide-react';
 
 interface HeaderProps {
   currentSymbol: string;
@@ -21,9 +21,13 @@ export const Header: React.FC<HeaderProps> = ({
         {/* Top Title Bar */}
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg shadow-emerald-950/50 text-white">
+            <a
+              href="https://karthikbalasubramanian.github.io/"
+              className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg shadow-emerald-950/50 text-white hover:scale-105 transition-transform"
+              title="Return to Main Website Home Page"
+            >
               <TrendingUp className="w-6 h-6" />
-            </div>
+            </a>
             <div>
               <div className="flex items-center gap-2">
                 <h1 className="text-xl sm:text-2xl font-extrabold text-white tracking-tight">
@@ -39,8 +43,20 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Navigation Tabs */}
-          <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800/80">
+          {/* Navigation Actions & Tabs */}
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <a
+              href="https://karthikbalasubramanian.github.io/"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
+              title="Return to Main Website Home Page"
+            >
+              <Home className="w-3.5 h-3.5 text-emerald-400" />
+              <span className="hidden sm:inline">Main Site Home</span>
+              <span className="sm:hidden">Home</span>
+            </a>
+
+            {/* Navigation Tabs */}
+            <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800/80">
             <button
               onClick={() => onTabChange('dashboard')}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-bold transition-all ${
@@ -76,6 +92,7 @@ export const Header: React.FC<HeaderProps> = ({
             </button>
           </div>
         </div>
+      </div>
 
         {/* Quick Ticker Chips */}
         <div className="mt-4 pt-3 border-t border-slate-800/60 flex items-center gap-2 overflow-x-auto no-scrollbar">
