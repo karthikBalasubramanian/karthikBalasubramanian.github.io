@@ -23,16 +23,27 @@ export const BENCHMARKS: Record<string, { symbol: string; name: string }> = {
   XLY: { symbol: 'XLY', name: 'Consumer Discretionary ETF (XLY)' },
 };
 
-const CACHE_PREFIX = 'rsu_stock_cache_v1_';
-const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
+// v2: monthly bars with dividend-adjusted closes. Bumping the prefix invalidates old quarterly caches.
+const CACHE_PREFIX = 'rsu_stock_cache_v2_';
+const CACHE_TTL_MS = 12 * 60 * 60 * 1000; // 12 hours
 
 interface CacheItem {
   timestamp: number;
   data: StockPriceData;
 }
 
-// Memory fallback cache
+// Memory fallback cache (live data only)
 const memoryCache = new Map<string, StockPriceData>();
+
+function isValidCachedData(data: StockPriceData | undefined): data is StockPriceData {
+  return (
+    !!data &&
+    data.source === 'live' &&
+    Array.isArray(data.prices) &&
+    data.prices.length > 0 &&
+    typeof data.prices[0].adjClose === 'number'
+  );
+}
 
 function getFromCache(symbol: string): StockPriceData | null {
   const upper = symbol.toUpperCase();
@@ -44,7 +55,7 @@ function getFromCache(symbol: string): StockPriceData | null {
     const raw = localStorage.getItem(CACHE_PREFIX + upper);
     if (raw) {
       const item: CacheItem = JSON.parse(raw);
-      if (Date.now() - item.timestamp < CACHE_TTL_MS) {
+      if (Date.now() - item.timestamp < CACHE_TTL_MS && isValidCachedData(item.data)) {
         memoryCache.set(upper, item.data);
         return item.data;
       }
@@ -56,6 +67,8 @@ function getFromCache(symbol: string): StockPriceData | null {
 }
 
 function saveToCache(symbol: string, data: StockPriceData): void {
+  // Never persist synthetic data: a transient network/CORS failure must not masquerade as real prices.
+  if (data.source !== 'live') return;
   const upper = symbol.toUpperCase();
   memoryCache.set(upper, data);
   try {
@@ -69,9 +82,49 @@ function saveToCache(symbol: string, data: StockPriceData): void {
   }
 }
 
+const isFiniteNumber = (v: unknown): v is number => typeof v === 'number' && Number.isFinite(v);
+
+/**
+ * Parse a Yahoo Finance chart payload (monthly bars) into ascending monthly price points.
+ * Exported for testing.
+ */
+export function parseYahooChart(json: any): PricePoint[] {
+  const result = json?.chart?.result?.[0];
+  const timestamps: number[] | undefined = result?.timestamp;
+  const closes: (number | null)[] | undefined = result?.indicators?.quote?.[0]?.close;
+  const adjCloses: (number | null)[] | undefined = result?.indicators?.adjclose?.[0]?.adjclose;
+  if (!timestamps || !closes) return [];
+
+  // Keyed by YYYY-MM; later entries win so a trailing live quote overrides a stale partial bar.
+  const byMonth = new Map<string, PricePoint>();
+
+  for (let i = 0; i < timestamps.length; i++) {
+    const close = closes[i];
+    if (!isFiniteNumber(close) || close <= 0) continue;
+    const adj = adjCloses?.[i];
+
+    // Bars are stamped at the start of the month (exchange time). Shift by 12h and read in UTC so the
+    // viewer's local timezone can never roll a bar back into the previous month.
+    const d = new Date((timestamps[i] + 12 * 3600) * 1000);
+    const year = d.getUTCFullYear();
+    const month = d.getUTCMonth() + 1;
+    const key = `${year}-${String(month).padStart(2, '0')}`;
+
+    byMonth.set(key, {
+      date: `${key}-01`,
+      year,
+      month,
+      close,
+      adjClose: isFiniteNumber(adj) && adj > 0 ? adj : close,
+    });
+  }
+
+  return Array.from(byMonth.values()).sort((a, b) => a.date.localeCompare(b.date));
+}
+
 /**
  * Live Stock Price Fetcher
- * Queries Yahoo Finance API with CORS proxy failovers.
+ * Queries Yahoo Finance API (monthly bars, full history) with CORS proxy failovers.
  */
 export async function fetchStockHistory(symbol: string): Promise<StockPriceData> {
   const upperSymbol = symbol.toUpperCase();
@@ -80,11 +133,13 @@ export async function fetchStockHistory(symbol: string): Promise<StockPriceData>
     return cached;
   }
 
+  const yahooUrl = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(upperSymbol)}?interval=1mo&range=max`;
+
   // Attempt live API endpoints
   const urls = [
-    `https://query1.finance.yahoo.com/v8/finance/chart/${upperSymbol}?interval=3mo&range=10y`,
-    `https://corsproxy.io/?${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${upperSymbol}?interval=3mo&range=10y`)}`,
-    `https://api.allorigins.win/raw?url=${encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${upperSymbol}?interval=3mo&range=10y`)}`
+    yahooUrl,
+    `https://corsproxy.io/?${encodeURIComponent(yahooUrl)}`,
+    `https://api.allorigins.win/raw?url=${encodeURIComponent(yahooUrl)}`,
   ];
 
   for (const url of urls) {
@@ -92,63 +147,33 @@ export async function fetchStockHistory(symbol: string): Promise<StockPriceData>
       const res = await fetch(url);
       if (!res.ok) continue;
       const json = await res.json();
-      const result = json?.chart?.result?.[0];
-      if (result && result.timestamp && result.indicators?.quote?.[0]?.close) {
-        const timestamps: number[] = result.timestamp;
-        const closes: (number | null)[] = result.indicators.quote[0].close;
-
-        const pricePoints: PricePoint[] = [];
-
-        for (let i = 0; i < timestamps.length; i++) {
-          const close = closes[i];
-          if (close === null || close === undefined || isNaN(close)) continue;
-
-          const dateObj = new Date(timestamps[i] * 1000);
-          const year = dateObj.getFullYear();
-          const month = dateObj.getMonth() + 1;
-          const quarter = Math.ceil(month / 3);
-          const dateStr = `${year}-${String(month).padStart(2, '0')}-01`;
-          const quarterLabel = `${year} Q${quarter}`;
-
-          // Avoid duplicate quarter points
-          if (!pricePoints.some(p => p.quarterLabel === quarterLabel)) {
-            pricePoints.push({
-              date: dateStr,
-              quarterLabel,
-              year,
-              quarter,
-              price: Math.round(close * 100) / 100,
-            });
-          }
-        }
-
-        if (pricePoints.length > 0) {
-          pricePoints.sort((a, b) => a.date.localeCompare(b.date));
-          const data: StockPriceData = { symbol: upperSymbol, prices: pricePoints };
-          saveToCache(upperSymbol, data);
-          return data;
-        }
+      const pricePoints = parseYahooChart(json);
+      if (pricePoints.length > 0) {
+        const data: StockPriceData = { symbol: upperSymbol, prices: pricePoints, source: 'live' };
+        saveToCache(upperSymbol, data);
+        return data;
       }
     } catch (err) {
       console.warn(`Failed fetching from ${url}:`, err);
     }
   }
 
-  // Real-world fallback simulation generator if API is blocked by CORS/offline
-  console.info(`Using client-side fallback price curve for ${upperSymbol}`);
-  const fallbackData = generateFallbackPrices(upperSymbol);
-  saveToCache(upperSymbol, fallbackData);
-  return fallbackData;
+  // Illustrative fallback if API is blocked by CORS/offline. Flagged as synthetic and never cached.
+  console.info(`Using client-side synthetic price curve for ${upperSymbol}`);
+  return generateFallbackPrices(upperSymbol);
 }
 
+const monthIndex = (year: number, month: number) => year * 12 + (month - 1);
+
 /**
- * Fallback generator providing accurate historic price trends for major tickers (2018-2026)
+ * Synthetic fallback generator: a smooth, illustrative monthly curve (2017 -> current month) shaped like
+ * the 2018-2025 market cycle. NOT real market data and does not include dividends.
  */
-function generateFallbackPrices(symbol: string): StockPriceData {
+export function generateFallbackPrices(symbol: string, now: Date = new Date()): StockPriceData {
   const upper = symbol.toUpperCase();
   const prices: PricePoint[] = [];
 
-  // Anchor prices per symbol (2018 Q1 to 2026 Q1)
+  // Anchor prices per symbol (split-adjusted)
   const baseAnchors: Record<string, { start: number; peak2021: number; current: number }> = {
     GOOGL: { start: 55, peak2021: 145, current: 175 },
     GOOG: { start: 55, peak2021: 145, current: 175 },
@@ -171,44 +196,47 @@ function generateFallbackPrices(symbol: string): StockPriceData {
   };
 
   const anchor = baseAnchors[upper] || { start: 50, peak2021: 150, current: 180 };
+  const dipPct = upper === 'NVDA' ? 0.5 : upper === 'META' ? 0.35 : 0.75;
+  const preCovid = anchor.start + (anchor.peak2021 - anchor.start) * 0.4;
 
-  const totalQuarters = 33; // 2018 Q1 to 2026 Q1
-  for (let q = 0; q < totalQuarters; q++) {
-    const year = 2018 + Math.floor(q / 4);
-    const quarter = (q % 4) + 1;
-    const quarterLabel = `${year} Q${quarter}`;
-    const date = `${year}-${String((quarter - 1) * 3 + 1).padStart(2, '0')}-01`;
+  const endYear = now.getFullYear();
+  const endMonth = now.getMonth() + 1;
 
-    let progress = q / (totalQuarters - 1);
-    let price: number;
+  // Knots: (monthIndex, price). Log-linear interpolation between knots keeps the curve continuous.
+  const knots: Array<[number, number]> = [
+    [monthIndex(2017, 1), anchor.start * 0.85],
+    [monthIndex(2018, 1), anchor.start],
+    [monthIndex(2020, 2), preCovid],
+    [monthIndex(2020, 3), preCovid * 0.8], // Covid drop
+    [monthIndex(2021, 12), anchor.peak2021], // 2021 peak
+    [monthIndex(2022, 10), anchor.peak2021 * dipPct], // 2022 trough
+    [Math.max(monthIndex(endYear, endMonth), monthIndex(2022, 11)), anchor.current],
+  ];
 
-    // Model typical market trajectory (2018 baseline -> 2020 covid drop -> 2021 tech surge -> 2022 tech pullback -> 2023-2026 bull run)
-    if (year <= 2021) {
-      const p2021 = q / 15;
-      price = anchor.start + (anchor.peak2021 - anchor.start) * p2021;
-      if (year === 2020 && quarter === 1) price *= 0.82; // Covid drop
-    } else if (year === 2022) {
-      // 2022 pullback
-      const dipPct = upper === 'NVDA' ? 0.5 : upper === 'META' ? 0.35 : 0.75;
-      price = anchor.peak2021 * dipPct;
-    } else {
-      // 2023-2026 recovery
-      const qFrom2023 = (year - 2023) * 4 + (quarter - 1);
-      const recoveryProgress = qFrom2023 / 12;
-      const start2023 = anchor.peak2021 * 0.75;
-      price = start2023 + (anchor.current - start2023) * Math.min(1, recoveryProgress);
-    }
+  const startIdx = knots[0][0];
+  const endIdx = knots[knots.length - 1][0];
 
+  for (let idx = startIdx; idx <= endIdx; idx++) {
+    let k = 0;
+    while (k < knots.length - 2 && idx > knots[k + 1][0]) k++;
+    const [i0, p0] = knots[k];
+    const [i1, p1] = knots[k + 1];
+    const t = i1 === i0 ? 0 : (idx - i0) / (i1 - i0);
+    const price = Math.exp(Math.log(p0) + (Math.log(p1) - Math.log(p0)) * t);
+
+    const year = Math.floor(idx / 12);
+    const month = (idx % 12) + 1;
+    const rounded = Math.round(price * 100) / 100;
     prices.push({
-      date,
-      quarterLabel,
+      date: `${year}-${String(month).padStart(2, '0')}-01`,
       year,
-      quarter,
-      price: Math.round(price * 100) / 100,
+      month,
+      close: rounded,
+      adjClose: rounded,
     });
   }
 
-  return { symbol: upper, prices };
+  return { symbol: upper, prices, source: 'synthetic' };
 }
 
 /**

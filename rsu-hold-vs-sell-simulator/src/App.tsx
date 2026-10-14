@@ -10,7 +10,7 @@ import { StrategyTable } from './components/StrategyTable';
 import { SectorComparison } from './components/SectorComparison';
 import { GameMode } from './components/GameMode';
 import { BehavioralGuide } from './components/BehavioralGuide';
-import { Shield, Sparkles, Heart } from 'lucide-react';
+import { Shield, Sparkles, Heart, AlertTriangle, Info, Calendar } from 'lucide-react';
 
 export function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'game' | 'guide'>('dashboard');
@@ -68,8 +68,10 @@ export function App() {
   }, [
     config.symbol,
     config.startYear,
+    config.startQuarter,
     config.totalShares,
     config.hasCliff,
+    config.vestingYears,
     config.taxWithholdingPct,
     config.statePreset,
     config.capitalGainsTaxPct,
@@ -111,17 +113,60 @@ export function App() {
         {/* Tab 1: Dashboard */}
         {activeTab === 'dashboard' && simulation && (
           <div className="space-y-6 sm:space-y-8">
-            {/* KPI Cards */}
-            <SummaryCards simulation={simulation} />
+            {/* Synthetic Data Alert Banner */}
+            {simulation.dataSources.stock === 'synthetic' && (
+              <div className="bg-amber-950/30 border border-amber-800/50 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs text-amber-200">
+                <div className="flex items-center gap-2">
+                  <Info className="w-4 h-4 text-amber-400 shrink-0" />
+                  <span>
+                    <strong>Modeled Data Mode:</strong> Displaying illustrative price history for {simulation.config.symbol} (live Yahoo Finance request timed out or was blocked by browser CORS).
+                  </span>
+                </div>
+                <span className="self-start sm:self-auto text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded bg-amber-900/60 text-amber-200 border border-amber-700/50">
+                  Synthetic Curve
+                </span>
+              </div>
+            )}
 
-            {/* Wealth Trajectory Chart */}
-            <WealthChart simulation={simulation} />
+            {/* Future Vests Pending Notice */}
+            {simulation.futureCount > 0 && simulation.vestedCount > 0 && (
+              <div className="bg-slate-900/60 border border-slate-800 rounded-xl px-4 py-2.5 flex items-center justify-between text-xs text-slate-400">
+                <div className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <span>
+                    <strong className="text-slate-200">{simulation.vestedCount} of {simulation.events.length}</strong> quarterly vests have occurred. The remaining <strong className="text-slate-200">{simulation.futureCount}</strong> upcoming vests are pending and excluded from realized strategy totals.
+                  </span>
+                </div>
+              </div>
+            )}
 
-            {/* Sector & Strategy Matrix */}
-            <SectorComparison simulation={simulation} />
+            {/* Zero Vests State */}
+            {simulation.vestedCount === 0 ? (
+              <div className="bg-slate-900/80 border border-slate-800 rounded-2xl p-8 text-center space-y-3">
+                <AlertTriangle className="w-8 h-8 text-amber-400 mx-auto" />
+                <h3 className="text-base font-bold text-white">No Vests Have Occurred Yet</h3>
+                <p className="text-xs text-slate-400 max-w-md mx-auto">
+                  For a grant snapshot starting in {simulation.config.startYear} Q{simulation.config.startQuarter} {simulation.config.hasCliff ? 'with a 1-year cliff' : ''}, the first vest is scheduled for {simulation.events[0]?.date || 'a future date'}. Select an earlier grant year to analyze historical performance.
+                </p>
+                <div className="pt-2">
+                  <StrategyTable simulation={simulation} />
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* KPI Cards */}
+                <SummaryCards simulation={simulation} />
 
-            {/* Vesting Audit & Tax Table */}
-            <StrategyTable simulation={simulation} />
+                {/* Wealth Trajectory Chart */}
+                <WealthChart simulation={simulation} />
+
+                {/* Sector & Strategy Matrix */}
+                <SectorComparison simulation={simulation} />
+
+                {/* Vesting Audit & Tax Table */}
+                <StrategyTable simulation={simulation} />
+              </>
+            )}
           </div>
         )}
 

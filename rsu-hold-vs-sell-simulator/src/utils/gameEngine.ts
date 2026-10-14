@@ -1,7 +1,12 @@
-import { Badge, GameChoice, GameQuarterState, SimulationOutput } from '../types';
+import { Badge, GameChoice, GameQuarterState, SimulationOutput, VestEvent } from '../types/index';
+
+/** Only quarters that have actually vested (with market data) are playable. */
+export function getPlayableEvents(simulation: SimulationOutput): VestEvent[] {
+  return simulation.events.filter(e => e.status === 'vested' && e.netSharesVested > 0);
+}
 
 export function initializeGameState(simulation: SimulationOutput): GameQuarterState[] {
-  return simulation.events.map(e => ({
+  return getPlayableEvents(simulation).map(e => ({
     quarterIndex: e.quarterIndex,
     quarterLabel: e.quarterLabel,
     date: e.date,
@@ -24,12 +29,11 @@ export function computeGameScore(
   regretCategory: 'Zero Regret' | 'Low Regret' | 'Moderate Regret' | 'High Regret';
   badges: Badge[];
 } {
-  const events = simulation.events;
-  const currentStockPrice = simulation.currentPrices.stock;
-  const currentSp500Price = simulation.currentPrices.sp500;
+  const events = getPlayableEvents(simulation);
 
-  let totalUserStockShares = 0;
-  let totalUserSp500Shares = 0;
+  let userValue = 0;
+  let optimalValue = 0;
+  let worstValue = 0;
 
   let totalHoldChoices = 0;
   let totalSellChoices = 0;
@@ -38,31 +42,36 @@ export function computeGameScore(
     const e = events[i];
     const choice = choices[e.quarterIndex] || 'sell_sp500';
 
+    // Value today of this quarter's net proceeds under each choice (total return, dividends reinvested)
+    const holdToday = e.netProceedsAtVest * e.stockGrowthToToday;
+    const sellToday = e.netProceedsAtVest * e.sp500GrowthToToday;
+
+    optimalValue += Math.max(holdToday, sellToday);
+    worstValue += Math.min(holdToday, sellToday);
+
     if (choice === 'hold') {
-      totalUserStockShares += e.netSharesVested;
+      userValue += holdToday;
       totalHoldChoices++;
     } else if (choice === 'sell_sp500') {
-      totalUserSp500Shares += e.netProceedsAtVest / e.sp500PriceAtVest;
+      userValue += sellToday;
       totalSellChoices++;
     } else if (choice === 'split5050') {
-      totalUserStockShares += e.netSharesVested * 0.5;
-      totalUserSp500Shares += (e.netProceedsAtVest * 0.5) / e.sp500PriceAtVest;
+      userValue += 0.5 * holdToday + 0.5 * sellToday;
       totalHoldChoices += 0.5;
       totalSellChoices += 0.5;
     }
   }
 
-  const userFinalValue = Math.round(
-    totalUserStockShares * currentStockPrice + totalUserSp500Shares * currentSp500Price
-  );
+  const userFinalValue = Math.round(userValue);
 
   const holdFinalValue = simulation.strategies.hold.finalValueToday;
   const sp500FinalValue = simulation.strategies.sp500.finalValueToday;
-  const optimalFinalValue = Math.max(holdFinalValue, sp500FinalValue);
+  // Hindsight optimum: the better of hold vs sell picked independently for every quarter
+  const optimalFinalValue = Math.round(optimalValue);
 
-  // Prospect Theory Regret Index (Loss Aversion multiplier = 2.25x)
-  const shortfall = optimalFinalValue - userFinalValue;
-  const maxPossibleShortfall = Math.abs(holdFinalValue - sp500FinalValue) || 1;
+  // Regret = share of the avoidable gap (worst possible -> perfect hindsight) that was left on the table
+  const shortfall = optimalValue - userValue;
+  const maxPossibleShortfall = optimalValue - worstValue || 1;
   let regretRatio = shortfall / maxPossibleShortfall;
   if (regretRatio < 0) regretRatio = 0;
   if (regretRatio > 1) regretRatio = 1;
@@ -81,14 +90,14 @@ export function computeGameScore(
       title: 'Wisdom of the Masses',
       description: 'Divested >70% of vest proceeds into S&P 500 broad market index.',
       icon: 'ShieldCheck',
-      unlocked: totalSellChoices / events.length >= 0.7,
+      unlocked: events.length > 0 && totalSellChoices / events.length >= 0.7,
     },
     {
       id: 'diamond_hands',
       title: 'Diamond Hands',
       description: 'Held company stock across >70% of all vest quarters.',
       icon: 'Gem',
-      unlocked: totalHoldChoices / events.length >= 0.7,
+      unlocked: events.length > 0 && totalHoldChoices / events.length >= 0.7,
     },
     {
       id: 'balanced_tactician',

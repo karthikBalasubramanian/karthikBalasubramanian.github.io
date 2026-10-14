@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { SimulationOutput, GameChoice } from '../types';
-import { computeGameScore } from '../utils/gameEngine';
+import { computeGameScore, getPlayableEvents } from '../utils/gameEngine';
 import { Gamepad2, ShieldCheck, Gem, Scale, Award, RefreshCw, Sparkles, Check, ArrowRight } from 'lucide-react';
 
 interface GameModeProps {
@@ -11,23 +11,26 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
   const [choices, setChoices] = useState<Record<number, GameChoice>>({});
   const [currentStep, setCurrentStep] = useState(1);
 
-  const totalQuarters = simulation.events.length;
-  const currentEvent = simulation.events[currentStep - 1];
+  const playableEvents = getPlayableEvents(simulation);
+  const totalQuarters = playableEvents.length;
+  const safeStep = Math.min(Math.max(1, currentStep), Math.max(1, totalQuarters));
+  const currentEvent = playableEvents[safeStep - 1];
 
   const handleChoice = (choice: GameChoice) => {
+    if (!currentEvent) return;
     setChoices(prev => ({ ...prev, [currentEvent.quarterIndex]: choice }));
-    if (currentStep < totalQuarters) {
-      setCurrentStep(currentStep + 1);
+    if (safeStep < totalQuarters) {
+      setCurrentStep(safeStep + 1);
     }
   };
 
   const applyAll = (choice: GameChoice) => {
     const newChoices: Record<number, GameChoice> = {};
-    simulation.events.forEach(e => {
+    playableEvents.forEach(e => {
       newChoices[e.quarterIndex] = choice;
     });
     setChoices(newChoices);
-    setCurrentStep(totalQuarters);
+    setCurrentStep(Math.max(1, totalQuarters));
   };
 
   const resetGame = () => {
@@ -39,6 +42,18 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
 
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
+
+  if (totalQuarters === 0) {
+    return (
+      <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-8 shadow-xl text-center">
+        <Gamepad2 className="w-8 h-8 text-emerald-400 mx-auto mb-3" />
+        <h2 className="text-lg font-extrabold text-white">No vests to replay yet</h2>
+        <p className="text-xs text-slate-400 mt-1">
+          None of the {simulation.events.length} scheduled vests for this grant have happened yet. Pick an earlier grant year to play.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -52,7 +67,7 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
             <div>
               <h2 className="text-xl font-extrabold text-white">The Vesting Time Machine Game</h2>
               <p className="text-xs text-slate-400">
-                Step through your 16-quarter vesting schedule and test your decision strategy against hindsight
+                Step through your {totalQuarters} vested quarters and test your decision strategy against hindsight
               </p>
             </div>
           </div>
@@ -88,7 +103,7 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
             {/* Step Progress Bar */}
             <div className="flex items-center justify-between text-xs font-bold mb-2">
               <span className="text-emerald-400">
-                Quarter {currentStep} of {totalQuarters}: {currentEvent?.quarterLabel}
+                Quarter {safeStep} of {totalQuarters}: {currentEvent?.quarterLabel}
               </span>
               <span className="text-slate-400">
                 {Object.keys(choices).length} Decisions Completed
@@ -98,7 +113,7 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
             <div className="w-full bg-slate-950 rounded-full h-2 overflow-hidden mb-6 border border-slate-800">
               <div
                 className="h-full bg-gradient-to-r from-emerald-500 to-teal-400 transition-all duration-300"
-                style={{ width: `${(currentStep / totalQuarters) * 100}%` }}
+                style={{ width: `${(safeStep / totalQuarters) * 100}%` }}
               ></div>
             </div>
 
@@ -192,8 +207,8 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
           {/* Stepper Footer Controls */}
           <div className="mt-6 pt-4 border-t border-slate-800 flex items-center justify-between">
             <button
-              disabled={currentStep <= 1}
-              onClick={() => setCurrentStep(currentStep - 1)}
+              disabled={safeStep <= 1}
+              onClick={() => setCurrentStep(safeStep - 1)}
               className="px-4 py-2 rounded-lg text-xs font-semibold bg-slate-800 text-slate-300 disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-700 transition-all"
             >
               &larr; Previous Quarter
@@ -204,8 +219,8 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
             </span>
 
             <button
-              disabled={currentStep >= totalQuarters}
-              onClick={() => setCurrentStep(currentStep + 1)}
+              disabled={safeStep >= totalQuarters}
+              onClick={() => setCurrentStep(safeStep + 1)}
               className="px-4 py-2 rounded-lg text-xs font-semibold bg-emerald-600 text-white disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-500 transition-all flex items-center gap-1"
             >
               Next Quarter &rarr;
@@ -260,7 +275,7 @@ export const GameMode: React.FC<GameModeProps> = ({ simulation }) => {
                 ></div>
               </div>
               <p className="text-[10px] text-slate-400 mt-1.5">
-                Based on Kahneman & Tversky Loss Aversion model (losses feel 2.25x more intense than gains).
+                Share of the gap between your worst and best possible hold/sell picks (in hindsight, per quarter) that you left on the table. Undecided quarters count as Sell &amp; S&amp;P 500.
               </p>
             </div>
           </div>

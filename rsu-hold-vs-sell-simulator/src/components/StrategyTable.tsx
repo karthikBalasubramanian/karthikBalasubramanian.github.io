@@ -19,6 +19,7 @@ export const StrategyTable: React.FC<StrategyTableProps> = ({ simulation }) => {
     const headers = [
       'Quarter',
       'Date',
+      'Status',
       'Initial Grant Shares',
       'Refresher Shares',
       'Total Gross Shares',
@@ -28,18 +29,22 @@ export const StrategyTable: React.FC<StrategyTableProps> = ({ simulation }) => {
       'Net Proceeds ($)',
       'S&P 500 Price ($)'
     ];
-    const rows = simulation.events.map(e => [
-      e.quarterLabel,
-      e.date,
-      e.initialSharesVested,
-      e.refresherSharesVested,
-      e.grossSharesVested,
-      e.taxSharesWithheld,
-      e.netSharesVested,
-      e.stockPriceAtVest,
-      e.netProceedsAtVest,
-      e.sp500PriceAtVest,
-    ]);
+    const rows = simulation.events.map(e => {
+      const vested = e.status === 'vested';
+      return [
+        e.quarterLabel,
+        e.date,
+        e.status,
+        e.initialSharesVested,
+        e.refresherSharesVested,
+        e.grossSharesVested,
+        e.taxSharesWithheld,
+        e.netSharesVested,
+        vested ? e.stockPriceAtVest : '',
+        vested ? e.netProceedsAtVest : '',
+        vested ? e.sp500PriceAtVest : '',
+      ];
+    });
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(r => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
@@ -63,6 +68,7 @@ export const StrategyTable: React.FC<StrategyTableProps> = ({ simulation }) => {
             <p className="text-xs text-slate-400">
               Quarterly vest events with {simulation.config.taxWithholdingPct}% income tax withholding
               {hasRefreshers ? ` (Includes +${simulation.config.annualRefresherShares} annual refresher shares/yr)` : ''}
+              {simulation.futureCount > 0 ? ` · ${simulation.futureCount} upcoming vest${simulation.futureCount === 1 ? '' : 's'} excluded from results` : ''}
             </p>
           </div>
         </div>
@@ -92,22 +98,32 @@ export const StrategyTable: React.FC<StrategyTableProps> = ({ simulation }) => {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800/80 font-medium">
-            {displayedEvents.map(e => (
-              <tr key={e.quarterIndex} className="hover:bg-slate-800/40 transition-colors">
-                <td className="py-3 px-3.5 font-bold text-emerald-400">{e.quarterLabel}</td>
-                <td className="py-3 px-3.5 text-slate-400">{e.date}</td>
-                {hasRefreshers && <td className="py-3 px-3.5 text-right text-slate-400">{e.initialSharesVested}</td>}
-                {hasRefreshers && <td className="py-3 px-3.5 text-right font-bold text-emerald-400">+{e.refresherSharesVested}</td>}
-                <td className="py-3 px-3.5 text-right text-slate-200">{e.grossSharesVested}</td>
-                <td className="py-3 px-3.5 text-right text-rose-400">-{e.taxSharesWithheld}</td>
-                <td className="py-3 px-3.5 text-right font-bold text-white">{e.netSharesVested}</td>
-                <td className="py-3 px-3.5 text-right text-slate-200">${e.stockPriceAtVest}</td>
-                <td className="py-3 px-3.5 text-right font-extrabold text-emerald-400">
-                  {formatCurrency(e.netProceedsAtVest)}
-                </td>
-                <td className="py-3 px-3.5 text-right text-slate-400">${e.sp500PriceAtVest}</td>
-              </tr>
-            ))}
+            {displayedEvents.map(e => {
+              const vested = e.status === 'vested';
+              return (
+                <tr key={e.quarterIndex} className={`hover:bg-slate-800/40 transition-colors ${vested ? '' : 'opacity-50'}`}>
+                  <td className="py-3 px-3.5 font-bold text-emerald-400">{e.quarterLabel}</td>
+                  <td className="py-3 px-3.5 text-slate-400">
+                    {e.date}
+                    {!vested && (
+                      <span className="ml-1.5 text-[10px] font-bold uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                        Upcoming
+                      </span>
+                    )}
+                  </td>
+                  {hasRefreshers && <td className="py-3 px-3.5 text-right text-slate-400">{e.initialSharesVested}</td>}
+                  {hasRefreshers && <td className="py-3 px-3.5 text-right font-bold text-emerald-400">+{e.refresherSharesVested}</td>}
+                  <td className="py-3 px-3.5 text-right text-slate-200">{e.grossSharesVested}</td>
+                  <td className="py-3 px-3.5 text-right text-rose-400">-{e.taxSharesWithheld}</td>
+                  <td className="py-3 px-3.5 text-right font-bold text-white">{e.netSharesVested}</td>
+                  <td className="py-3 px-3.5 text-right text-slate-200">{vested ? `$${e.stockPriceAtVest}` : '—'}</td>
+                  <td className="py-3 px-3.5 text-right font-extrabold text-emerald-400">
+                    {vested ? formatCurrency(e.netProceedsAtVest) : '—'}
+                  </td>
+                  <td className="py-3 px-3.5 text-right text-slate-400">{vested ? `$${e.sp500PriceAtVest}` : '—'}</td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -118,7 +134,7 @@ export const StrategyTable: React.FC<StrategyTableProps> = ({ simulation }) => {
           className="text-xs font-semibold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 transition-colors"
         >
           {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-          {isExpanded ? 'Show Fewer Quarters' : `Show All ${simulation.events.length} Quarters`}
+          {isExpanded ? 'Show Fewer Quarters' : `Show All ${simulation.events.length} Vests`}
         </button>
 
         <span className="text-[11px] text-slate-400 flex items-center gap-1">

@@ -42,13 +42,14 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
     const sp500PricePct = Math.round(((t.sp500Price - initialSp500Price) / initialSp500Price) * 100);
 
     return {
-      quarter: t.quarterLabel,
+      quarter: t.label,
       hold: t.holdValue,
       sp500: t.sp500Value,
       nasdaq: t.nasdaqValue,
       sector: t.sectorValue,
       cash: t.cashValue,
       hybrid5050: t.hybrid5050Value,
+      ltcg1yr: t.ltcg1yrValue,
       stockPrice: t.stockPrice,
       sp500Price: t.sp500Price,
       stockPricePct,
@@ -65,7 +66,7 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
         <div className="bg-slate-950/95 border border-slate-700/80 rounded-xl p-3.5 shadow-2xl backdrop-blur-md text-xs font-sans min-w-[210px]">
           <div className="font-extrabold text-white border-b border-slate-800 pb-1.5 mb-2 flex items-center justify-between">
             <span>{label}</span>
-            <span className="text-slate-400 font-normal">Quarter Snapshot</span>
+            <span className="text-slate-400 font-normal">{label === 'Today' ? 'Latest Prices' : 'Month Start'}</span>
           </div>
           <div className="space-y-1.5">
             {payload.map((p: any) => (
@@ -77,7 +78,7 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
                 <span className="font-extrabold text-white">
                   {chartMode === 'wealth'
                     ? formatCurrency(p.value)
-                    : `${p.value > 0 ? '+' : ''}${p.value}% ($${p.payload.stockPrice})`}
+                    : `${p.value > 0 ? '+' : ''}${p.value}% ($${p.dataKey === 'sp500PricePct' ? p.payload.sp500Price : p.payload.stockPrice})`}
                 </span>
               </div>
             ))}
@@ -101,8 +102,8 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
             </h3>
             <p className="text-xs text-slate-400">
               {chartMode === 'wealth'
-                ? 'Quarterly cumulative wealth ($) across strategy options'
-                : `Price performance of ${simulation.config.symbol} vs S&P 500 benchmark since ${simulation.config.startYear}`}
+                ? 'Monthly portfolio value ($) from first vest through today · total return, dividends reinvested'
+                : `Price performance of ${simulation.config.symbol} vs S&P 500 benchmark since first vest`}
             </p>
           </div>
         </div>
@@ -272,6 +273,18 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
                   fill="none"
                 />
               )}
+
+              {activeStrategies.ltcg1yr && (
+                <Area
+                  type="monotone"
+                  dataKey="ltcg1yr"
+                  name="1-Yr LTCG Hold"
+                  stroke={simulation.strategies.ltcg1yr.color}
+                  strokeWidth={2}
+                  strokeDasharray="6 3"
+                  fill="none"
+                />
+              )}
             </AreaChart>
           ) : (
             <LineChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
@@ -298,7 +311,7 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
                 name={`${simulation.config.symbol} Stock Price %`}
                 stroke={simulation.strategies.hold.color}
                 strokeWidth={3}
-                dot={{ r: 3, fill: simulation.strategies.hold.color }}
+                dot={false}
               />
 
               <Line
@@ -307,7 +320,7 @@ export const WealthChart: React.FC<WealthChartProps> = ({ simulation }) => {
                 name="S&P 500 Index %"
                 stroke={simulation.strategies.sp500.color}
                 strokeWidth={3}
-                dot={{ r: 3, fill: simulation.strategies.sp500.color }}
+                dot={false}
               />
             </LineChart>
           )}

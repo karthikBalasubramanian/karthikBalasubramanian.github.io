@@ -10,7 +10,7 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({ simulation }
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
-  const strategyKeys: StrategyKey[] = ['hold', 'sp500', 'nasdaq', 'sector', 'hybrid5050', 'cash'];
+  const strategyKeys: StrategyKey[] = ['hold', 'sp500', 'nasdaq', 'sector', 'hybrid5050', 'ltcg1yr', 'cash'];
 
   return (
     <div className="bg-slate-900/80 backdrop-blur-md border border-slate-800 rounded-2xl p-5 sm:p-6 shadow-xl">
@@ -21,7 +21,7 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({ simulation }
         <div>
           <h3 className="text-lg font-bold text-white">Sector & Strategy Matrix Comparison</h3>
           <p className="text-xs text-slate-400">
-            Comparing {simulation.config.symbol} against Industry Sector ({simulation.config.sectorEtf}) and Index Benchmarks
+            Comparing {simulation.config.symbol} against Industry Sector ({simulation.config.sectorEtf}) and Index Benchmarks · total return, dividends reinvested · best pick ranked after tax ({simulation.config.capitalGainsTaxPct}% LTCG)
           </p>
         </div>
       </div>
@@ -42,7 +42,7 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({ simulation }
             >
               {isBest && (
                 <div className="absolute top-3 right-3 text-[10px] font-extrabold uppercase bg-emerald-500 text-slate-950 px-2 py-0.5 rounded-full flex items-center gap-1 shadow-sm">
-                  <CheckCircle2 className="w-3 h-3" /> Best Performer
+                  <CheckCircle2 className="w-3 h-3" /> Best After Tax
                 </div>
               )}
 
@@ -58,6 +58,10 @@ export const SectorComparison: React.FC<SectorComparisonProps> = ({ simulation }
               </div>
 
               <div className="mt-3 pt-3 border-t border-slate-800/80 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between text-slate-300">
+                  <span className="text-slate-400">After-Tax if Sold Today:</span>
+                  <span className="font-bold text-white">{formatCurrency(strat.afterTaxValueToday)}</span>
+                </div>
                 <div className="flex items-center justify-between text-slate-300">
                   <span className="text-slate-400">Total Net Return:</span>
                   <span className={`font-bold ${strat.returnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>

@@ -53,9 +53,9 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ simulation }) => {
         </div>
         <div className="mt-2 flex items-center justify-between text-xs">
           <span className="text-slate-400 font-medium">Net Return:</span>
-          <span className="font-bold text-emerald-400 flex items-center">
-            <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" />
-            +{sp500.returnPct}%
+          <span className={`font-bold flex items-center ${sp500.returnPct >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
+            {sp500.returnPct >= 0 ? <ArrowUpRight className="w-3.5 h-3.5 mr-0.5" /> : <ArrowDownRight className="w-3.5 h-3.5 mr-0.5" />}
+            {sp500.returnPct > 0 ? `+${sp500.returnPct}%` : `${sp500.returnPct}%`}
           </span>
         </div>
         <div className="mt-1 text-[11px] text-slate-400">
