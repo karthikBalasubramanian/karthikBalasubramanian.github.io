@@ -10,11 +10,11 @@ description: About Karthik Balasubramanian, a Software Engineer at Adobe moving 
 I'm **Karthik Balasubramanian**, a Software Engineer at Adobe. I've worked at Adobe since 2017, starting at Marketo
 (an Adobe company), with a background in **site reliability, tools and infrastructure**.
 
-My infrastructure work includes running thousands of scheduled, containerized ETL jobs on Kubernetes and Mesos, building GitOps
-CI/CD with Jenkins and Helm, and setting up logging, monitoring and alerting with Prometheus, Grafana, OpenTelemetry
-and Splunk. I'm a **Certified Kubernetes Administrator**. More recently I've shipped agentic systems:
-LangGraph agents, agent harnesses and loops, research into isolated sandboxes for executing agent code, and agent
-evaluation using the *analyze → measure → improve* method from Hamel Husain and Shreya Shankar.
+My engineering background spans:
+
+- **Production infrastructure & Kubernetes:** Running thousands of scheduled, containerized ETL jobs on Kubernetes and Mesos, building GitOps CI/CD with Jenkins and Helm, and maintaining **Certified Kubernetes Administrator (CKA)** depth.
+- **Observability & reliability:** Logging, metrics, tracing, and alerting across Prometheus, Grafana, OpenTelemetry, and Splunk.
+- **Agentic systems & evaluation:** Shipping LangGraph agents, agent harnesses and loops, researching isolated sandboxes (e.g., Agent Sandbox) for safe code execution, and evaluating agents using the *analyze → measure → improve* methodology (Hamel Husain & Shreya Shankar).
 
 ## What I'm working on now
 
@@ -54,7 +54,9 @@ and I'm building skills on both sides.
 - Data Engineering Nanodegree, Udacity (2020)
 - Machine Learning Engineer Nanodegree, Udacity (2019)
 
-## Elsewhere
+## Elsewhere & Contact
+
+I'm focused on **ML Inference Engineering** and **GPU Systems / ML Infrastructure** roles where production reliability meets low-level performance. The best way to reach me is on LinkedIn.
 
 - GitHub: [karthikBalasubramanian](https://github.com/karthikBalasubramanian)
 - LinkedIn: [bks4line](https://www.linkedin.com/in/bks4line)

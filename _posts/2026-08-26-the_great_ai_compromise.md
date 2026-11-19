@@ -6,6 +6,7 @@ description: "An exploration of FLOPs, memory bandwidth, MFU across GPT-2 to Cla
 permalink: /ml/2026/08/26/the_great_ai_compromise.html
 categories: [Inference Engineering]
 tags: [llm-inference, gpu, roofline, mfu, agents]
+pin: true
 math: true
 image:
   path: /static/img/blog/roofline_model.png

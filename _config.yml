@@ -57,8 +57,8 @@ cdn:
 # Headshot (800x800, approved).
 avatar: /assets/img/avatar.jpg
 
-# Pending: default 1200x630 social preview image, e.g. /assets/img/og-default.png
-social_preview_image:
+# Default 1200x630 social preview image for Open Graph / Twitter cards.
+social_preview_image: /assets/img/og-default.png
 
 toc: true
 

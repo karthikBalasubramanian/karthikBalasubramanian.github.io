@@ -59,7 +59,6 @@ make check   # html-proofer (internal links)
 ## Pending settings
 
 - `analytics.google.id` (GA4) and `webmaster_verifications.google` (Search Console) in `_config.yml`
-- `social_preview_image` (default 1200×630 share image)
 
 Theme: Chirpy by Cotes Chung (MIT). The earlier Jalpc design was based on
 [JiaKunUp/jalpc_jekyll_theme](https://github.com/JiaKunUp/jalpc_jekyll_theme).
