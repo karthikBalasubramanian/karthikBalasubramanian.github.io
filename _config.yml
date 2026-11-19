@@ -147,7 +147,7 @@ exclude:
   - "*.gem"
   - "*.gemspec"
   - docs
-  - tools/test.sh
+  - scripts
   - README.md
   - LICENSE
   - Gemfile
