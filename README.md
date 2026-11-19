@@ -18,6 +18,7 @@ plus four React/Vite/Tailwind finance calculators served under their own paths a
 | `assets/css/jekyll-theme-chirpy.scss` | Theme entry point plus site styles |
 | `shared/site-chrome/` | Single source for the microsites' shared design tokens, header and footer |
 | `scripts/build-microsites.sh` | Builds every microsite and copies its `dist/` into `_site/` |
+| `_plugins/math-protect.rb` | Math in posts: write `$...$` inline and `$$...$$` display (on its own line). The plugin shields the TeX from kramdown and turns on MathJax (`math: true`) for any post that contains math |
 
 ### Microsites
 
