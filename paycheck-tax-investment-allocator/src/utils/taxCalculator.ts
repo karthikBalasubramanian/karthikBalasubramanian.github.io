@@ -17,7 +17,7 @@ export function getPayPeriodsCount(frequency: string): number {
 }
 
 export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxBreakdownResult {
-  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2027);
   const payPeriods = getPayPeriodsCount(inputs.payFrequency);
 
   // Normalize gross to Annual and Biweekly equivalent for consistent calculations
@@ -35,9 +35,12 @@ export function calculatePaycheckTaxBreakdown(inputs: UserFinancialInputs): TaxB
     : (inputs.traditional401k || 0);
   
   const age = inputs.age || 30;
-  const max401kAnnual = age >= 50
-    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
-    : taxLimits.TRADITIONAL_401K_MAX;
+  const catchup401k = age >= 60 && age <= 63 && taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    ? taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    : age >= 50
+      ? taxLimits.TRADITIONAL_401K_CATCHUP
+      : 0;
+  const max401kAnnual = taxLimits.TRADITIONAL_401K_MAX + catchup401k;
 
   let preTax401kBiweekly = rawPreTax401kBiweekly;
   if (preTax401kBiweekly * 26 > max401kAnnual) {
@@ -472,13 +475,16 @@ export function generatePaycheckSchedule(
   inputs: UserFinancialInputs,
   taxResultWithoutSchedule: Omit<TaxBreakdownResult, 'schedule'>
 ): PaycheckScheduleResult {
-  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2027);
   const bonusPeriodNumber = inputs.bonusPayPeriodNumber || 4; // default Paycheck #4 (Feb)
   const stateInfo = US_STATES[inputs.state] || US_STATES['CA'];
   const age = inputs.age || 30;
-  const max401kAnnual = age >= 50
-    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
-    : taxLimits.TRADITIONAL_401K_MAX;
+  const catchup401k = age >= 60 && age <= 63 && taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    ? taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    : age >= 50
+      ? taxLimits.TRADITIONAL_401K_CATCHUP
+      : 0;
+  const max401kAnnual = taxLimits.TRADITIONAL_401K_MAX + catchup401k;
   const maxHsaStatutoryAnnual = inputs.hsaCoverage === 'family' ? taxLimits.HSA_FAMILY_MAX : taxLimits.HSA_SINGLE_MAX;
   const maxEsppAnnualPayroll = 21250; // $21,250 annual payroll limit for 15% discount
 
@@ -1160,7 +1166,7 @@ export function generateSankeyData(
 }
 
 export function getMaximizedInputs(current: UserFinancialInputs): UserFinancialInputs {
-  const taxLimits = getTaxLimitsForYear(current.taxYear || 2026);
+  const taxLimits = getTaxLimitsForYear(current.taxYear || 2027);
   const grossBiweekly = current.grossSalary;
   const max401kAnnual = current.age >= 50
     ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP

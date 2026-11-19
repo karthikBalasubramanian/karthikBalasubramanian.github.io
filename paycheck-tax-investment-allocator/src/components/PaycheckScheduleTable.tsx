@@ -42,7 +42,7 @@ export const PaycheckScheduleTable: React.FC<PaycheckScheduleTableProps> = ({
             <h3 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
               <span>26-Paycheck Chronological Timeline & Sequencing</span>
               <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-purple-950 text-purple-300 border border-purple-800">
-                2026 Tax Year
+                {inputs.taxYear || 2027} Tax Year
               </span>
             </h3>
             <p className="text-xs text-slate-400">

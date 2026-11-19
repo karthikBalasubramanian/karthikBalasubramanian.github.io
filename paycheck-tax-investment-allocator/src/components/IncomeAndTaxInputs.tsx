@@ -64,7 +64,7 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
 
               <span className="bg-indigo-950 border border-indigo-700 text-indigo-300 font-bold px-2.5 py-1 rounded-lg flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-indigo-400" />
-                IRS {inputs.taxYear || 2026}
+                IRS {inputs.taxYear || 2027}
               </span>
 
               <span className="bg-slate-800 border border-slate-700 text-emerald-300 font-mono font-bold px-2.5 py-1 rounded-lg">
@@ -170,14 +170,14 @@ export const IncomeAndTaxInputs: React.FC<IncomeAndTaxInputsProps> = ({
                   <span>IRS Tax Year</span>
                 </label>
                 <select
-                  value={inputs.taxYear || 2026}
-                  onChange={(e) => onChange({ taxYear: parseInt(e.target.value) || 2026 })}
+                  value={inputs.taxYear || 2027}
+                  onChange={(e) => onChange({ taxYear: parseInt(e.target.value) || 2027 })}
                   className="w-full bg-indigo-50/60 border border-indigo-200 rounded-xl py-2 px-3 text-sm text-indigo-950 font-bold focus:outline-none focus:border-indigo-500"
                 >
                   <option value={2024}>2024 (Official IRS)</option>
                   <option value={2025}>2025 (Official IRS)</option>
-                  <option value={2026}>2026 (Active IRS)</option>
-                  <option value={2027}>2027 (Projected CPI-U)</option>
+                  <option value={2026}>2026 (Official IRS)</option>
+                  <option value={2027}>2027 (Active IRS)</option>
                   <option value={2028}>2028 (Projected CPI-U)</option>
                 </select>
               </div>

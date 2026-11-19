@@ -160,7 +160,7 @@ export const RolloverMaximizer: React.FC<RolloverMaximizerProps> = ({ inputs }) 
                 <CheckCircle className="w-4 h-4 text-emerald-600" /> 2. Utilize 5-Year Superfunding
               </div>
               <p className="text-slate-600 dark:text-slate-400">
-                Gift up to $95,000 at once ($190k joint) without gift tax penalty, front-loading 5 years of compounding!
+                Gift up to $100,000 at once ($200k joint) without gift tax penalty, front-loading 5 years of compounding!
               </p>
             </div>
 

@@ -111,7 +111,7 @@ export const InputPanel: React.FC<InputPanelProps> = ({
             onChange={e => onChangeConfig({ ...config, startYear: Number(e.target.value) })}
             className="w-full bg-slate-950 border border-slate-700/80 rounded-xl px-3.5 py-2.5 text-sm font-semibold text-white focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all"
           >
-            {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025].map(yr => (
+            {[2018, 2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026].map(yr => (
               <option key={yr} value={yr}>
                 {yr} Grant Snapshot
               </option>

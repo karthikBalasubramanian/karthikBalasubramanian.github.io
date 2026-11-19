@@ -66,13 +66,13 @@ Under Section 126 of the SECURE 2.0 Act, if your child does not attend college o
 **2. Key Eligibility Requirements for the Rollover:**
 * The 529 account must have been open for at least **15 years**.
 * Rolled-over funds (and earnings) must have been in the 529 account for at least **5 years**.
-* Rollovers are subject to annual Roth IRA contribution limits (e.g., $7,000/year in 2024/2025).
+* Rollovers are subject to annual Roth IRA contribution limits ($7,500/year in 2027).
 * The child must have compensation/earned income equal to or exceeding the rollover amount in that year.
 
 **3. Action Plan for $${monthly}/month ($${annual}/year):**
 * Keep contributing $${monthly}/mo to a 529 plan now while child is age ${age}.
 * By age 18, you will have accumulated significant compound growth.
-* If college is not needed, initiate annual $7,000 rollovers to their Roth IRA over a 5-year span ($35k max). This seeds $35,000 into a tax-free Roth IRA that can grow to over **$500,000+** by their retirement!`;
+* If college is not needed, initiate annual rollovers (up to the $7,500/yr IRA limit) to their Roth IRA until you reach the $35k lifetime max. This seeds $35,000 into a tax-free Roth IRA that can grow to over **$500,000+** by their retirement!`;
     }
 
     if (qLower.includes('trump') || qLower.includes('custodial') || qLower.includes('$5k') || qLower.includes('both')) {

@@ -200,7 +200,7 @@ export const PortfolioOptimizer: React.FC<PortfolioOptimizerProps> = ({
               id="child-earned-income-input"
               type="number"
               min="0"
-              max="7000"
+              max="7500"
               step="100"
               value={inputs.childEarnedIncome}
               onChange={(e) => onUpdateInputs({ childEarnedIncome: Number(e.target.value) })}

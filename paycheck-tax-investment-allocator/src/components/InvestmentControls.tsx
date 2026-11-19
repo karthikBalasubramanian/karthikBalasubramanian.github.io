@@ -10,11 +10,14 @@ interface InvestmentControlsProps {
 
 export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs, onChange }) => {
   const payPeriods = 26;
-  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2027);
 
-  const max401kAnnual = inputs.age >= 50
-    ? taxLimits.TRADITIONAL_401K_MAX + taxLimits.TRADITIONAL_401K_CATCHUP
-    : taxLimits.TRADITIONAL_401K_MAX;
+  const catchup401k = inputs.age >= 60 && inputs.age <= 63 && taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    ? taxLimits.TRADITIONAL_401K_SUPER_CATCHUP
+    : inputs.age >= 50
+      ? taxLimits.TRADITIONAL_401K_CATCHUP
+      : 0;
+  const max401kAnnual = taxLimits.TRADITIONAL_401K_MAX + catchup401k;
   const max401kBiweekly = Math.round((max401kAnnual / payPeriods) * 100) / 100;
 
   const employerHsaAnnual = inputs.employerHsaAnnual || 0;
@@ -268,7 +271,7 @@ export const PreTaxDeductionsCard: React.FC<InvestmentControlsProps> = ({ inputs
 
 export const PostTaxAllocationsCard: React.FC<InvestmentControlsProps> = ({ inputs, onChange }) => {
   const payPeriods = 26;
-  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2026);
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2027);
 
   const maxIraAnnual = inputs.age >= 50
     ? taxLimits.IRA_MAX + taxLimits.IRA_CATCHUP

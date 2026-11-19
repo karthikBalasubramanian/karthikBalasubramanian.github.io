@@ -71,7 +71,7 @@ export function calculateOptimalAllocation(inputs: ParentInputs): AllocationResu
         ? `Ideal for child's $${childEarnedIncome}/yr earned income. Tax-free compounding for life!`
         : 'Requires child earned income (e.g. babysitting, modeling, family job) to unlock.';
     } else if (id === 'utma_ugma') {
-      recommendationReason = 'Flexible spending for non-education expenses (car, sports, computer) with first $1,350 tax-free.';
+      recommendationReason = 'Flexible spending for non-education expenses (car, sports, computer) with first $1,400 tax-free.';
     } else if (id === 'coverdell_esa') {
       recommendationReason = 'Tax-free for K-12 tuition with individual stock selection capability.';
     } else {

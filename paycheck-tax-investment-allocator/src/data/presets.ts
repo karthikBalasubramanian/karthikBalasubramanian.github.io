@@ -12,15 +12,15 @@ export const FINANCIAL_PRESETS: PresetProfile[] = [
       filingStatus: 'married',
       state: 'CA',
       dependents: 2,
-      traditional401k: 903.85, // $23,500 / 26
-      hsa: 271.15, // ($8,750 family cap - $1,700 employer seed) / 26
+      traditional401k: 980.77, // $25,500 / 26
+      hsa: 280.77, // ($9,000 family cap - $1,700 employer seed) / 26
       hsaCoverage: 'family',
       employerHsaAnnual: 1700,
       fsa: 0,
       roth401k: 0,
       roth401kIsPercent: false,
       ira: 0,
-      rothIra: 269.23, // $7,000 / 26
+      rothIra: 288.46, // $7,500 / 26
       plan529: 200,
       custodialAccount: 100,
       trumpAccount: 100,

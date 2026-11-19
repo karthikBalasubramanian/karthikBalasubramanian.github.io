@@ -30,7 +30,7 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
     color: 'emerald',
     bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
     borderColor: 'border-emerald-200 dark:border-emerald-800',
-    annualLimit: '$19,000/yr (Gift tax limit) or $95,000 superfund',
+    annualLimit: '$20,000/yr (2027 Gift tax limit) or $100,000 superfund',
     taxTreatment: '100% Tax-Free growth & withdrawals for qualified education + State tax deduction',
     ageOfControl: 'Parent maintains control indefinitely (Beneficiary changed anytime)',
     flexibility: 'Education Only',
@@ -43,7 +43,7 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
       'SECURE 2.0 Act: Up to $35,000 lifetime rollover to child Roth IRA (no tax/penalty)',
       'State tax deduction or credit in over 30 states',
       'Parent retains full control of the account; beneficiary can be transferred to siblings',
-      'Superfunding option: Contribute up to $95k per parent ($190k joint) upfront using 5-year gift rule',
+      'Superfunding option: Contribute up to $100k per parent ($200k joint) upfront using 5-year gift rule',
     ],
     cons: [
       'Non-qualified withdrawals incur income tax + 10% penalty on earnings (waived for scholarships)',
@@ -51,7 +51,7 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
       'Roth IRA rollover requires 15-year account age and annual IRA contribution limits',
     ],
     keyRules: [
-      'SECURE 2.0 Roth Rollover: Account must be open for 15+ years; earnings/contributions subject to annual IRA cap (e.g., $7,000/yr up to $35,000 lifetime max).',
+      'SECURE 2.0 Roth Rollover: Account must be open for 15+ years; earnings/contributions subject to annual IRA cap ($7,500/yr in 2027 up to $35,000 lifetime max).',
       'K-12 Expense Limit: Up to $10,000 per year per student for private elementary or high school tuition.',
       'Student Loan Repayment: Up to $10,000 lifetime limit per beneficiary.',
     ],
@@ -150,13 +150,13 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
     color: 'purple',
     bgColor: 'bg-purple-50 dark:bg-purple-950/30',
     borderColor: 'border-purple-200 dark:border-purple-800',
-    annualLimit: 'Up to 100% of earned income ($7,000 max in 2026)',
+    annualLimit: 'Up to 100% of earned income ($7,500 max in 2027)',
     taxTreatment: '100% Tax-Free growth & 100% Tax-Free qualified withdrawals in retirement',
     ageOfControl: 'Age 18 or 21 (transfers to standard Roth IRA)',
     flexibility: 'High',
     secure20Eligible: true,
     iraRolloverEligible: true,
-    description: 'The ultimate wealth-building account for working kids. Every dollar earned (babysitting, modeling, family biz, yard work) can be contributed up to $7k/yr for 100% tax-free lifetime compounding.',
+    description: 'The ultimate wealth-building account for working kids. Every dollar earned (babysitting, modeling, family biz, yard work) can be contributed up to $7,500/yr for 100% tax-free lifetime compounding.',
     bestFor: 'Children who have legitimate earned income (W-2 or 1099/self-employed earnings).',
     pros: [
       '100% Tax-Free compounding forever — zero tax on gains or retirement withdrawals',
@@ -167,7 +167,7 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
     ],
     cons: [
       'Strict Requirement: Child MUST have legitimate, documented earned income',
-      'Subject to annual IRA limits ($7,000 in 2026 or earned income amount, whichever is lower)',
+      'Subject to annual IRA limits ($7,500 in 2027 or earned income amount, whichever is lower)',
       'Requires income records (Form 1040, W-2, or detailed self-employment log)',
     ],
     keyRules: [
@@ -210,8 +210,8 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
     color: 'blue',
     bgColor: 'bg-blue-50 dark:bg-blue-950/30',
     borderColor: 'border-blue-200 dark:border-blue-800',
-    annualLimit: 'Unlimited ($19,000/yr per donor gift tax exclusion)',
-    taxTreatment: 'Kiddie Tax rules (First $1,350 tax-free, next $1,350 at child rate, rest at parent rate)',
+    annualLimit: 'Unlimited ($20,000/yr per donor 2027 gift tax exclusion)',
+    taxTreatment: 'Kiddie Tax rules (First $1,400 tax-free, next $1,400 at child rate, rest at parent rate)',
     ageOfControl: 'Age 18, 21, or 25 depending on state laws',
     flexibility: 'High',
     secure20Eligible: false,
@@ -221,19 +221,19 @@ export const ACCOUNT_DATA: Record<AccountId, AccountInfo> = {
     pros: [
       'Zero contribution limits (save as much as you want)',
       'Zero restrictions on how funds are spent (must benefit the child)',
-      'First $1,350 of unearned income is completely tax-free every year',
-      'Next $1,350 is taxed at the child’s low tax rate',
+      'First $1,400 of unearned income is completely tax-free every year',
+      'Next $1,400 is taxed at the child’s low tax rate',
       'Can hold stocks, ETFs, mutual funds, bonds, real estate, and digital assets',
     ],
     cons: [
       'Child receives 100% irrevocable ownership and control at age 18/21',
-      'Unearned income over $2,700 per year is taxed at the parent’s marginal income tax rate (Kiddie Tax)',
+      'Unearned income over $2,800 per year is taxed at the parent’s marginal income tax rate (Kiddie Tax)',
       'Impacts financial aid eligibility more heavily than 529 plans (counted as 20% child asset)',
     ],
     keyRules: [
       'Irrevocable Gift: Once deposited, funds legally belong to the child and cannot be taken back by parents.',
       'Age of Majority: Custodianship terminates at age 18, 21, or 25 depending on state statute.',
-      'Kiddie Tax: Tax brackets adjust annually (e.g. 2026: 0-$1350 0%, $1350-$2700 child rate, >$2700 parent rate).',
+      'Kiddie Tax: Tax brackets adjust annually (2027: $0-$1,400 0%, $1,400-$2,800 child rate, >$2,800 parent rate).',
     ],
     officialLinks: [
       {

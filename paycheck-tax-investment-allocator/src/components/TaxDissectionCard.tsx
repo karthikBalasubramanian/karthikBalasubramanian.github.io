@@ -1,6 +1,6 @@
 import React from 'react';
 import { UserFinancialInputs, TaxBreakdownResult } from '../types';
-import { US_STATES } from '../data/taxRates';
+import { US_STATES, getTaxLimitsForYear } from '../data/taxRates';
 import { Landmark, FileText, Percent, Shield, Info, ArrowUpRight, ChevronRight, PieChart } from 'lucide-react';
 
 interface TaxDissectionCardProps {
@@ -15,6 +15,7 @@ export const TaxDissectionCard: React.FC<TaxDissectionCardProps> = ({
   onToggleDissectInSankey,
 }) => {
   const stateInfo = US_STATES[inputs.state] || US_STATES.OTHER;
+  const taxLimits = getTaxLimitsForYear(inputs.taxYear || 2027);
   const isBiweekly = inputs.payFrequency !== 'annual';
   const mul = isBiweekly ? 1 : 26;
 
@@ -57,7 +58,7 @@ export const TaxDissectionCard: React.FC<TaxDissectionCardProps> = ({
       percentageOfTax: totalTaxes > 0 ? ((taxResult.socialSecurityBiweekly * mul) / totalTaxes) * 100 : 0,
       color: 'bg-amber-500',
       textColor: 'text-amber-400',
-      description: '6.2% FICA tax up to $176,100 annual wage cap',
+      description: `6.2% FICA tax up to $${taxLimits.SOCIAL_SECURITY_WAGE_CAP.toLocaleString()} annual wage cap`,
     },
     {
       id: 'medicare',
