@@ -1,0 +1,55 @@
+---
+layout: null
+permalink: /llms.txt
+sitemap: false
+---
+# {{ site.title }}
+
+> {{ site.tagline }} — {{ site.description }}
+
+Software Engineer at Adobe (since 2017, starting at Marketo) transitioning from site reliability, Kubernetes infrastructure, observability, and agentic systems into **ML Inference Engineering** and **GPU Kernel Engineering**.
+
+## Focus & Target Roles
+
+- **Target roles:** ML Inference Engineer, GPU Systems Engineer, ML Infrastructure Engineer (LLM serving, performance benchmarking, reliability).
+- **Current focus:** Triton & CUDA GPU kernels (Vizuara AI Kernel Engineering), building LLMs from scratch in PyTorch (Sebastian Raschka), and LLM serving/benchmarking with vLLM and SGLang (p50/p99 latency, TTFT, tokens/s, MFU, KV-cache management).
+
+## Background & Skills
+
+- **Languages:** Python, Java
+- **ML & LLMs:** PyTorch, Transformers, LLM evaluation (*analyze → measure → improve*, Hamel Husain & Shreya Shankar), agentic frameworks (LangGraph), agent harnesses & isolated sandboxes (Agent Sandbox), A2A protocol
+- **Inference & Kernels (in progress):** Triton, CUDA, vLLM, SGLang, roofline/MFU analysis
+- **Infrastructure:** Kubernetes (CKA), Docker, Helm, Terraform, Airflow, FastAPI, microservices, GitOps CI/CD
+- **Observability:** Prometheus, Grafana, OpenTelemetry, Splunk
+- **Data:** PostgreSQL, MySQL, MS SQL Server, Azure Data Explorer, Redis, Databricks
+- **Education:** Master of Information Systems Management, Carnegie Mellon University (Heinz College, 2017); B.Tech in Information Technology, SRM University (2013)
+- **Certifications:** Certified Kubernetes Administrator (CKA, Linux Foundation, 2024); AI Evals for Engineers & PMs (Maven, 2026); Udacity Nanodegrees in Cloud DevOps (2020), Data Engineering (2020), and Machine Learning (2019)
+
+## Core Pages
+
+- [Home]({{ '/' | absolute_url }}): Positioning, featured inference/LLM work, and latest posts
+- [Blog]({{ '/blog/' | absolute_url }}): Full archive of technical writing
+- [Projects]({{ '/projects/' | absolute_url }}): Public GitHub repositories and ML/infrastructure projects
+- [About]({{ '/about/' | absolute_url }}): Detailed background, skills, education, and certifications
+- [Tools]({{ '/tools/' | absolute_url }}): Client-side personal finance calculators built in React and TypeScript
+- [RSS Feed]({{ '/feed.xml' | absolute_url }}): Atom/RSS feed of all blog posts
+
+## Key Repositories
+
+- [pytorch_tutorials](https://github.com/karthikBalasubramanian/pytorch_tutorials): Building an LLM from scratch in PyTorch (BPE tokenization, embeddings, causal/multi-head attention, GPTModel, MPS vs CPU benchmarks, DDP)
+- [jev-tutorials](https://github.com/karthikBalasubramanian/jev-tutorials): Calibrated non-generative decision models for support triage in TypeScript/Node.js (Vercel AI SDK)
+- [project-ml-microservice-kubernetes](https://github.com/karthikBalasubramanian/project-ml-microservice-kubernetes): Containerized ML inference API deployed on Kubernetes with CI/CD and structured logging
+- [FER](https://github.com/karthikBalasubramanian/FER): Facial emotion recognition using heuristic and transfer learning
+
+## Writing
+{% for post in site.posts %}
+- [{{ post.title }}]({{ post.url | absolute_url }}) ({{ post.date | date: "%Y-%m-%d" }}){% if post.description %}: {{ post.description }}{% endif %}{% endfor %}
+
+## Optional: Interactive Tools
+{% for tool in site.data.tools %}
+- [{{ tool.title }}]({{ tool.url | absolute_url }}): {{ tool.goal }}{% endfor %}
+
+## Contact
+
+- GitHub: https://github.com/{{ site.github.username }}
+- LinkedIn: https://www.linkedin.com/in/bks4line
