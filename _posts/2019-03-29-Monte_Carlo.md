@@ -204,7 +204,7 @@ then the value of state `(4, 7, False)` was estimated to be `-0.3877551020408163
 
 If you are unfamiliar with how to use `defaultdict` in Python, you are encouraged to check out [this source](https://www.accelebrate.com/blog/using-defaultdict-python/).
 
-![Monte Carlo First Visit State Value prediction Algo](https://drive.google.com/uc?export=view&id=1kupLK_0dvl0CV7LFejJN05-pMpGKIf_y)
+![Monte Carlo First Visit State Value prediction Algo](https://lh3.googleusercontent.com/d/1kupLK_0dvl0CV7LFejJN05-pMpGKIf_y)
 
 
 ```python
@@ -265,7 +265,7 @@ plot_blackjack_values(V)
 
     Episode 500000/500000.
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1L7WQdBhdKkKo32uPtCMMA6GE83wo0DHf)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1L7WQdBhdKkKo32uPtCMMA6GE83wo0DHf)
 
 
 
@@ -310,7 +310,7 @@ Your algorithm has three arguments:
 The algorithm returns as output:
 - `Q`: This is a dictionary (of one-dimensional arrays) where `Q[s][a]` is the estimated action value corresponding to state `s` and action `a`.
 
-![Monte Carlo First Visit Action Value prediction Algo](https://drive.google.com/uc?export=view&id=15P5GrYZwpp2L1li1D_UuNCPfp2EvfLZz)
+![Monte Carlo First Visit Action Value prediction Algo](https://lh3.googleusercontent.com/d/15P5GrYZwpp2L1li1D_UuNCPfp2EvfLZz)
 
 
 ```python
@@ -362,7 +362,7 @@ plot_blackjack_values(V_to_plot)
     Episode 500000/500000.
 
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1yei5Ztn6DOsamXWcDsKyaNeI9M5JKiva)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1yei5Ztn6DOsamXWcDsKyaNeI9M5JKiva)
 
 
 ### Part 3: MC Control: GLIE
@@ -380,11 +380,11 @@ The algorithm returns as output:
 
 (_Feel free to define additional functions to help you to organize your code._)
 
-![Monte Carlo Control - Greedy in limit with exploration Algo](https://drive.google.com/uc?export=view&id=12986rwBhhtCAwyO3a_y7v0CXuhGIEnif)
+![Monte Carlo Control - Greedy in limit with exploration Algo](https://lh3.googleusercontent.com/d/12986rwBhhtCAwyO3a_y7v0CXuhGIEnif)
 
 ###### Algorithm we follow for greedy policy
 
-![Greedy Policy](https://drive.google.com/uc?export=view&id=1wbjV3tzgNA6SeVnLywwOZYUUQoeo9P2s)
+![Greedy Policy](https://lh3.googleusercontent.com/d/1wbjV3tzgNA6SeVnLywwOZYUUQoeo9P2s)
 
 
 ```python
@@ -526,7 +526,7 @@ plot_blackjack_values(V_glie)
 ```
 
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1FFnCJttM8iFzDAZnuXie4pqNvH955i9s)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1FFnCJttM8iFzDAZnuXie4pqNvH955i9s)
 
 
 Finally, we visualize the policy that is estimated to be optimal.
@@ -540,12 +540,12 @@ plot_policy(policy_glie)
 ```
 
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1BIR8O5wUI81saELC-XQqnhx5iSkqXht2)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1BIR8O5wUI81saELC-XQqnhx5iSkqXht2)
 
 
 The **true** optimal policy $\pi_*$ can be found on page 82 of the [textbook](http://go.udacity.com/rl-textbook) (and appears below).  Compare your final estimate to the optimal policy - how close are you able to get?  If you are not happy with the performance of your algorithm, take the time to tweak the decay rate of $\epsilon$ and/or run the algorithm for more episodes to attain better results.
 
-![True Optimal Policy](https://drive.google.com/uc?export=view&id=1wFQFMnh-Vebcr1TT50IZme7TnttNxJSu)
+![True Optimal Policy](https://lh3.googleusercontent.com/d/1wFQFMnh-Vebcr1TT50IZme7TnttNxJSu)
 
 ### Part 4: MC Control: Constant-$\alpha$
 
@@ -562,7 +562,7 @@ The algorithm returns as output:
 
 (_Feel free to define additional functions to help you to organize your code._)
 
-![Monte Carlo Control with constant alpha](https://drive.google.com/uc?export=view&id=1QigoicFeaQ5Mbb0Qr33Nkp1Vext7SOee)
+![Monte Carlo Control with constant alpha](https://lh3.googleusercontent.com/d/1QigoicFeaQ5Mbb0Qr33Nkp1Vext7SOee)
 
 
 ```python
@@ -617,7 +617,7 @@ plot_blackjack_values(V_alpha)
 ```
 
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1fS5vl6uCfsyA1RUws0F0AdOHvGE57XP4)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1fS5vl6uCfsyA1RUws0F0AdOHvGE57XP4)
 
 
 Finally, we visualize the policy that is estimated to be optimal.
@@ -629,12 +629,12 @@ plot_policy(policy_alpha)
 ```
 
 
-![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1QXvT7W0VOByZFEN3HnP9c3XtJpSRa5VY)
+![Blackjack Monte Carlo value function or policy plot](https://lh3.googleusercontent.com/d/1QXvT7W0VOByZFEN3HnP9c3XtJpSRa5VY)
 
 
 The **true** optimal policy $\pi_*$ can be found on page 82 of the [textbook](http://go.udacity.com/rl-textbook) (and appears below).  Compare your final estimate to the optimal policy - how close are you able to get?  If you are not happy with the performance of your algorithm, take the time to tweak the decay rate of $\epsilon$, change the value of $\alpha$, and/or run the algorithm for more episodes to attain better results.
 
-![True Optimal Policy](https://drive.google.com/uc?export=view&id=1wFQFMnh-Vebcr1TT50IZme7TnttNxJSu)
+![True Optimal Policy](https://lh3.googleusercontent.com/d/1wFQFMnh-Vebcr1TT50IZme7TnttNxJSu)
 
 #### Playing games with the dealer with  $\pi_*$ 
   I have added the last state of the game when it ends which contains (sum(player_hand), sum(dealer_hand), usable_ace)

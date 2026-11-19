@@ -29,7 +29,7 @@ The objective of this project is to showcase two different solutions in solving 
  
  Here is the basic structure in attempting to solve the problem.
 
-![FER](https://drive.google.com/uc?export=view&id=1dvJBlYr76j7VF6JN2ew87paZF6svoSrz)
+![FER](https://lh3.googleusercontent.com/d/1dvJBlYr76j7VF6JN2ew87paZF6svoSrz)
 
 1. Data preprocessing - Steps done to create a clean dataset
 2. Feature Extraction and Normalization methods - The supervised learning approach uses some hand crafted shape prediction methods while the deep neuralnets have data normalization steps. Both these methods are followed by creation of train, valid test set splits
@@ -72,7 +72,7 @@ The images within each subfolder may have an image sequence of the subject. The 
 
 Here is the statistical report of the dataset after I do all the preprocessing.
 
-![Dataset_stats](https://drive.google.com/uc?export=view&id=1stMpFbmTcgN8pcR057XZd7W0GRka9IMg)
+![Dataset_stats](https://lh3.googleusercontent.com/d/1stMpFbmTcgN8pcR057XZd7W0GRka9IMg)
 
 **Abnormalities in the Dataset**  
 I am aware of the following abnormalities in the dataset. but I am still going with the dataset.
@@ -88,23 +88,23 @@ Before we jump into finding solutions to the problem by defining the algorithms,
 
 #### Understanding  Feature Extraction Process In Baseline models
 
-![ActionUnit](https://drive.google.com/uc?export=view&id=1xMnDLiOz5_MxnDCMzJ5mKjM2yMXNNzCR)
+![ActionUnit](https://lh3.googleusercontent.com/d/1xMnDLiOz5_MxnDCMzJ5mKjM2yMXNNzCR)
 
 The Feature Extraction process has 2 different phases.
 
 1. Finding the face - Libraries like dlib has functions like `get_frontal_face_detector` which is handy to identify the face region
 2. Extracting the features in the face - This is where most of the research in the past has gone into. It has been done so far by realizing through manual interference. One of the method is called Facial Action Coding System (FACS) which describes Facial expression using Action Units (AU). An Action Unit is a facial action like "raising the Inner eyebrow". Multiple Activation units when combined expresses the emotion in the underlying face. An example is provided below.
 
-![FACS](https://drive.google.com/uc?export=view&id=14krm8krZudg4ekBOva4XYKcnAPoOM15j)
+![FACS](https://lh3.googleusercontent.com/d/14krm8krZudg4ekBOva4XYKcnAPoOM15j)
 
 I use dlib's `shape_predictor` and its learned landmark predictor `shape_predictor_68_face_landmarks.bat` to extract AUs.
 
 The below image helps us understand the facial action units.
 
-![FACS_WITH_FACE](https://drive.google.com/uc?export=view&id=1jUHU36pi5MB-UBoaxmyn4RLQN6UAq_h-)
+![FACS_WITH_FACE](https://lh3.googleusercontent.com/d/1jUHU36pi5MB-UBoaxmyn4RLQN6UAq_h-)
 
 
-![FACS_WITHOUT_FACE](https://drive.google.com/uc?export=view&id=1BZJ6uBFcn7KfEvuC8YyZqiMyoY2b8jlW)
+![FACS_WITHOUT_FACE](https://lh3.googleusercontent.com/d/1BZJ6uBFcn7KfEvuC8YyZqiMyoY2b8jlW)
 
 The `shape_predictor_68_face_landmarks` above have extracted 67 points in any face in both X and Y axis from the image presented. This X and Y points when combined becomes a Facial Landmark. They describe the position of all the “moving parts” of the depicted face, the things you use to express an emotion. The good thing about extracting facial landmark is that I will be extracting very important information from the image to use it and classify an emotion. But,
 
@@ -225,7 +225,7 @@ I chose Linear SVM as the baseline model and I want to see if the transfer learn
 
 **Linear SVM Test data Confusion Matrix**
 
-![LIN_SVM](https://drive.google.com/uc?export=view&id=1FYxH9I390DgcGKJ0nz9a7eMq_e4M4qmQ)
+![LIN_SVM](https://lh3.googleusercontent.com/d/1FYxH9I390DgcGKJ0nz9a7eMq_e4M4qmQ)
 
 
 
@@ -267,7 +267,7 @@ Now that we have train and test sets obtained from the above process, we want to
 
 The non-uniformity of image distribution among different emotions could not be resolved as the data itself is very constrained. The papers I read had defined ways in extracting the emotions via peak frames. If I have to introduce any data from outside the dataset, I would have to go against the methodology of Cohn-Kanade data collection. The final test set had the following distribution of emotions.
 
-![TEST_SET](https://drive.google.com/uc?export=view&id=1RPYbU8tVyM4a0K4uqz9wbF-xYWJpunOV)
+![TEST_SET](https://lh3.googleusercontent.com/d/1RPYbU8tVyM4a0K4uqz9wbF-xYWJpunOV)
 
 ```
 emotion
@@ -290,9 +290,9 @@ After obtaining train test and valid sets, I used the APIs defined in `SKLearn` 
 
 **Observations from implementations of Transfer Learning**
 
-![VGG_LOSS_AND_ACCURACY](https://drive.google.com/uc?export=view&id=16l5v0OqKiyVcW8SIcZpl4r8Flt_VJBni)
+![VGG_LOSS_AND_ACCURACY](https://lh3.googleusercontent.com/d/16l5v0OqKiyVcW8SIcZpl4r8Flt_VJBni)
 
-![XCEPTION_LOSS_AND_ACCURACY](https://drive.google.com/uc?export=view&id=1rjrBqD1OS4WQAYakRbMK_NX8ijCew5PL)
+![XCEPTION_LOSS_AND_ACCURACY](https://lh3.googleusercontent.com/d/1rjrBqD1OS4WQAYakRbMK_NX8ijCew5PL)
 
 1. In both VGG16 and Xception Transfer learning experiments we saw that the Training Accuracy and Training loss imporves drastically. But the Validation accuracy and losses suffer reaching a plateau in a few iterations.
 
@@ -338,7 +338,7 @@ There are total of 6 components to our image augumented VGG16 model.
 
 The process could not be improved. It only got worse. I realized my mistakes later on after completing the project. I had no time to do them so I will document them as part of improvements.
 
-![AUGUMENTED_VGG_LOSS_AND_ACCURACY](https://drive.google.com/uc?export=view&id=1EvBI2g7irvCstBMG1tsjlxmAY0R6Cn9y)
+![AUGUMENTED_VGG_LOSS_AND_ACCURACY](https://lh3.googleusercontent.com/d/1EvBI2g7irvCstBMG1tsjlxmAY0R6Cn9y)
 
 ## IV. Results
 
@@ -350,11 +350,11 @@ The process could not be improved. It only got worse. I realized my mistakes lat
 | Transfer Learned VGG16    | 0.42                       | 1.15                        | 1.27                      | 0.91             | 0.63             | 0.56            |
 | Data Augumented VGG16     | 1.71                       | 1.83                        | 1.78                      | 0.25             | 0.24             | 0.21            |
 
-![VGG16_CONFUSION_MATRIX](https://drive.google.com/uc?export=view&id=1vmCx7fCppS4NbKM8SLxGimRyMHWYKySN)
+![VGG16_CONFUSION_MATRIX](https://lh3.googleusercontent.com/d/1vmCx7fCppS4NbKM8SLxGimRyMHWYKySN)
 
-![XCEPTION_CONFUSION_MATRIX](https://drive.google.com/uc?export=view&id=1lt-19Gcn4c-2S-No9YQDNkTHpmJi1kus)
+![XCEPTION_CONFUSION_MATRIX](https://lh3.googleusercontent.com/d/1lt-19Gcn4c-2S-No9YQDNkTHpmJi1kus)
 
-![AUGUMENTED_VGG_CONFUSION_MATRIX](https://drive.google.com/uc?export=view&id=1181h-Zpzbr519MPf_ihVKyDwMrrqhh4o)
+![AUGUMENTED_VGG_CONFUSION_MATRIX](https://lh3.googleusercontent.com/d/1181h-Zpzbr519MPf_ihVKyDwMrrqhh4o)
 
 After several iterations of the parameters in the models, I present the output above. From the given output we can clearly see that none of the tried models is resonable. They have barely learnt emotion other than the skewed Neutral emotion in the hold out test dataset. Accuracy has been a very bad metric to put into evaluation. We can see from the confusion matrix that the models have barely learnt anything. Still due to its non-uniformity, Accuracy has been upto 68%. Data Augumentation has performed horribly. Augumentations to data has greatly affected the loss performance. The models above cannot be trusted for a production usecase. I could not decide on the final model based on the performance results I got.
 

@@ -43,7 +43,7 @@ for i in range(36):
     ax.imshow(np.squeeze(x_train[i]))
 ```
 
-<a href="https://drive.google.com/uc?export=view&id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5"><img src="https://drive.google.com/uc?export=view&id=10qfV53-pHFUl0w7ta2HfZEbXph00vir5" style="width: 750px; max-width: 100%; height: auto" alt="Grid of 36 sample CIFAR-10 training images" title="List of Images" /></a>
+<a href="https://lh3.googleusercontent.com/d/10qfV53-pHFUl0w7ta2HfZEbXph00vir5"><img src="https://lh3.googleusercontent.com/d/10qfV53-pHFUl0w7ta2HfZEbXph00vir5" style="width: 750px; max-width: 100%; height: auto" alt="Grid of 36 sample CIFAR-10 training images" title="List of Images" /></a>
 
 
 ### 3. Rescale the Images by Dividing Every Pixel in Every Image by 255
@@ -266,7 +266,7 @@ for i, idx in enumerate(np.random.choice(x_test.shape[0], size=16, replace=False
 ```
 
 
-<a href="https://drive.google.com/uc?export=view&id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8"><img src="https://drive.google.com/uc?export=view&id=1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8" style="width: 125px; max-width: 100%; height: auto" alt="CIFAR-10 test images with predicted and true labels" title="Predictions" /></a>
+<a href="https://lh3.googleusercontent.com/d/1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8"><img src="https://lh3.googleusercontent.com/d/1BWWZpjEspNIErZyMg-rZ5h2jYAOanil8" style="width: 125px; max-width: 100%; height: auto" alt="CIFAR-10 test images with predicted and true labels" title="Predictions" /></a>
 
 ```python
 
