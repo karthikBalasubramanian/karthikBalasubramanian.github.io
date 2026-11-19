@@ -4,7 +4,7 @@
     var m = null;
     try { m = localStorage.getItem('theme'); } catch (e) {}
     if (m !== 'light' && m !== 'dark') {
-      m = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      m = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
     }
     document.documentElement.setAttribute('data-bs-theme', m);
   })();

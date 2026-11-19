@@ -8,7 +8,7 @@
   <p class="kb-hero-lead">
     I'm Karthik Balasubramanian, a Software Engineer at Adobe with a background in site reliability,
     tools and infrastructure. I'm now working down the stack, where LLM cost and latency are decided:
-    GPU kernels and inference engines. Each week I write up what I learn about kernels, attention,
+    GPU kernels and inference engines. I write up what I learn about kernels, attention,
     KV-cache management and serving with vLLM and SGLang, and I measure it the way an SRE would.
   </p>
   <div class="kb-hero-actions">
@@ -21,7 +21,7 @@
 
   <div class="kb-cards">
     {% for item in site.data.featured %}
-      <a class="kb-card" href="{{ item.url | relative_url }}">
+      <a class="kb-card" href="{{ item.url | relative_url }}"{% if item.url contains '://' %} target="_blank" rel="noopener"{% endif %}>
         <span class="kb-card-kicker">{{ item.kicker }}</span>
         <span class="kb-card-title">{{ item.title }}</span>
         <span class="kb-card-text">{{ item.text }}</span>

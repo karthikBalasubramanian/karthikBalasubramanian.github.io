@@ -23,7 +23,7 @@ I'm moving down the stack to where LLM cost and latency are decided: **GPU kerne
 - **AI Kernel Engineering** with Vizuara AI (in progress): Triton and CUDA kernels, the GPU memory hierarchy, and FlashAttention-style fusion.
 - **Build a Large Language Model (From Scratch)** by Sebastian Raschka, with all my code in
   [pytorch_tutorials](https://github.com/karthikBalasubramanian/pytorch_tutorials).
-- **A weekly blog** on kernels, attention, KV cache, continuous batching and speculative decoding, and on serving with
+- **Technical writing** on kernels, attention, KV cache, continuous batching and speculative decoding, and on serving with
   **vLLM** and **SGLang**. I benchmark each topic the way an SRE would, with p50/p99 latency, time to first token (TTFT),
   tokens/s and GPU utilization.
 

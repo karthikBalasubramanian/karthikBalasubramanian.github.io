@@ -20,7 +20,7 @@ const LINKS: ReadonlyArray<{ label: string; href: string }> = [
 ];
 
 function systemMode(): Mode {
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function storedMode(): Mode | null {
@@ -52,7 +52,7 @@ export function SiteHeader() {
     const onStorage = (e: StorageEvent) => {
       if (e.key === STORAGE_KEY || e.key === null) setMode(resolveMode());
     };
-    const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: light)') : null;
+    const mq = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
     const onSystem = () => {
       if (!storedMode()) setMode(systemMode());
     };
