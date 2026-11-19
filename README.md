@@ -11,7 +11,7 @@ plus four React/Vite/Tailwind finance calculators served under their own paths a
 |---|---|
 | `_config.yml` | Site config. Production URL `https://karthikbalasubramanian.github.io` |
 | `_config.local.yml` | Local-only override (`url: http://localhost:4000`), used by Docker / `make site` |
-| `_posts/` | Blog posts. Older posts pin `permalink:` so their `/ml/YYYY/MM/DD/slug.html` URLs never change; new posts default to `/posts/:title/` |
+| `_posts/` | Blog posts. Older posts pin `permalink:` so their `/ml/YYYY/MM/DD/slug.html` URLs never change; new posts default to `/posts/:title/`. Store post images locally in `assets/img/posts/<slug>/` rather than external hosts |
 | `_tabs/` | Sidebar pages: Blog, Projects, Tools, About, Categories, Tags |
 | `_includes/home-hero.html`, `_layouts/home.html` | Home page hero (the layout is a copy of Chirpy's with one include added; re-sync on Chirpy upgrades) |
 | `_data/featured.yml`, `_data/tools.yml` | Home page cards and Tools page cards |
