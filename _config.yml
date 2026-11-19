@@ -54,7 +54,7 @@ theme_mode:
 
 cdn:
 
-# Pending: add the headshot at assets/img/avatar.jpg (square, >= 400x400).
+# Candidate headshot (800x800) at assets/img/avatar.jpg, pending approval.
 avatar: /assets/img/avatar.jpg
 
 # Pending: default 1200x630 social preview image, e.g. /assets/img/og-default.png

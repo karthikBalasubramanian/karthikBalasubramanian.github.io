@@ -5,7 +5,7 @@ order: 4
 description: About Karthik Balasubramanian, a Software Engineer at Adobe moving into LLM inference and GPU kernel engineering.
 ---
 
-<!-- Pending: headshot at /assets/img/avatar.jpg (shown in the sidebar). -->
+<!-- Avatar: /assets/img/avatar.jpg (candidate headshot, pending approval). -->
 
 I'm **Karthik Balasubramanian**, a Software Engineer at Adobe. I've worked at Adobe since 2017, starting at Marketo
 (an Adobe company), with a background in **site reliability, tools and infrastructure**.
@@ -58,5 +58,4 @@ and I'm building skills on both sides.
 
 - GitHub: [karthikBalasubramanian](https://github.com/karthikBalasubramanian)
 - LinkedIn: [bks4line](https://www.linkedin.com/in/bks4line)
-- [Résumé]({{ '/resume/' | relative_url }})
 - [RSS feed]({{ '/feed.xml' | relative_url }})
