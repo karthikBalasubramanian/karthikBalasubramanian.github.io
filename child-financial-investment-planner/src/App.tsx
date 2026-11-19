@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { ParentInputs, AccountId } from './types';
 import { calculateOptimalAllocation, generateYearlyProjections } from './utils/financialCalculators';
 import { Header } from './components/Header';
@@ -10,26 +10,101 @@ import { SpreadsheetGrid } from './components/SpreadsheetGrid';
 import { AIAdvisorTab } from './components/AIAdvisorTab';
 import { Github, ExternalLink, Globe } from 'lucide-react';
 
+const STORAGE_KEY = 'kb_child_planner_v1';
+
+const DEFAULT_PARENT_INPUTS: ParentInputs = {
+  childCurrentAge: 0,
+  targetAge1: 18,
+  targetAge2: 60,
+  monthlyContribution: 300,
+  yearlyLumpSum: 0,
+  primaryGoal: 'balanced_growth',
+  parentMarginalTaxRate: 0.24,
+  childEarnedIncome: 0,
+  state: 'NY',
+  customAllocations: {
+    '529_plan': 45,
+    trump_account: 30,
+    custodial_roth_ira: 15,
+    utma_ugma: 10,
+    coverdell_esa: 0,
+    taxable_brokerage: 0,
+  },
+};
+
+function loadInitialParentInputs(): ParentInputs {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const s = params.get('s');
+    if (s) {
+      const parsed = JSON.parse(atob(s));
+      if (parsed && typeof parsed === 'object') {
+        return {
+          ...DEFAULT_PARENT_INPUTS,
+          ...parsed,
+          customAllocations: { ...DEFAULT_PARENT_INPUTS.customAllocations, ...(parsed.customAllocations || {}) },
+        };
+      }
+    }
+    const base = (() => {
+      try {
+        const saved = localStorage.getItem(STORAGE_KEY);
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') {
+            return {
+              ...DEFAULT_PARENT_INPUTS,
+              ...parsed,
+              customAllocations: { ...DEFAULT_PARENT_INPUTS.customAllocations, ...(parsed.customAllocations || {}) },
+            };
+          }
+        }
+      } catch { /* storage unavailable */ }
+      return DEFAULT_PARENT_INPUTS;
+    })();
+
+    // Step 2 -> Step 3 handoff via URL query params (?monthlySurplus=...&state=...)
+    const surplusParam = params.get('monthlySurplus');
+    const stateParam = params.get('state');
+    const updates: Partial<ParentInputs> = {};
+    if (surplusParam) {
+      const parsedSurplus = parseFloat(surplusParam);
+      if (!isNaN(parsedSurplus) && parsedSurplus > 0) {
+        // Suggest allocating up to 25% of monthly housing surplus (rounded to $50, min $100)
+        updates.monthlyContribution = Math.max(100, Math.min(2500, Math.round((parsedSurplus * 0.25) / 50) * 50));
+      }
+    }
+    if (stateParam) {
+      updates.state = stateParam.toUpperCase();
+    }
+    return { ...base, ...updates };
+  } catch { /* ignore */ }
+  return DEFAULT_PARENT_INPUTS;
+}
+
 export default function App() {
-  const [inputs, setInputs] = useState<ParentInputs>({
-    childCurrentAge: 0,
-    targetAge1: 18,
-    targetAge2: 60,
-    monthlyContribution: 300,
-    yearlyLumpSum: 0,
-    primaryGoal: 'balanced_growth',
-    parentMarginalTaxRate: 0.24,
-    childEarnedIncome: 0,
-    state: 'NY',
-    customAllocations: {
-      '529_plan': 45,
-      trump_account: 30,
-      custodial_roth_ira: 15,
-      utma_ugma: 10,
-      coverdell_esa: 0,
-      taxable_brokerage: 0,
-    },
-  });
+  const [inputs, setInputs] = useState<ParentInputs>(loadInitialParentInputs);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
+    } catch { /* ignore */ }
+  }, [inputs]);
+
+  const handleReset = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    if (window.location.search) window.history.replaceState({}, '', window.location.pathname);
+    setInputs(DEFAULT_PARENT_INPUTS);
+  };
+
+  const handleShare = () => {
+    try {
+      const encoded = btoa(JSON.stringify(inputs));
+      const url = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(encoded)}`;
+      navigator.clipboard?.writeText(url);
+      window.history.replaceState({}, '', `?s=${encodeURIComponent(encoded)}`);
+    } catch { /* ignore */ }
+  };
 
   const [activeTab, setActiveTab] = useState<string>('optimizer');
 
@@ -92,6 +167,8 @@ export default function App() {
         inputs={inputs}
         onUpdateInputs={handleUpdateInputs}
         onExportCSV={handleExportCSV}
+        onShare={handleShare}
+        onReset={handleReset}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         projectedAge18Mod={age18Row.moderateBalance}

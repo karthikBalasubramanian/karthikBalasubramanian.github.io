@@ -23,7 +23,7 @@ const root = join(here, '..', '..');
 //              only the shared header/footer follow the blog's mode.
 export const MICROSITE_STRATEGY = {
   'child-financial-investment-planner': 'native',
-  'paycheck-tax-investment-allocator': 'fixed',
+  'paycheck-tax-investment-allocator': 'native',
   'rent-vs-buy-house-poor-calculator': 'mirror',
   'rsu-hold-vs-sell-simulator': 'mirror',
 };

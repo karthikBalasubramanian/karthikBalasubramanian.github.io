@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { PresetProfile, PayFrequency } from '../types';
 import { FINANCIAL_PRESETS } from '../data/presets';
-import { Wallet, Sparkles, HelpCircle, RotateCcw, Home } from 'lucide-react';
+import { Wallet, Sparkles, HelpCircle, RotateCcw, Share2, Check } from 'lucide-react';
 
 interface HeaderProps {
   activePresetId: string;
@@ -9,6 +9,7 @@ interface HeaderProps {
   payFrequency: PayFrequency;
   onChangeFrequency: (freq: PayFrequency) => void;
   onReset: () => void;
+  onShare: () => void;
   onOpenTips: () => void;
 }
 
@@ -18,8 +19,16 @@ export const Header: React.FC<HeaderProps> = ({
   payFrequency,
   onChangeFrequency,
   onReset,
+  onShare,
   onOpenTips,
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    onShare();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   return (
     <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-xl text-slate-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -43,17 +52,8 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Stepper Navigation (3-Step Roadmap) & Home Button */}
+          {/* Stepper Navigation (3-Step Roadmap) */}
           <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href="https://karthikbalasubramanian.github.io/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
-              title="Return to Main Website Home Page"
-            >
-              <Home className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Main Site Home</span>
-            </a>
-
             <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
               {/* Step 1 (Active) */}
               <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950 whitespace-nowrap">
@@ -65,7 +65,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Step 2 */}
               <a
-                href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+                href="/rent-vs-buy-house-poor-calculator/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
@@ -76,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Step 3 */}
               <a
-                href="https://karthikbalasubramanian.github.io/child-financial-investment-planner/"
+                href="/child-financial-investment-planner/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">3</span>
@@ -145,8 +145,17 @@ export const Header: React.FC<HeaderProps> = ({
             ))}
           </div>
 
-          {/* Guide & Reset */}
+          {/* Guide, Share & Reset */}
           <div className="flex items-center gap-2">
+            <button
+              onClick={handleShare}
+              title="Copy shareable link to this scenario"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-950 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800 transition-all"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-sky-400" />}
+              <span>{copied ? 'Copied!' : 'Share'}</span>
+            </button>
+
             <button
               onClick={onOpenTips}
               className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-950 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800 transition-all"

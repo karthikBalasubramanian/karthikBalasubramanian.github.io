@@ -149,7 +149,7 @@ export const SankeyDiagram: React.FC<SankeyDiagramProps> = ({
     <div
       ref={containerRef}
       onMouseMove={handleMouseMove}
-      className={`relative bg-white border border-slate-200 rounded-2xl p-5 text-slate-900 overflow-hidden transition-all duration-300 ${
+      className={`relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl p-5 text-slate-900 dark:text-slate-100 overflow-hidden transition-all duration-300 ${
         isFocusMode ? 'shadow-2xl ring-2 ring-indigo-500/50' : 'shadow-xs'
       }`}
     >

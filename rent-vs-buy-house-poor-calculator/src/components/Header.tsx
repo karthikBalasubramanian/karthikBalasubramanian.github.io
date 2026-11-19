@@ -1,7 +1,20 @@
-import React from 'react';
-import { Home } from 'lucide-react';
+import React, { useState } from 'react';
+import { Home, Share2, Check, RotateCcw } from 'lucide-react';
 
-export const Header: React.FC = () => {
+interface HeaderProps {
+  onShare: () => void;
+  onReset: () => void;
+}
+
+export const Header: React.FC<HeaderProps> = ({ onShare, onReset }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    onShare();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <header className="bg-slate-900 border-b border-slate-800 sticky top-0 z-50 shadow-xl">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3">
@@ -25,21 +38,12 @@ export const Header: React.FC = () => {
             </div>
           </div>
 
-          {/* Stepper Navigation & Home Button */}
+          {/* Stepper Navigation & Actions */}
           <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href="https://karthikbalasubramanian.github.io/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
-              title="Return to Main Website Home Page"
-            >
-              <Home className="w-3.5 h-3.5 text-rose-400" />
-              <span>Main Site Home</span>
-            </a>
-
             <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
               {/* Step 1 */}
               <a
-                href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
+                href="/paycheck-tax-investment-allocator/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">1</span>
@@ -58,13 +62,30 @@ export const Header: React.FC = () => {
 
               {/* Step 3 */}
               <a
-                href="https://karthikbalasubramanian.github.io/child-financial-investment-planner/"
+                href="/child-financial-investment-planner/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">3</span>
                 <span>Child 529 Planner</span>
               </a>
             </div>
+
+            <button
+              onClick={handleShare}
+              title="Copy shareable link to this scenario"
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-950 text-slate-300 hover:text-white hover:bg-slate-800 border border-slate-800 transition-all"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-sky-400" />}
+              <span>{copied ? 'Copied!' : 'Share'}</span>
+            </button>
+
+            <button
+              onClick={onReset}
+              title="Reset to defaults"
+              className="p-2 text-slate-400 hover:text-rose-400 hover:bg-slate-950 rounded-xl transition-all border border-slate-800"
+            >
+              <RotateCcw className="w-4 h-4" />
+            </button>
           </div>
 
         </div>

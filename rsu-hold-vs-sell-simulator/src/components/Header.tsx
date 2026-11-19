@@ -1,12 +1,14 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { POPULAR_TICKERS } from '../services/stockApi';
-import { Shield, TrendingUp, Gamepad2, BookOpen, Sparkles, Home } from 'lucide-react';
+import { Shield, TrendingUp, Gamepad2, BookOpen, Sparkles, Share2, Check, RotateCcw } from 'lucide-react';
 
 interface HeaderProps {
   currentSymbol: string;
   onSelectTicker: (symbol: string) => void;
   activeTab: 'dashboard' | 'game' | 'guide';
   onTabChange: (tab: 'dashboard' | 'game' | 'guide') => void;
+  onShare: () => void;
+  onReset: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -14,7 +16,17 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectTicker,
   activeTab,
   onTabChange,
+  onShare,
+  onReset,
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    onShare();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <header className="bg-slate-900/90 backdrop-blur-xl border-b border-slate-800 sticky top-0 z-50 transition-all">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -22,9 +34,9 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div className="flex items-center gap-3">
             <a
-              href="https://karthikbalasubramanian.github.io/"
+              href="/tools/"
               className="p-2.5 bg-gradient-to-br from-emerald-500 to-teal-700 rounded-xl shadow-lg shadow-emerald-950/50 text-white hover:scale-105 transition-transform"
-              title="Return to Main Website Home Page"
+              title="Back to All Calculators"
             >
               <TrendingUp className="w-6 h-6" />
             </a>
@@ -45,16 +57,6 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Navigation Actions & Tabs */}
           <div className="flex items-center gap-2.5 flex-wrap">
-            <a
-              href="https://karthikbalasubramanian.github.io/"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
-              title="Return to Main Website Home Page"
-            >
-              <Home className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="hidden sm:inline">Main Site Home</span>
-              <span className="sm:hidden">Home</span>
-            </a>
-
             {/* Navigation Tabs */}
             <div className="flex items-center bg-slate-950 p-1 rounded-xl border border-slate-800/80">
             <button
@@ -91,6 +93,23 @@ export const Header: React.FC<HeaderProps> = ({
               <span>Wisdom Guide</span>
             </button>
           </div>
+
+          <button
+            onClick={handleShare}
+            title="Copy shareable link to this RSU simulation"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
+          >
+            {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-sky-400" />}
+            <span>{copied ? 'Copied!' : 'Share'}</span>
+          </button>
+
+          <button
+            onClick={onReset}
+            title="Reset to defaults"
+            className="p-2 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 transition-all shrink-0"
+          >
+            <RotateCcw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

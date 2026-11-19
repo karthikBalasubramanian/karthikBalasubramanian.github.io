@@ -7,4 +7,8 @@
   body {
     background-color: var(--color-slate-50);
   }
+
+  :root[data-bs-theme='dark'] body {
+    background-color: var(--color-slate-950);
+  }
 }

@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useMemo, useRef } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { UserFinancialInputs, PresetProfile, PayFrequency } from './types';
 import { FINANCIAL_PRESETS } from './data/presets';
 import { calculatePaycheckTaxBreakdown, getMaximizedInputs } from './utils/taxCalculator';
@@ -19,47 +19,75 @@ import { Step2RentVsBuyCTA } from './components/Step2RentVsBuyCTA';
 import { TaxTipsModal } from './components/TaxTipsModal';
 import { Sparkles, PieChart, Landmark, TrendingUp, Shield, Wallet, Baby, Calendar } from 'lucide-react';
 
+const STORAGE_KEY = 'kb_paycheck_allocator_v1';
+
+const DEFAULT_INPUTS: UserFinancialInputs = {
+  grossSalary: 5200,
+  payFrequency: 'biweekly',
+  filingStatus: 'single',
+  state: 'CA',
+  dependents: 1,
+  age: 32,
+
+  traditional401k: 750,
+  traditional401kIsPercent: false,
+  hsa: 165.38,
+  hsaCoverage: 'single',
+  fsa: 0,
+
+  roth401k: 0,
+  roth401kIsPercent: false,
+  ira: 0,
+  rothIra: 288.46, // $7,500 / 26
+  plan529: 200,
+  custodialAccount: 100,
+  trumpAccount: 100,
+  custodialIra: 0,
+  esppPercent: 10,
+  esppDiscountPercent: 15,
+
+  companyMatchPercent: 50,
+  companyMatchUpToPercent: 6,
+  employerMatchPercent: 50,
+  employerMatchCapPercent: 6,
+
+  // Annual Bonus
+  annualBonusPercent: 15,
+  annualBonusIsPercent: true,
+  annualBonusAmount: 0,
+  includeBonusIn401k: true,
+  bonusPayPeriodNumber: 4,
+
+  dissectTaxesInSankey: false,
+  taxYear: 2027,
+};
+
+function loadInitialPaycheckInputs(): UserFinancialInputs {
+  try {
+    const s = new URLSearchParams(window.location.search).get('s');
+    if (s) {
+      const parsed = JSON.parse(atob(s));
+      if (parsed && typeof parsed === 'object') return { ...DEFAULT_INPUTS, ...parsed };
+    }
+  } catch { /* ignore invalid share param */ }
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') return { ...DEFAULT_INPUTS, ...parsed };
+    }
+  } catch { /* storage unavailable */ }
+  return DEFAULT_INPUTS;
+}
+
 export default function App() {
-  // Default to High Earner / Balanced preset ($5,200 biweekly = $135.2k/yr in CA)
-  const [inputs, setInputs] = useState<UserFinancialInputs>({
-    grossSalary: 5200,
-    payFrequency: 'biweekly',
-    filingStatus: 'single',
-    state: 'CA',
-    dependents: 1,
-    age: 32,
+  const [inputs, setInputs] = useState<UserFinancialInputs>(loadInitialPaycheckInputs);
 
-    traditional401k: 750,
-    traditional401kIsPercent: false,
-    hsa: 165.38,
-    hsaCoverage: 'single',
-    fsa: 0,
-
-    roth401k: 0,
-    roth401kIsPercent: false,
-    ira: 0,
-    rothIra: 288.46, // $7,500 / 26
-    plan529: 200,
-    custodialAccount: 100,
-    trumpAccount: 100,
-    custodialIra: 0,
-    esppPercent: 10,
-    esppDiscountPercent: 15,
-
-    companyMatchPercent: 50,
-    companyMatchUpToPercent: 6,
-    employerMatchPercent: 50,
-    employerMatchCapPercent: 6,
-
-    // Annual Bonus
-    annualBonusPercent: 15,
-    annualBonusIsPercent: true,
-    annualBonusAmount: 0,
-    includeBonusIn401k: true,
-    bonusPayPeriodNumber: 4,
-
-    dissectTaxesInSankey: false,
-  });
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(inputs));
+    } catch { /* ignore */ }
+  }, [inputs]);
 
   const [activePresetId, setActivePresetId] = useState<string>('tech_high_earner');
   const [isTipsOpen, setIsTipsOpen] = useState<boolean>(false);
@@ -104,11 +132,23 @@ export default function App() {
 
   // Reset to default
   const handleReset = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    if (window.location.search) window.history.replaceState({}, '', window.location.pathname);
     const defaultPreset = FINANCIAL_PRESETS[0];
     setActivePresetId(defaultPreset.id);
-    setInputs((prev) => ({ ...prev, ...defaultPreset.inputs }));
+    setInputs({ ...DEFAULT_INPUTS, ...defaultPreset.inputs });
     setIsInputsCollapsed(false);
     setIsFocusMode(false);
+  };
+
+  // Copy shareable scenario URL
+  const handleShare = () => {
+    try {
+      const encoded = btoa(JSON.stringify(inputs));
+      const url = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(encoded)}`;
+      navigator.clipboard?.writeText(url);
+      window.history.replaceState({}, '', `?s=${encodeURIComponent(encoded)}`);
+    } catch { /* ignore */ }
   };
 
   // Toggle tax dissection in Sankey
@@ -142,7 +182,7 @@ export default function App() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 font-sans antialiased pb-16">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 font-sans antialiased pb-16 transition-colors">
       {/* App Header */}
       <Header
         activePresetId={activePresetId}
@@ -150,6 +190,7 @@ export default function App() {
         payFrequency={inputs.payFrequency}
         onChangeFrequency={handleChangeFrequency}
         onReset={handleReset}
+        onShare={handleShare}
         onOpenTips={() => setIsTipsOpen(true)}
       />
 

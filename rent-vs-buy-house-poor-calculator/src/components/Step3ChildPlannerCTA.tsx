@@ -14,7 +14,7 @@ export const Step3ChildPlannerCTA: React.FC<Step3ChildPlannerCTAProps> = ({ inpu
   const fmt = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
-  const childPlannerUrl = `https://karthikbalasubramanian.github.io/child-financial-investment-planner/?monthlySurplus=${Math.round(leftoverCash)}`;
+  const childPlannerUrl = `/child-financial-investment-planner/?monthlySurplus=${Math.round(leftoverCash)}&state=${encodeURIComponent(inputs.state)}`;
 
   return (
     <div className="bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950 border border-purple-500/50 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">

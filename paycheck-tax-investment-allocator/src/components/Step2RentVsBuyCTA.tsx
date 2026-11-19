@@ -13,7 +13,7 @@ export const Step2RentVsBuyCTA: React.FC<Step2RentVsBuyCTAProps> = ({ inputs, ta
   const fmt = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
-  const targetUrl = `https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/?monthlyNet=${monthlyNet}&state=${inputs.state}`;
+  const targetUrl = `/rent-vs-buy-house-poor-calculator/?monthlyNet=${monthlyNet}&state=${inputs.state}`;
 
   return (
     <div className="bg-gradient-to-r from-rose-950/80 via-slate-900 to-indigo-950 border border-rose-500/50 rounded-2xl p-6 shadow-2xl text-slate-100 space-y-4">

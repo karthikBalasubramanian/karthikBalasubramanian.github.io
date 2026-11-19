@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { ParentInputs } from '../types';
 import { US_STATES } from '../data/accountData';
 import {
@@ -12,13 +12,17 @@ import {
   Calendar,
   Calculator,
   Baby,
-  Home,
+  Share2,
+  Check,
+  RotateCcw,
 } from 'lucide-react';
 
 interface HeaderProps {
   inputs: ParentInputs;
   onUpdateInputs: (updated: Partial<ParentInputs>) => void;
   onExportCSV: () => void;
+  onShare: () => void;
+  onReset: () => void;
   activeTab: string;
   setActiveTab: (tab: string) => void;
   projectedAge18Mod: number;
@@ -29,11 +33,20 @@ export const Header: React.FC<HeaderProps> = ({
   inputs,
   onUpdateInputs,
   onExportCSV,
+  onShare,
+  onReset,
   activeTab,
   setActiveTab,
   projectedAge18Mod,
   projectedAge60Mod,
 }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleShare = () => {
+    onShare();
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const formatCurrency = (val: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(val);
 
@@ -69,21 +82,12 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Stepper Navigation (3-Step Roadmap) & Home Button */}
+          {/* Stepper Navigation (3-Step Roadmap) */}
           <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href="https://karthikbalasubramanian.github.io/"
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 text-xs font-bold transition-all shadow-sm shrink-0"
-              title="Return to Main Website Home Page"
-            >
-              <Home className="w-3.5 h-3.5 text-teal-400" />
-              <span>Main Site Home</span>
-            </a>
-
             <div className="flex items-center gap-1 sm:gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800 text-xs font-semibold overflow-x-auto">
               {/* Step 1 */}
               <a
-                href="https://karthikbalasubramanian.github.io/paycheck-tax-investment-allocator/"
+                href="/paycheck-tax-investment-allocator/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">1</span>
@@ -94,7 +98,7 @@ export const Header: React.FC<HeaderProps> = ({
 
               {/* Step 2 */}
               <a
-                href="https://karthikbalasubramanian.github.io/rent-vs-buy-house-poor-calculator/"
+                href="/rent-vs-buy-house-poor-calculator/"
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-900 transition-all whitespace-nowrap"
               >
                 <span className="w-4 h-4 rounded-full bg-slate-800 text-slate-300 text-[10px] flex items-center justify-center font-bold">2</span>
@@ -198,6 +202,16 @@ export const Header: React.FC<HeaderProps> = ({
               ))}
             </select>
 
+            {/* Share Scenario Button */}
+            <button
+              onClick={handleShare}
+              title="Copy shareable link to this plan"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 font-semibold text-xs transition-all"
+            >
+              {copied ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5 text-sky-400" />}
+              <span>{copied ? 'Copied!' : 'Share'}</span>
+            </button>
+
             {/* Export CSV Button */}
             <button
               id="export-csv-button"
@@ -206,6 +220,15 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Download className="w-3.5 h-3.5" />
               <span>Export CSV</span>
+            </button>
+
+            {/* Reset Button */}
+            <button
+              onClick={onReset}
+              title="Reset to defaults"
+              className="p-1.5 rounded-lg bg-slate-950 hover:bg-slate-800 text-slate-400 hover:text-rose-400 border border-slate-800 transition-all"
+            >
+              <RotateCcw className="w-3.5 h-3.5" />
             </button>
           </div>
 

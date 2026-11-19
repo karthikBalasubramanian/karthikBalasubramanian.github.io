@@ -12,25 +12,68 @@ import { GameMode } from './components/GameMode';
 import { BehavioralGuide } from './components/BehavioralGuide';
 import { Shield, Sparkles, Heart, AlertTriangle, Info, Calendar, Home } from 'lucide-react';
 
+const STORAGE_KEY = 'kb_rsu_simulator_v1';
+
+const DEFAULT_RSU_CONFIG: RSUGrantConfig = {
+  symbol: 'GOOGL',
+  companyName: 'Alphabet Inc. (Google)',
+  totalShares: 450,
+  startYear: 2019,
+  startQuarter: 1,
+  hasCliff: true,
+  vestingYears: 4,
+  taxWithholdingPct: 35,
+  statePreset: 'Custom',
+  capitalGainsTaxPct: 20,
+  cashApyPct: 4.5,
+  sectorEtf: 'XLC',
+  enableRefresherGrants: false,
+  annualRefresherShares: 100,
+};
+
+function loadInitialRsuConfig(): RSUGrantConfig {
+  try {
+    const s = new URLSearchParams(window.location.search).get('s');
+    if (s) {
+      const parsed = JSON.parse(atob(s));
+      if (parsed && typeof parsed === 'object') return { ...DEFAULT_RSU_CONFIG, ...parsed };
+    }
+  } catch { /* ignore invalid share param */ }
+  try {
+    const saved = localStorage.getItem(STORAGE_KEY);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (parsed && typeof parsed === 'object') return { ...DEFAULT_RSU_CONFIG, ...parsed };
+    }
+  } catch { /* storage unavailable */ }
+  return DEFAULT_RSU_CONFIG;
+}
+
 export function App() {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'game' | 'guide'>('dashboard');
 
-  const [config, setConfig] = useState<RSUGrantConfig>({
-    symbol: 'GOOGL',
-    companyName: 'Alphabet Inc. (Google)',
-    totalShares: 450,
-    startYear: 2019,
-    startQuarter: 1,
-    hasCliff: true,
-    vestingYears: 4,
-    taxWithholdingPct: 35,
-    statePreset: 'Custom',
-    capitalGainsTaxPct: 20,
-    cashApyPct: 4.5,
-    sectorEtf: 'XLC',
-    enableRefresherGrants: false,
-    annualRefresherShares: 100,
-  });
+  const [config, setConfig] = useState<RSUGrantConfig>(loadInitialRsuConfig);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
+    } catch { /* ignore */ }
+  }, [config]);
+
+  const handleReset = () => {
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* ignore */ }
+    if (window.location.search) window.history.replaceState({}, '', window.location.pathname);
+    setConfig(DEFAULT_RSU_CONFIG);
+  };
+
+  const handleShare = () => {
+    try {
+      const encoded = btoa(JSON.stringify(config));
+      const url = `${window.location.origin}${window.location.pathname}?s=${encodeURIComponent(encoded)}`;
+      navigator.clipboard?.writeText(url);
+      window.history.replaceState({}, '', `?s=${encodeURIComponent(encoded)}`);
+    } catch { /* ignore */ }
+  };
 
   const [simulation, setSimulation] = useState<SimulationOutput | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -99,6 +142,8 @@ export function App() {
         onSelectTicker={handleSelectTicker}
         activeTab={activeTab}
         onTabChange={setActiveTab}
+        onShare={handleShare}
+        onReset={handleReset}
       />
 
       {/* Main Content Area */}
