@@ -1,6 +1,17 @@
 <!doctype html>
 <html lang="en">
   <head>
+    <!-- site-chrome: set light/dark before first paint (same localStorage key as the blog's Chirpy theme) -->
+    <script>
+      (function () {
+        var m = null;
+        try { m = localStorage.getItem('theme'); } catch (e) {}
+        if (m !== 'light' && m !== 'dark') {
+          m = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+        }
+        document.documentElement.setAttribute('data-bs-theme', m);
+      })();
+    </script>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="/child-financial-investment-planner/favicon.ico" />

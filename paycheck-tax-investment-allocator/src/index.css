@@ -1,1 +1,10 @@
 @import "tailwindcss";
+/* Shared design tokens + header/footer (generated from shared/site-chrome, see build.mjs) */
+@import "./site-chrome/tokens.css";
+@import "./site-chrome/chrome.css";
+
+@layer base {
+  body {
+    background-color: var(--color-slate-950);
+  }
+}
