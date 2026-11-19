@@ -9,8 +9,8 @@ lang: en
 timezone: America/Los_Angeles
 
 title: Karthik Balasubramanian
-tagline: >-
-  ML Inference & GPU Systems Engineer: making LLMs fast, observable, and reliable in production.
+# Short so it fits the sidebar; the full headline is in the home page hero.
+tagline: ML Inference & GPU Systems Engineer
 description: >-
   Karthik Balasubramanian writes about LLM inference engineering and GPU kernels:
   Triton and CUDA, attention, KV cache, vLLM and SGLang serving, benchmarking and observability.
@@ -54,7 +54,7 @@ theme_mode:
 
 cdn:
 
-# Candidate headshot (800x800) at assets/img/avatar.jpg, pending approval.
+# Headshot (800x800, approved).
 avatar: /assets/img/avatar.jpg
 
 # Pending: default 1200x630 social preview image, e.g. /assets/img/og-default.png
