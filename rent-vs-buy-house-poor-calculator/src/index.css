@@ -1,9 +1,12 @@
 @import "tailwindcss";
+/* Shared design tokens + header/footer (generated from shared/site-chrome, see build.mjs) */
+@import "./site-chrome/tokens.css";
+@import "./site-chrome/chrome.css";
 
 @layer base {
   body {
-    background-color: #0f172a;
-    color: #f8fafc;
+    background-color: var(--color-slate-950);
+    color: var(--color-slate-50);
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
   }
 }

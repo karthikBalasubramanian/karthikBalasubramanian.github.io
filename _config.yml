@@ -1,82 +1,176 @@
-# Welcome to Jekyll!
+# Site configuration for the Chirpy theme
+# Docs: https://github.com/cotes2020/jekyll-theme-chirpy/wiki
+# Production build: bundle exec jekyll build   (JEKYLL_ENV=production)
+# Local Docker build: bundle exec jekyll build --config _config.yml,_config.local.yml
 
-# Website settings
-title: "Karthik Balasubramanian"
-description: "Karthik's blog"
-keywords: "Karthik B, Karthik CMU MISM, Karthik Balasubramanian, Karthik Adobe"
+theme: jekyll-theme-chirpy
+
+lang: en
+timezone: America/Los_Angeles
+
+title: Karthik Balasubramanian
+# Short so it fits the sidebar; the full headline is in the home page hero.
+tagline: ML Inference & GPU Systems Engineer
+description: >-
+  Karthik Balasubramanian writes about LLM inference engineering and GPU kernels:
+  Triton and CUDA, attention, KV cache, vLLM and SGLang serving, benchmarking and observability.
+
+# Production URL. Overridden only by _config.local.yml for local Docker builds.
+url: "https://karthikbalasubramanian.github.io"
 baseurl: ""
-#url: "http://karthikBalasubramanian.github.io"
 
-url: "http://127.0.0.1:4000"
+github:
+  username: karthikBalasubramanian
 
-# author
-author:
-  name: 'Karthik'
-  first_name: 'Karthik'
-  last_name: 'Balasubramanian'
-  email: 'balasubramaniankarthik102@gmail.com'
-  linkedin_username: 'bks4line'
-  github_username: 'karthikBalasubramanian'
-  avatar: 'static/img/landing/profile_pic_karthik.jpg'
-  desc: 'Software Engineer at Adobe specializing in Site Reliability, Observability, and Resilient Systems. I bridge high-level business strategy with deep technical execution, scale POCs into production products, and build tools in my free time to solve everyday challenges for others. Privacy note: Your data is never collected or used for any purpose.'
-  pgp: 'PGP fingerprint <b>C3F4 A8A7 620A 9056 915B FDE0 C649 D585 83A6 936A</b>'
+# twitter:
+#   username: # pending: add an X/Twitter handle if you want one linked
 
-# localization
-languages:
-  # - locale: 'zh'
-  #   flag: 'static/img/flags/China.png'
-  - locale: 'en'
-    flag: 'static/img/flags/United-States.png'
+social:
+  name: Karthik Balasubramanian
+  email: # intentionally left blank so no address is published; add one if you want an email link
+  links:
+    - https://github.com/karthikBalasubramanian
+    - https://www.linkedin.com/in/bks4line
 
-# blog img path
-img_path: 'http://karthikBalasubramanian.github.io/static/img/blog'
+# Search engine verification (pending: paste codes from Google Search Console / Bing Webmaster Tools)
+webmaster_verifications:
+  google:
+  bing:
 
-# donate
-# donate:
-#   wechat1: 'static/img/pay/w1.jpeg'
-#   wechat5: 'static/img/pay/w5.jpeg'
+# Analytics. The old Universal Analytics tag (UA-135003839-1) was removed: UA stopped collecting data in 2023.
+analytics:
+  google:
+    id: # pending GA4 measurement ID, e.g. G-XXXXXXXXXX
+  goatcounter:
+    id:
 
-# comment
-# changyan:
-  # appid: cysfY7ULn
-  # conf: prod_861928934cecb7a18e15bedaed9dae29
-disqus:
-   name: https-karthikbalasubramanian-github-io
-   public_key: N3n8ymxO3tzmAfetCxCQ6HTocyF7PMrvp1pzgkaRTNQkNKRxHnAUwxEixA86xNQv
+pageviews:
+  provider:
 
-# # share
-# bshare:
-#   uuid: 513f778e-a8f7-4c20-9ec2-d29cc2328d75
+# Leave empty so the site follows the visitor's OS preference and the toggle in the sidebar.
+# Chirpy stores the visitor's choice in localStorage key "theme" ("light" | "dark");
+# the /tools/ microsites read the same key so they match the blog.
+theme_mode:
 
-# baidu analytics
-# ba:
-  # uuid: 317acca9ef9255b934e46371e471431d
+cdn:
 
-# google analytics
-# ga:
-#   id: UA-73784599-1
+# Headshot (800x800, approved).
+avatar: /assets/img/avatar.jpg
 
-# growingIO
-# gio:
-#   id: a49d4901c7853da9
+# Default 1200x630 social preview image for Open Graph / Twitter cards.
+social_preview_image: /assets/img/og-default.png
 
-# Build settings
-encoding: "utf-8"
+toc: true
 
-# other settings
-highlighter: rouge
-markdown: kramdown
+actions:
+  edit_post:
+    enabled: false
+    url: "https://github.com/karthikBalasubramanian/karthikBalasubramanian.github.io/edit/master"
+
+comments:
+  # Disqus was removed for page weight. To re-enable comments, giscus (GitHub Discussions) is recommended.
+  provider:
+
+assets:
+  self_host:
+    enabled:
+    env:
+
+pwa:
+  enabled: true
+  cache:
+    enabled: true
+    # Do not let the blog's service worker cache the React microsites.
+    deny_paths:
+      - /child-financial-investment-planner/
+      - /paycheck-tax-investment-allocator/
+      - /rent-vs-buy-house-poor-calculator/
+      - /rsu-hold-vs-sell-simulator/
+
+paginate: 10
+
 kramdown:
   input: GFM
+  footnote_backlink: "&#8617;&#xfe0e;"
   syntax_highlighter: rouge
+  syntax_highlighter_opts:
+    css_class: highlight
+    span:
+      line_numbers: false
+    block:
+      line_numbers: true
+      start_line: 1
+
+collections:
+  tabs:
+    output: true
+    sort_by: order
+
+defaults:
+  - scope:
+      path: ""
+      type: posts
+    values:
+      layout: post
+      comments: false
+      toc: true
+      # New posts get clean URLs. Older posts set an explicit `permalink:`
+      # in front matter so their /ml/YYYY/MM/DD/slug.html URLs don't change.
+      permalink: /posts/:title/
+  - scope:
+      path: _drafts
+    values:
+      comments: false
+  - scope:
+      path: ""
+      type: tabs
+    values:
+      layout: page
+      permalink: /:title/
+
+plugins:
+  - jekyll-redirect-from
+
+sass:
+  style: compressed
+
+compress_html:
+  clippings: all
+  comments: all
+  endings: all
+  profile: false
+  blanklines: false
+  ignore:
+    envs: [development]
 
 exclude:
-  - "**/node_modules"
-  - "**/src"
-  - "**/package.json"
-  - "**/package-lock.json"
-  - "**/bun.lock"
-  - "**/vite.config.*"
-  - "**/tsconfig.*"
+  - "*.gem"
+  - "*.gemspec"
+  - docs
+  - scripts
+  - README.md
+  - LICENSE
   - Gemfile
   - Gemfile.lock
+  - Makefile
+  - Dockerfile.local
+  - docker-compose.yml
+  - git_find_big.sh
+  - shared
+  - vendor
+  - "*.config.js"
+  - "package*.json"
+  # React/Vite microsites are built separately by npm and copied into _site afterwards.
+  - child-financial-investment-planner
+  - paycheck-tax-investment-allocator
+  - rent-vs-buy-house-poor-calculator
+  - rsu-hold-vs-sell-simulator
+
+jekyll-archives:
+  enabled: [categories, tags]
+  layouts:
+    category: category
+    tag: tag
+  permalinks:
+    tag: /tags/:name/
+    category: /categories/:name/

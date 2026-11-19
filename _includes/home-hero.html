@@ -1,0 +1,31 @@
+<section class="kb-hero" aria-labelledby="kb-hero-title">
+  <p class="kb-eyebrow">
+    Inference Engineering · GPU Kernels (Triton / CUDA) · LLM Serving (vLLM, SGLang) · Kubernetes (CKA)
+  </p>
+  <h1 id="kb-hero-title" class="kb-hero-title">
+    ML Inference &amp; GPU Systems Engineer: making LLMs fast, observable, and reliable in production.
+  </h1>
+  <p class="kb-hero-lead">
+    I'm Karthik Balasubramanian, a Software Engineer at Adobe with a background in site reliability,
+    tools and infrastructure. I'm now working down the stack, where LLM cost and latency are decided:
+    GPU kernels and inference engines. I write up what I learn about kernels, attention,
+    KV-cache management and serving with vLLM and SGLang, and I measure it the way an SRE would.
+  </p>
+  <div class="kb-hero-actions">
+    <a class="btn btn-primary" href="{{ '/blog/' | relative_url }}"><i class="fas fa-book-open me-1"></i> Read the blog</a>
+    <a class="btn btn-outline-secondary" href="{{ '/projects/' | relative_url }}"><i class="fas fa-code me-1"></i> Projects</a>
+    <a class="btn btn-outline-secondary" href="{{ '/about/' | relative_url }}"><i class="fas fa-user me-1"></i> About</a>
+    <a class="btn btn-outline-secondary" href="https://github.com/karthikBalasubramanian" rel="me noopener"><i class="fab fa-github me-1"></i> GitHub</a>
+    <a class="btn btn-outline-secondary" href="https://www.linkedin.com/in/bks4line" rel="me noopener"><i class="fab fa-linkedin me-1"></i> LinkedIn</a>
+  </div>
+
+  <div class="kb-cards">
+    {% for item in site.data.featured %}
+      <a class="kb-card" href="{{ item.url | relative_url }}"{% if item.url contains '://' %} target="_blank" rel="noopener"{% endif %}>
+        <span class="kb-card-kicker">{{ item.kicker }}</span>
+        <span class="kb-card-title">{{ item.title }}</span>
+        <span class="kb-card-text">{{ item.text }}</span>
+      </a>
+    {% endfor %}
+  </div>
+</section>

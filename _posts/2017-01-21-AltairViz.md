@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "A Visualization tutorial"
-date:  2017-01-20
-desc: "A declarative statistics visualization library"
-keywords: "Visualization,Data Science"
-categories: [Ml]
-tags: [blog, Data Science, Visualization]
-icon: fa-pencil
+title: "A Visualization tutorial"
+date: 2017-01-20
+description: "A declarative statistics visualization library"
+permalink: /ml/2017/01/20/AltairViz.html
+categories: [Data Science]
+tags: [data-visualization, altair, python]
 ---
 
 

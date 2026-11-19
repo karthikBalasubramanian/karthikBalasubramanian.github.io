@@ -1,0 +1,25 @@
+{%- comment -%} Chirpy hook (included at the end of <head>). Adds LLMs.txt discovery and Person structured data on the home page. {%- endcomment -%}
+<link rel="alternate" type="text/plain" href="{{ '/llms.txt' | relative_url }}" title="LLMs.txt">
+{%- if page.layout == 'home' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Karthik Balasubramanian",
+  "url": "{{ site.url }}/",
+  "image": "{{ site.url }}{{ site.avatar }}",
+  "description": {{ site.description | jsonify }},
+  "jobTitle": "Software Engineer",
+  "worksFor": { "@type": "Organization", "name": "Adobe" },
+  "alumniOf": [
+    { "@type": "CollegeOrUniversity", "name": "Carnegie Mellon University, Heinz College" },
+    { "@type": "CollegeOrUniversity", "name": "SRM University" }
+  ],
+  "knowsAbout": ["LLM inference", "GPU kernels", "Triton", "CUDA", "vLLM", "SGLang", "Kubernetes", "Observability", "Site reliability engineering"],
+  "sameAs": [
+    "https://github.com/karthikBalasubramanian",
+    "https://www.linkedin.com/in/bks4line"
+  ]
+}
+</script>
+{%- endif -%}

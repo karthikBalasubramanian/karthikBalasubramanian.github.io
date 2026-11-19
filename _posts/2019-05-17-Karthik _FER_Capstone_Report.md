@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "Facial Emotions Recognition using Heuristic Learning and Transfer Learning"
-date:  2019-05-17
-desc: "Emotion Recognition and Pattern Recognition"
-keywords: "Transfer Learning, Deep Convoltional Neural Networks"
-categories: [Ml]
-tags: [blog, Deep Learning, Emotions recognition]
-icon: fa-pencil
+title: "Facial Emotions Recognition using Heuristic Learning and Transfer Learning"
+date: 2019-05-17
+description: "Emotion Recognition and Pattern Recognition"
+permalink: /ml/2019/05/17/Karthik-_FER_Capstone_Report.html
+categories: [Deep Learning]
+tags: [deep-learning, transfer-learning, computer-vision]
 ---
 
 Karthik Balasubramanian 
@@ -43,15 +42,15 @@ This is a problem of classifying an image to its right emotion. A multi-class cl
 
 1. Accuracy - is defined as 
 
-      $(True Positives + True Negatives)$  /$(True Positives + True Negatives+ False Positives + False Negatives)$  
+   $$\text{Accuracy} = \frac{\text{True Positives} + \text{True Negatives}}{\text{True Positives} + \text{True Negatives} + \text{False Positives} + \text{False Negatives}}$$
 
-But when the dataset is not uniformly distributed across classes we use cross entropy loss. 
+   But when the dataset is not uniformly distributed across classes we use cross entropy loss.
 
 2. Cross entropy loss - Which compares the loss between a vector and a true label in the SVM model.In the deep networks it compares the distance between two vectors. The predicted vector has the probabilities of all the classes. The true vector is a one-hot encoded vector of output labels. The lesser the cross entropy the better the model is. We should also aim at minimizing this loss (i.e closer to 0). In deep learning models, a softmax layer is introduced in the final layer to get the probability vector of classes from the matrix multiplicated computations.
  
-      $CE = -\sum_{i}^{C}t_{i} log (s_{i})$
+   $$CE = -\sum_{i}^{C} t_{i} \log(s_{i})$$
 
-     Where $t_{i}$  and $s_{i}$ are the groundtruth (label or one hot      encoded vector) and the probability for each class $i$ in $C$          classes. 
+   Where $t_{i}$ and $s_{i}$ are the groundtruth (label or one hot encoded vector) and the probability for each class $i$ in $C$ classes.
 
 
 ## II. Analysis
@@ -130,7 +129,7 @@ Example feature vector
 
 I have chosen Support vector machines (SVMs) to map the different facial features to their emotions. SVMs attempt to find the hyperplane that maximizes the margin between positive and negative observations for a specified emotion class. Therefore its also called Maximum margin classifier.
   
-We use libSVM which uses one vs one classifier. i.e It will create $ (K * (K-1))/2 $ binary classifiers in total - where K here is number of classes 8. A total of 28 binary classfiers are created. 
+We use libSVM which uses one vs one classifier. i.e It will create $K(K-1)/2$ binary classifiers in total - where K here is number of classes 8. A total of 28 binary classfiers are created. 
   
 
 **Linear SVM**

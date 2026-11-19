@@ -1,58 +1,37 @@
 # ==============================================================================
-# Multi-Stage Dockerfile for Local Build & Serve (Mimicking GitHub Actions)
+# Multi-stage Dockerfile for a local build and preview that mirrors GitHub Actions
+#   make build && make serve   ->  http://localhost:4000
 # ==============================================================================
 
 # ------------------------------------------------------------------------------
-# Stage 1: Build Node.js / Vite Microsites
+# Stage 1: Jekyll (Chirpy) site, built with the local URL override
 # ------------------------------------------------------------------------------
-FROM node:22-alpine AS microsite-builder
-WORKDIR /app
-
-# Copy root workspace files
+# Full ruby image (not -slim) because it includes git (used by _plugins/posts-lastmod-hook.rb)
+# and build tools for native gems.
+FROM ruby:3.3 AS jekyll-builder
+WORKDIR /srv/site
+ENV JEKYLL_ENV=production
+COPY Gemfile Gemfile.lock ./
+RUN bundle install --jobs 4
 COPY . .
-
-# Build each discovered microsite
-RUN find . -maxdepth 2 -name "package.json" -not -path "*/node_modules/*" -not -path "*/bower_components/*" -not -path "./package.json" | while read -r pkg; do \
-      dir=$(dirname "$pkg" | sed 's|^\./||'); \
-      echo "Building microsite: $dir..."; \
-      ( \
-        cd "$dir" && \
-        npm install --include=optional && \
-        npm run build \
-      ); \
-    done
-
+RUN bundle exec jekyll build --config _config.yml,_config.local.yml --destination /out
 
 # ------------------------------------------------------------------------------
-# Stage 2: Build Jekyll Root Site (GitHub Pages Image)
+# Stage 2: all React/Vite microsites (whichever top-level folders have package.json),
+#          copied into the Jekyll output
 # ------------------------------------------------------------------------------
-FROM jekyll/jekyll:pages AS jekyll-builder
-WORKDIR /srv/jekyll
-
-
-COPY --chown=jekyll:jekyll . .
-RUN bundle install
-RUN bundle exec jekyll build --destination ./_site
-
-
+FROM node:22-bookworm-slim AS microsite-builder
+WORKDIR /app
+COPY . .
+COPY --from=jekyll-builder /out /out
+RUN bash scripts/build-microsites.sh /out
 
 # ------------------------------------------------------------------------------
-# Stage 3: Assemble & Serve with Nginx
+# Stage 3: serve with nginx
 # ------------------------------------------------------------------------------
 FROM nginx:alpine AS runner
 WORKDIR /usr/share/nginx/html
-
-# Remove default nginx static assets
 RUN rm -rf ./*
-
-# Copy compiled Jekyll site
-COPY --from=jekyll-builder /srv/jekyll/_site .
-
-# Copy compiled Vite microsite dist outputs into their respective subfolders
-COPY --from=microsite-builder /app/paycheck-tax-investment-allocator/dist ./paycheck-tax-investment-allocator
-COPY --from=microsite-builder /app/rent-vs-buy-house-poor-calculator/dist ./rent-vs-buy-house-poor-calculator
-COPY --from=microsite-builder /app/child-financial-investment-planner/dist ./child-financial-investment-planner
-
+COPY --from=microsite-builder /out/ ./
 EXPOSE 80
-
 CMD ["nginx", "-g", "daemon off;"]

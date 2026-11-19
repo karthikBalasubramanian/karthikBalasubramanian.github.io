@@ -1,0 +1,33 @@
+# Cards on /tools/. URLs are the existing microsite paths and must not change.
+- step: Step 01 · Paycheck
+  title: Net Take-Home & Wealth Allocator
+  url: /paycheck-tax-investment-allocator/
+  goal: Work out your real take-home pay after maxing out 401(k), HSA and ESPP.
+  features:
+    - Federal, state and SDI tax breakdown
+    - 401(k) match and ESPP contribution-cap calculator
+    - Cash-flow timeline across 26 paychecks
+- step: Step 02 · Affordability & Housing
+  title: Rent vs. Buy & Major Purchase Planner
+  url: /rent-vs-buy-house-poor-calculator/
+  goal: Test monthly rent, total homeownership costs (PITI) and other big commitments against your take-home pay.
+  features:
+    - Reverse PITI calculation with ZIP-code data
+    - Asset picker for homes, cars and other big purchases
+    - Homeownership readiness roadmap and expense trimmer
+- step: Family · 18-year horizon
+  title: Child 529 & Family Wealth Growth
+  url: /child-financial-investment-planner/
+  goal: Project 18 years of compounding growth in 529, UTMA and Roth rollover accounts.
+  features:
+    - State 529 tax-deduction optimizer
+    - College fund vs. age-60 Roth rollover comparison
+    - Custodial UTMA growth projections
+- step: Equity · Strategy game
+  title: RSU Hold vs. Sell Simulator & Game
+  url: /rsu-hold-vs-sell-simulator/
+  goal: Simulate vesting schedules, compare holding your RSUs with the S&P 500, and play the regret game.
+  features:
+    - Simulations for a 1-year cliff and quarterly vesting
+    - Diversification benchmark against the S&P 500
+    - A "vesting time machine" game about decision regret

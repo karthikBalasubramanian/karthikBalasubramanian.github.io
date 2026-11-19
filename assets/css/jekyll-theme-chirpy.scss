@@ -1,0 +1,126 @@
+---
+---
+
+@use 'abstracts/variables' with (
+  $theme: '{{ site.theme_mode }}'
+);
+
+/* prettier-ignore */
+@use 'main
+{%- if jekyll.environment == 'production' -%}
+  .bundle
+{%- endif -%}
+';
+
+/* ---------------------------------------------------------------
+ * Site-specific styles (home hero, cards, tools grid).
+ * Only Chirpy's own CSS variables are used, so light and dark mode follow the theme toggle.
+ * The microsites copy the same palette from shared/site-chrome/ (chrome.css and tokens.*.css).
+ * --------------------------------------------------------------- */
+
+.kb-hero {
+  padding: 1.5rem 0 1rem;
+  margin-bottom: 1.5rem;
+  border-bottom: 1px solid var(--main-border-color);
+}
+
+.kb-eyebrow {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--text-muted-color);
+  margin-bottom: 0.5rem;
+}
+
+.kb-hero-title {
+  font-size: clamp(1.6rem, 3.2vw, 2.3rem);
+  line-height: 1.2;
+  font-weight: 700;
+  color: var(--heading-color);
+  margin-bottom: 1rem;
+}
+
+.kb-hero-lead {
+  font-size: 1.05rem;
+  line-height: 1.7;
+  color: var(--text-color);
+  max-width: 48rem;
+}
+
+.kb-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.25rem 0 1.5rem;
+
+  .btn { border-radius: 0.5rem; }
+}
+
+.kb-section-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0.5rem 0 1rem;
+  color: var(--heading-color);
+}
+
+.kb-cards,
+.kb-tools {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  margin: 1rem 0 1.5rem;
+}
+
+.kb-tools { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
+
+.kb-card,
+.kb-tool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--main-border-color);
+  border-radius: 0.75rem;
+  background: var(--card-bg, var(--main-bg));
+  box-shadow: 0 1px 2px var(--card-shadow, rgb(0 0 0 / 5%));
+  color: var(--text-color) !important;
+  text-decoration: none !important;
+  border-bottom: 1px solid var(--main-border-color) !important;
+  transition: transform 0.15s ease, border-color 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    border-color: var(--link-color) !important;
+  }
+}
+
+.kb-card-kicker {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--link-color);
+}
+
+.kb-card-title {
+  font-weight: 700;
+  font-size: 1.02rem;
+  color: var(--heading-color);
+}
+
+.kb-card-text {
+  font-size: 0.92rem;
+  color: var(--text-muted-color);
+}
+
+.kb-tool-features {
+  margin: 0.25rem 0 0.5rem;
+  padding-left: 1.1rem;
+  font-size: 0.88rem;
+}
+
+.kb-tool-cta {
+  margin-top: auto;
+  font-weight: 600;
+  color: var(--link-color);
+}

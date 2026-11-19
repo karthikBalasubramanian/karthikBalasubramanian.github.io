@@ -2,11 +2,15 @@
 layout: post
 title: "The Great AI Compromise: How Autonomous Agents Will Reclaim Our Idling GPUs"
 date: 2026-08-26
-desc: "An exploration of FLOPs, memory bandwidth, MFU across GPT-2 to Claude 3.5 Sonnet, and how long-horizon autonomous agents will unlock maximum GPU throughput."
-keywords: "AI, LLM, GPU, FLOPs, Latency, Throughput, MFU, GPT-4, Claude Sonnet, Autonomous Agents, Systems"
-categories: [Ml]
-tags: [blog, AI, LLM, GPU, Machine Learning, Systems, Agents]
-icon: fa-pencil
+description: "An exploration of FLOPs, memory bandwidth, MFU across GPT-2 to Claude 3.5 Sonnet, and how long-horizon autonomous agents will unlock maximum GPU throughput."
+permalink: /ml/2026/08/26/the_great_ai_compromise.html
+categories: [Inference Engineering]
+tags: [llm-inference, gpu, roofline, mfu, agents]
+pin: true
+math: true
+image:
+  path: /static/img/blog/roofline_model.png
+  alt: The roofline model showing compute-bound and memory-bound regions
 ---
 
 Imagine hiring an Olympic-class speed-reader who can process 1,000 pages every second. You sit down in front of them, hand over a single index card with one sentence, wait for them to read it, and then hand over another card five seconds later.

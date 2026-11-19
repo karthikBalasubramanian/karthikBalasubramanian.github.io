@@ -5,6 +5,10 @@ on:
     branches:
       - master
       - main
+  pull_request:
+    branches:
+      - master
+      - main
   workflow_dispatch:
 
 permissions:
@@ -17,61 +21,59 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so Chirpy's last-modified dates work (_plugins/posts-lastmod-hook.rb)
+
+      - name: Setup Pages
+        id: pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: '3.3'
+          bundler-cache: true
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: 22
 
-      - name: Build Jekyll Root Site
-        uses: actions/jekyll-build-pages@v1
-        with:
-          source: ./
-          destination: ./_site
+      - name: Build Jekyll site (Chirpy)
+        run: bundle exec jekyll build -d "_site${{ steps.pages.outputs.base_path }}"
+        env:
+          JEKYLL_ENV: production
 
-      - name: Discover & Build All Microsites into Jekyll Site
+      - name: Build microsites into _site
+        run: scripts/build-microsites.sh "_site${{ steps.pages.outputs.base_path }}"
+
+      - name: Check internal links (html-proofer)
         run: |
-          sudo chown -R $USER:$USER ./_site
-          touch ./_site/.nojekyll
-
-          find . -maxdepth 2 -name "package.json" -not -path "*/node_modules/*" -not -path "*/bower_components/*" -not -path "./package.json" | while read -r pkg; do
-            dir=$(dirname "$pkg" | sed 's|^\./||')
-            echo "=========================================="
-            echo "Found microsite directory: $dir"
-            echo "=========================================="
-
-            (
-              cd "$dir"
-              echo "Installing dependencies in $dir..."
-              npm ci || npm install
-              echo "Building $dir..."
-              npm run build
-            )
-
-            if [ -d "$dir/dist" ]; then
-              echo "Copying compiled output for $dir into _site/$dir..."
-              mkdir -p "./_site/$dir"
-              cp -r "$dir/dist/"* "./_site/$dir/"
-              touch "./_site/$dir/.nojekyll"
-              echo "Successfully integrated $dir into _site/$dir"
-            else
-              echo "Warning: No dist directory found for $dir after build."
-            fi
-          done
+          bundle exec htmlproofer "_site${{ steps.pages.outputs.base_path }}" \
+            --disable-external \
+            --no-enforce-https \
+            --ignore-urls "/^http:\/\/127.0.0.1/,/^http:\/\/0.0.0.0/,/^http:\/\/localhost/"
 
       - name: Upload artifact
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './_site'
+          path: '_site${{ steps.pages.outputs.base_path }}'
 
+  deploy:
+    needs: build
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4

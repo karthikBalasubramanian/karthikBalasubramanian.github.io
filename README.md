@@ -1,39 +1,64 @@
+Karthik Balasubramanian: personal site
+=====================================
 
-Karthik's Official website
-==========================
+Source for <https://karthikbalasubramanian.github.io/>, a Jekyll site using the
+[Chirpy](https://github.com/cotes2020/jekyll-theme-chirpy) theme (`jekyll-theme-chirpy` gem),
+plus four React/Vite/Tailwind finance calculators served under their own paths and listed on `/tools/`.
 
-I would like to thank [Jack](https://github.com/JiaKunUp) for his amazing work on [Jekyllrb](http://jekyllrb.com/). I have built my website on top of his [jekyll template](https://github.com/JiaKunUp/jalpc_jekyll_theme). You can get all the intricacies about this website's development there.
+## Layout
 
-## Microsites Architecture (Jekyll + Vite SPAs)
+| Path | What |
+|---|---|
+| `_config.yml` | Site config. Production URL `https://karthikbalasubramanian.github.io` |
+| `_config.local.yml` | Local-only override (`url: http://localhost:4000`), used by Docker / `make site` |
+| `_posts/` | Blog posts. Older posts pin `permalink:` so their `/ml/YYYY/MM/DD/slug.html` URLs never change; new posts default to `/posts/:title/` |
+| `_tabs/` | Sidebar pages: Blog, Projects, Tools, About, Categories, Tags |
+| `_includes/home-hero.html`, `_layouts/home.html` | Home page hero (the layout is a copy of Chirpy's with one include added; re-sync on Chirpy upgrades) |
+| `_data/featured.yml`, `_data/tools.yml` | Home page cards and Tools page cards |
+| `assets/css/jekyll-theme-chirpy.scss` | Theme entry point plus site styles |
+| `shared/site-chrome/` | Single source for the microsites' shared design tokens, header and footer |
+| `scripts/build-microsites.sh` | Builds every microsite and copies its `dist/` into `_site/` |
+| `_plugins/math-protect.rb` | Math in posts: write `$...$` inline and `$$...$$` display (on its own line). The plugin shields the TeX from kramdown and turns on MathJax (`math: true`) for any post that contains math |
 
-This repository supports an automated, zero-config multi-microsite architecture:
-### Personal Wealth Operating System (3-Step Roadmap)
-1. **Paycheck & Tax Allocator** (`/paycheck-tax-investment-allocator/`): Calculates liquid net take-home cash after all taxes, 401(k), HSA, & ESPP deductions.
-2. **Rent vs Buy & House Poor Stress Tester** (`/rent-vs-buy-house-poor-calculator/`): Evaluates target home purchase in target ZIP Code vs rent after lifestyle expenses.
-3. **Child Financial Investment Planner** (`/child-financial-investment-planner/`): Projects 18-year compounding wealth for 529 College Plans & Custodial accounts.
+### Microsites
 
-### Adding a New Microsite
-1. Create a subfolder with your Vite/React application (e.g., `my-new-tool`).
-2. Ensure `base: '/my-new-tool/'` is set in `my-new-tool/vite.config.ts`.
-3. Push to `main` / `master`. 
+`child-financial-investment-planner`, `paycheck-tax-investment-allocator`,
+`rent-vs-buy-house-poor-calculator`, `rsu-hold-vs-sell-simulator`. Each is a standalone Vite app with
+`base: '/<folder>/'`. Any new top-level folder with a `package.json` is picked up automatically.
 
-GitHub Actions will automatically discover your app, run `npm run build`, and deploy it to `https://<username>.github.io/my-new-tool/`.
+They share the blog's look through `shared/site-chrome`:
 
----
+- `tokens.*.css` remaps Tailwind's palette to Chirpy's greys through CSS variables, so the apps follow the blog's
+  light/dark mode (localStorage key `theme`, attribute `html[data-bs-theme]`, which is what Chirpy uses).
+- `SiteChrome.tsx` + `chrome.css` render the shared header (Home, Blog, Projects, Tools, About, mode toggle)
+  and footer around each `<App />`.
 
-## Local Development (Docker & Makefile)
+Edit files in `shared/site-chrome/`, then run `make tokens` (`node shared/site-chrome/build.mjs`) to copy them into
+each `<microsite>/src/site-chrome/`. The per-app color strategy is set in `build.mjs`.
 
-To build and run the entire site locally (mimicking the exact GitHub Actions deployment workflow):
+## Build
+
+**GitHub Actions** (`.github/workflows/deploy.yml`, runs on push to `master`/`main`): Ruby + bundler cache →
+`JEKYLL_ENV=production bundle exec jekyll build` → `scripts/build-microsites.sh` → html-proofer → deploy to Pages.
+In the repository settings, Pages → Source must be **GitHub Actions**.
+
+**Local, Docker** (mirrors CI, serves via nginx):
 
 ```bash
-# Build the multi-stage Docker container (Jekyll site + all Vite microsites)
-make build
-
-# Start the local server at http://localhost:4000
-make serve
-
-# Stop the local container
-make down
+make build   # docker compose build (Dockerfile.local)
+make serve   # http://localhost:4000
 ```
 
+**Local, no Docker** (Ruby 3.3 + Node 22):
 
+```bash
+make site    # Jekyll with _config.local.yml + all microsites into _site/
+make check   # html-proofer (internal links)
+```
+
+## Pending settings
+
+- `analytics.google.id` (GA4) and `webmaster_verifications.google` (Search Console) in `_config.yml`
+
+Theme: Chirpy by Cotes Chung (MIT). The earlier Jalpc design was based on
+[JiaKunUp/jalpc_jekyll_theme](https://github.com/JiaKunUp/jalpc_jekyll_theme).
