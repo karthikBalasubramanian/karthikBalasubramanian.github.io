@@ -10,3 +10,7 @@ Gemfile.lock
 dist
 *.log
 *.tsbuildinfo
+.bundle
+vendor
+.jekyll-cache
+assets/js/dist

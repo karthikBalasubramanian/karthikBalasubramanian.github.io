@@ -1,0 +1,4 @@
+# Local-only overrides. Used by Dockerfile.local / `make build`:
+#   bundle exec jekyll build --config _config.yml,_config.local.yml
+# Never used by the GitHub Actions production build.
+url: "http://localhost:4000"

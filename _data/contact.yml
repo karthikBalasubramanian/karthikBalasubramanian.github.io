@@ -1,0 +1,11 @@
+# Contact icons at the bottom of the sidebar.
+- type: github
+  icon: "fab fa-github"
+
+- type: linkedin
+  icon: "fab fa-linkedin"
+  url: "https://www.linkedin.com/in/bks4line"
+
+- type: rss
+  icon: "fas fa-rss"
+  noblank: true

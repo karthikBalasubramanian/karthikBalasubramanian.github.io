@@ -1,0 +1,22 @@
+{%- comment -%} Chirpy hook (included at the end of <head>). Adds Person structured data on the home page. {%- endcomment -%}
+{%- if page.layout == 'home' -%}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Karthik Balasubramanian",
+  "url": "{{ site.url }}/",
+  "jobTitle": "Software Engineer",
+  "worksFor": { "@type": "Organization", "name": "Adobe" },
+  "alumniOf": [
+    { "@type": "CollegeOrUniversity", "name": "Carnegie Mellon University, Heinz College" },
+    { "@type": "CollegeOrUniversity", "name": "SRM University" }
+  ],
+  "knowsAbout": ["LLM inference", "GPU kernels", "Triton", "CUDA", "vLLM", "SGLang", "Kubernetes", "Observability", "Site reliability engineering"],
+  "sameAs": [
+    "https://github.com/karthikBalasubramanian",
+    "https://www.linkedin.com/in/bks4line"
+  ]
+}
+</script>
+{%- endif -%}

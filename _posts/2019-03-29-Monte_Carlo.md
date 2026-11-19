@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "How to Train an agent to play the game of Black Jack?"
-date:  2019-03-29
-desc: "Reinforcement learning using Monte Carlo Methods"
-keywords: "Reinforcement Learning, Optimization"
-categories: [Ml]
-tags: [blog, Reinforcement Learning, Optimization]
-icon: fa-pencil
+title: "How to Train an agent to play the game of Black Jack?"
+date: 2019-03-29
+description: "Reinforcement learning using Monte Carlo Methods"
+permalink: /ml/2019/03/29/Monte_Carlo.html
+categories: [Reinforcement Learning]
+tags: [reinforcement-learning, monte-carlo]
 ---
 
 
@@ -266,7 +265,7 @@ plot_blackjack_values(V)
 
     Episode 500000/500000.
 
-![png](https://drive.google.com/uc?export=view&id=1L7WQdBhdKkKo32uPtCMMA6GE83wo0DHf)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1L7WQdBhdKkKo32uPtCMMA6GE83wo0DHf)
 
 
 
@@ -363,7 +362,7 @@ plot_blackjack_values(V_to_plot)
     Episode 500000/500000.
 
 
-![png](https://drive.google.com/uc?export=view&id=1yei5Ztn6DOsamXWcDsKyaNeI9M5JKiva)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1yei5Ztn6DOsamXWcDsKyaNeI9M5JKiva)
 
 
 ### Part 3: MC Control: GLIE
@@ -527,7 +526,7 @@ plot_blackjack_values(V_glie)
 ```
 
 
-![png](https://drive.google.com/uc?export=view&id=1FFnCJttM8iFzDAZnuXie4pqNvH955i9s)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1FFnCJttM8iFzDAZnuXie4pqNvH955i9s)
 
 
 Finally, we visualize the policy that is estimated to be optimal.
@@ -541,7 +540,7 @@ plot_policy(policy_glie)
 ```
 
 
-![png](https://drive.google.com/uc?export=view&id=1BIR8O5wUI81saELC-XQqnhx5iSkqXht2)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1BIR8O5wUI81saELC-XQqnhx5iSkqXht2)
 
 
 The **true** optimal policy $\pi_*$ can be found on page 82 of the [textbook](http://go.udacity.com/rl-textbook) (and appears below).  Compare your final estimate to the optimal policy - how close are you able to get?  If you are not happy with the performance of your algorithm, take the time to tweak the decay rate of $\epsilon$ and/or run the algorithm for more episodes to attain better results.
@@ -618,7 +617,7 @@ plot_blackjack_values(V_alpha)
 ```
 
 
-![png](https://drive.google.com/uc?export=view&id=1fS5vl6uCfsyA1RUws0F0AdOHvGE57XP4)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1fS5vl6uCfsyA1RUws0F0AdOHvGE57XP4)
 
 
 Finally, we visualize the policy that is estimated to be optimal.
@@ -630,7 +629,7 @@ plot_policy(policy_alpha)
 ```
 
 
-![png](https://drive.google.com/uc?export=view&id=1QXvT7W0VOByZFEN3HnP9c3XtJpSRa5VY)
+![Blackjack Monte Carlo value function or policy plot](https://drive.google.com/uc?export=view&id=1QXvT7W0VOByZFEN3HnP9c3XtJpSRa5VY)
 
 
 The **true** optimal policy $\pi_*$ can be found on page 82 of the [textbook](http://go.udacity.com/rl-textbook) (and appears below).  Compare your final estimate to the optimal policy - how close are you able to get?  If you are not happy with the performance of your algorithm, take the time to tweak the decay rate of $\epsilon$, change the value of $\alpha$, and/or run the algorithm for more episodes to attain better results.

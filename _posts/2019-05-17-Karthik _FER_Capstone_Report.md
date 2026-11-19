@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "Facial Emotions Recognition using Heuristic Learning and Transfer Learning"
-date:  2019-05-17
-desc: "Emotion Recognition and Pattern Recognition"
-keywords: "Transfer Learning, Deep Convoltional Neural Networks"
-categories: [Ml]
-tags: [blog, Deep Learning, Emotions recognition]
-icon: fa-pencil
+title: "Facial Emotions Recognition using Heuristic Learning and Transfer Learning"
+date: 2019-05-17
+description: "Emotion Recognition and Pattern Recognition"
+permalink: /ml/2019/05/17/Karthik-_FER_Capstone_Report.html
+categories: [Deep Learning]
+tags: [deep-learning, transfer-learning, computer-vision]
 ---
 
 Karthik Balasubramanian 

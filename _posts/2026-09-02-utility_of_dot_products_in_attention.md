@@ -2,11 +2,11 @@
 layout: post
 title: "The Flashlight and the Shadow: How Dot Products and Normalization Power AI Attention"
 date: 2026-09-02
-desc: "From flashlight shadows to multi-dimensional Transformer attention: an intuitive, first-principles deep dive into dot products, matrix operations, and why self-attention works the way it does."
-keywords: "AI, LLM, Dot Product, Attention Mechanism, Linear Algebra, PyTorch, Transformers, Deep Learning, Backpropagation"
-categories: [Ml]
-tags: [blog, AI, LLM, Math, Attention, Transformers, Machine Learning]
-icon: fa-pencil
+description: "From flashlight shadows to multi-dimensional Transformer attention: an intuitive, first-principles deep dive into dot products, matrix operations, and why self-attention works the way it does."
+permalink: /ml/2026/09/02/utility_of_dot_products_in_attention.html
+categories: [LLM Foundations]
+tags: [attention, transformers, linear-algebra, pytorch, llm-from-scratch]
+math: true
 ---
 
 If you peel back the layers of a modern Large Language Model—past the billions of parameters, the multi-head mechanisms, and the massive GPU clusters—you arrive at a shockingly simple mathematical operation performed trillions of times a second:

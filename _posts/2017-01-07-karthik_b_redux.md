@@ -1,12 +1,11 @@
 ---
 layout: post
-title:  "First Kaggle Submission - Deep learning"
-date:  2017-01-07
-desc: "Introduction to Convolutional Neural Networks"
-keywords: "Machine Learning,Deep Learning"
-categories: [Ml]
-tags: [blog, Machine learning, Deep Learning]
-icon: fa-pencil
+title: "First Kaggle Submission - Deep learning"
+date: 2017-01-07
+description: "Introduction to Convolutional Neural Networks"
+permalink: /ml/2017/01/07/karthik_b_redux.html
+categories: [Deep Learning]
+tags: [deep-learning, cnn, kaggle]
 ---
 
 
