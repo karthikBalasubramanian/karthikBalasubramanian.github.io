@@ -32,9 +32,9 @@ social:
     - https://github.com/karthikBalasubramanian
     - https://www.linkedin.com/in/bks4line
 
-# Search engine verification (pending: paste codes from Google Search Console / Bing Webmaster Tools)
+# Search engine verification (Google Search Console / Bing Webmaster Tools)
 webmaster_verifications:
-  google:
+  google: a98NVC58TL2aLzemLIEsJBZuVDUfJevxNg2rJbBTwls
   bing:
 
 # Analytics (blog pages only — never loaded in the 4 standalone finance calculators under /tools/).
