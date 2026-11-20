@@ -37,12 +37,13 @@ webmaster_verifications:
   google:
   bing:
 
-# Analytics. The old Universal Analytics tag (UA-135003839-1) was removed: UA stopped collecting data in 2023.
+# Analytics (blog pages only — never loaded in the 4 standalone finance calculators under /tools/).
+# Recommended: GoatCounter (cookieless, privacy-friendly) or GA4.
 analytics:
   google:
-    id: # pending GA4 measurement ID, e.g. G-XXXXXXXXXX
+    id: # optional GA4 measurement ID, e.g. G-XXXXXXXXXX
   goatcounter:
-    id:
+    id: # optional GoatCounter site code (e.g. karthikb -> karthikb.goatcounter.com)
 
 pageviews:
   provider:

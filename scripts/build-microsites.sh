@@ -38,3 +38,29 @@ done < <(find . -mindepth 2 -maxdepth 2 -name package.json \
 
 echo "Built $found microsite(s)."
 [ "$found" -gt 0 ]
+
+# Add built microsite URLs to Jekyll's sitemap.xml (they are excluded from Jekyll's own build).
+SITEMAP="$DEST/sitemap.xml"
+if [ -f "$SITEMAP" ]; then
+  SITE_URL="$(grep -m1 '^url:' "$ROOT/_config.yml" | sed -E 's/^url:[[:space:]]*["'\'']?([^"'\''#]+)["'\'']?.*/\1/' | sed 's|/*$||')"
+  if [ -n "$SITE_URL" ]; then
+    TODAY="$(date -u +%Y-%m-%d)"
+    ADDED=0
+    while IFS= read -r pkg; do
+      dir="$(dirname "$pkg" | sed 's|^\./||')"
+      loc="${SITE_URL}/${dir}/"
+      if ! grep -q "<loc>${loc}</loc>" "$SITEMAP"; then
+        ENTRY="<url><loc>${loc}</loc><lastmod>${TODAY}</lastmod></url>"
+        node -e '
+const fs = require("node:fs");
+const [p, entry] = process.argv.slice(1);
+const txt = fs.readFileSync(p, "utf8");
+fs.writeFileSync(p, txt.replace("</urlset>", entry + "\n</urlset>"));
+' "$SITEMAP" "$ENTRY"
+        ADDED=$((ADDED + 1))
+      fi
+    done < <(find . -mindepth 2 -maxdepth 2 -name package.json \
+               -not -path '*/node_modules/*' -not -path './shared/*' -not -path './_site/*' | sort)
+    echo "Added $ADDED microsite URL(s) to $SITEMAP."
+  fi
+fi
