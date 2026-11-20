@@ -56,9 +56,10 @@ make site    # Jekyll with _config.local.yml + all microsites into _site/
 make check   # html-proofer (internal links)
 ```
 
-## Pending settings
+## Analytics & Verification
 
-- `analytics.google.id` (GA4) and `webmaster_verifications.google` (Search Console) in `_config.yml`
+- **Google Search Console:** Configured via `webmaster_verifications.google` in `_config.yml` (static `<meta>` tag only).
+- **Blog-only analytics:** Cookieless GoatCounter (`karthikb.goatcounter.com`) configured via `analytics.goatcounter.id` in `_config.yml`. Never loaded in the 4 finance calculators.
 
 Theme: Chirpy by Cotes Chung (MIT). The earlier Jalpc design was based on
 [JiaKunUp/jalpc_jekyll_theme](https://github.com/JiaKunUp/jalpc_jekyll_theme).

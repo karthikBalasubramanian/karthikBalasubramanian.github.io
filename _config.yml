@@ -41,9 +41,9 @@ webmaster_verifications:
 # Recommended: GoatCounter (cookieless, privacy-friendly) or GA4.
 analytics:
   google:
-    id: # optional GA4 measurement ID, e.g. G-XXXXXXXXXX
+    id:
   goatcounter:
-    id: # optional GoatCounter site code (e.g. karthikb -> karthikb.goatcounter.com)
+    id: karthikb
 
 pageviews:
   provider:
