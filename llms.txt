@@ -19,7 +19,7 @@ Software Engineer at Adobe (since 2017, starting at Marketo) transitioning from 
 - **Languages:** Python, Java
 - **ML & LLMs:** PyTorch, Transformers, LLM evaluation (*analyze → measure → improve*, Hamel Husain & Shreya Shankar), agentic frameworks (LangGraph), agent harnesses & isolated sandboxes (Agent Sandbox), A2A protocol
 - **Inference & Kernels (in progress):** Triton, CUDA, vLLM, SGLang, roofline/MFU analysis
-- **Infrastructure:** Kubernetes (CKA), Docker, Helm, Terraform, Airflow, FastAPI, microservices, GitOps CI/CD
+- **Infrastructure:** Kubernetes (CKA), Argo (Argo CD, Argo Workflows, Argo Rollouts — Rolling Update, Canary, Blue-Green), Docker, Helm, Terraform, Airflow, FastAPI, microservices, GitOps CI/CD
 - **Observability:** Prometheus, Grafana, OpenTelemetry, Splunk
 - **Data:** PostgreSQL, MySQL, MS SQL Server, Azure Data Explorer, Redis, Databricks
 - **Education:** Master of Information Systems Management, Carnegie Mellon University (Heinz College, 2017); B.Tech in Information Technology, SRM University (2013)

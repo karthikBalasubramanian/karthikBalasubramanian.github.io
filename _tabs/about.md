@@ -12,7 +12,7 @@ I'm **Karthik Balasubramanian**, a Software Engineer at Adobe. I've worked at Ad
 
 My engineering background spans:
 
-- **Production infrastructure & Kubernetes:** Running thousands of scheduled, containerized ETL jobs on Kubernetes and Mesos, building GitOps CI/CD with Jenkins and Helm, and maintaining **Certified Kubernetes Administrator (CKA)** depth.
+- **Production infrastructure & Kubernetes:** Running thousands of scheduled, containerized ETL jobs on Kubernetes and Mesos, building GitOps CI/CD with **Argo CD**, Jenkins, and Helm, working with **Argo Workflows** and progressive delivery via **Argo Rollouts** (Rolling Update, Canary, Blue-Green), and maintaining **Certified Kubernetes Administrator (CKA)** depth.
 - **Observability & reliability:** Logging, metrics, tracing, and alerting across Prometheus, Grafana, OpenTelemetry, and Splunk.
 - **Agentic systems & evaluation:** Shipping LangGraph agents, agent harnesses and loops, researching isolated sandboxes (e.g., Agent Sandbox) for safe code execution, and evaluating agents using the *analyze → measure → improve* methodology (Hamel Husain & Shreya Shankar).
 
@@ -37,7 +37,7 @@ and I'm building skills on both sides.
 | Languages | Python, Java |
 | ML & LLMs | PyTorch, Transformers, LLM evaluation, agentic frameworks (LangGraph), A2A protocol |
 | Learning now | Triton, CUDA, vLLM, SGLang |
-| Infrastructure | Kubernetes (CKA), Docker, Terraform, Airflow, FastAPI, microservices |
+| Infrastructure | Kubernetes (CKA), Argo (CD, Workflows, Rollouts), Helm, Docker, Terraform, Airflow, FastAPI, microservices |
 | Observability | Prometheus, Grafana, OpenTelemetry, Splunk |
 | Data | PostgreSQL, MySQL, MS SQL Server, Azure Data Explorer, Redis, Databricks |
 
