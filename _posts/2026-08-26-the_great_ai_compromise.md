@@ -9,8 +9,8 @@ tags: [llm-inference, gpu, roofline, mfu, agents]
 pin: true
 math: true
 image:
-  path: /static/img/blog/roofline_model.png
-  alt: The roofline model showing compute-bound and memory-bound regions
+  path: /assets/img/posts/great-ai-compromise/roofline-batching-shift.gif
+  alt: Animated H100 Roofline model showing batching moving LLM decode from memory-bound at Batch 1 to compute-bound past the ridge point
 ---
 
 Imagine hiring an Olympic-class speed-reader who can process 1,000 pages every second. You sit down in front of them, hand over a single index card with one sentence, wait for them to read it, and then hand over another card five seconds later.
@@ -127,7 +127,7 @@ The chef wheels the 140 recipe volumes from VRAM to the small SRAM counter **onc
 
 ### The Roofline Bottleneck
 
-![The Roofline Model](/static/img/blog/roofline_model.png)
+![Animated H100 Roofline model showing how batching moves LLM decode from memory-bound to compute-bound](/assets/img/posts/great-ai-compromise/roofline-batching-shift.gif)
 *Figure 1: The Roofline Model depicting Arithmetic Intensity vs Realized Performance (FLOPs/s), highlighting Memory-Bandwidth-Bound vs Compute-Bound operational regimes.*
 
 In hardware terms, this dynamic is formalized by the **Roofline Model**, which maps the performance relationship between ultra-fast **on-chip SRAM** (where active matrix calculations occur) and larger **off-chip VRAM / HBM** (where the 140 GB model parameters reside).
