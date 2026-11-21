@@ -56,8 +56,9 @@ and I'm building skills on both sides.
 
 ## Elsewhere & Contact
 
-I'm focused on **ML Inference Engineering** and **GPU Systems / ML Infrastructure** roles where production reliability meets low-level performance. The best way to reach me is on LinkedIn.
+I'm focused on **ML Inference Engineering** and **GPU Systems / ML Infrastructure** roles where production reliability meets low-level performance. The best way to reach me is on LinkedIn or X.
 
 - GitHub: [karthikBalasubramanian](https://github.com/karthikBalasubramanian)
 - LinkedIn: [bks4line](https://www.linkedin.com/in/bks4line)
+- X: [@\_karthikb\_](https://x.com/_karthikb_)
 - [RSS feed]({{ '/feed.xml' | relative_url }})

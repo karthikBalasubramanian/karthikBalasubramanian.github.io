@@ -53,3 +53,4 @@ Software Engineer at Adobe (since 2017, starting at Marketo) transitioning from 
 
 - GitHub: https://github.com/{{ site.github.username }}
 - LinkedIn: https://www.linkedin.com/in/bks4line
+- X: https://x.com/_karthikb_

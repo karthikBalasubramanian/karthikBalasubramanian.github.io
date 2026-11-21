@@ -6,6 +6,10 @@
   icon: "fab fa-linkedin"
   url: "https://www.linkedin.com/in/bks4line"
 
+- type: twitter
+  icon: "fa-brands fa-x-twitter"
+  url: "https://x.com/_karthikb_"
+
 - type: rss
   icon: "fas fa-rss"
   noblank: true
