@@ -21,11 +21,25 @@
   </div>
 
   <div class="kb-cards">
+    {% assign latest_post = site.posts | sort: 'date' | reverse | first %}
     {% for item in site.data.featured %}
-      <a class="kb-card" href="{{ item.url | relative_url }}"{% if item.url contains '://' %} target="_blank" rel="noopener"{% endif %}>
+      {% if item.dynamic == 'latest_post' and latest_post %}
+        {% assign card_url = latest_post.url %}
+        {% assign card_title = latest_post.title %}
+        {% if latest_post.description %}
+          {% assign card_text = latest_post.description %}
+        {% else %}
+          {% assign card_text = latest_post.excerpt | strip_html | strip_newlines | truncate: 160 %}
+        {% endif %}
+      {% else %}
+        {% assign card_url = item.url %}
+        {% assign card_title = item.title %}
+        {% assign card_text = item.text %}
+      {% endif %}
+      <a class="kb-card" href="{{ card_url | relative_url }}"{% if card_url contains '://' %} target="_blank" rel="noopener"{% endif %}>
         <span class="kb-card-kicker">{{ item.kicker }}</span>
-        <span class="kb-card-title">{{ item.title }}</span>
-        <span class="kb-card-text">{{ item.text }}</span>
+        <span class="kb-card-title">{{ card_title }}</span>
+        <span class="kb-card-text">{{ card_text }}</span>
       </a>
     {% endfor %}
   </div>
