@@ -22,8 +22,8 @@ baseurl: ""
 github:
   username: karthikBalasubramanian
 
-# twitter:
-#   username: # pending: add an X/Twitter handle if you want one linked
+twitter:
+  username: _karthikb_
 
 social:
   name: Karthik Balasubramanian
@@ -31,6 +31,7 @@ social:
   links:
     - https://github.com/karthikBalasubramanian
     - https://www.linkedin.com/in/bks4line
+    - https://x.com/_karthikb_
 
 # Search engine verification (Google Search Console / Bing Webmaster Tools)
 webmaster_verifications:
