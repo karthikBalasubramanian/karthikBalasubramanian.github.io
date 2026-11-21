@@ -124,3 +124,13 @@ We will stop here before opening the optimization playbook. Keep these three que
 1. **Batching vs. KV cache:** Batching more users raises arithmetic intensity and pushes you right along the Roofline. Why doesn't higher concurrency simply give every user low latency, and where does KV-cache traffic start pushing back?
 2. **Un-fused glue around matmuls:** When most raw FLOPs live inside Tensor Core matmuls, how much wall-clock time gets lost to tiny CUDA-core steps and extra HBM reads and writes in between?
 3. **On-chip layout traps:** Once data reaches shared memory or registers, how do global memory coalescing, shared-memory bank conflicts, and register/SMEM budgets dictate whether a kernel actually runs fast?
+
+---
+
+## Acknowledgments & References
+
+- **Learning acknowledgment:** Much of my hands-on foundation for this series comes from the [Vizuara AI Kernel Engineering Workshop](https://kernelworkshop.vizuara.ai/) by [Vizuara.ai](https://vizuara.ai/).
+- **NVIDIA H100 Tensor Core GPU Datasheet & Hopper Tuning Guide:** Official H100 SXM5 specifications (132 active SMs, 5,120-bit HBM3 at 3.35 TB/s, 50 MB L2, 256 KB SRAM/SM, 4th-gen Tensor Cores) — [H100 Datasheet](https://resources.nvidia.com/en-us-tensor-core/nvidia-tensor-core-gpu-datasheet) and [Hopper Tuning Guide](https://docs.nvidia.com/cuda/hopper-tuning-guide/).
+- **NVIDIA Deep Learning Performance Guide:** [GPU Performance Background](https://docs.nvidia.com/deeplearning/performance/dl-performance-gpu-background/index.html) (arithmetic intensity, memory-bound vs. math-bound regimes, and Tensor Core utilization).
+- **NVIDIA CUDA Programming Guide:** [CUDA Programming Guide](https://docs.nvidia.com/cuda/cuda-programming-guide/) (SIMT execution, warps, thread blocks, registers, and shared memory).
+- **Roofline Model (Original Paper):** Samuel Williams, Andrew Waterman, and David Patterson, *"Roofline: An Insightful Visual Performance Model for Multicore Architectures,"* *Communications of the ACM*, 52(4), 65–76 (2009), DOI `10.1145/1498765.1498785`.
