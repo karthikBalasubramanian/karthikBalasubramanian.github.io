@@ -1,8 +1,8 @@
 # Cards shown under the home page hero.
+# `dynamic: latest_post` pulls the newest post by original publish `date`
+# (editing an older post won't replace it unless its `date:` front matter changes).
 - kicker: Latest deep dive
-  title: "The Great AI Compromise: FLOPs, memory bandwidth and MFU"
-  text: Roofline analysis of LLM inference from GPT-2 onward, and why autonomous agents may finally keep GPUs busy.
-  url: /ml/2026/08/26/the_great_ai_compromise.html
+  dynamic: latest_post
 - kicker: Build an LLM from scratch
   title: pytorch_tutorials
   text: Tokenizers, embeddings, causal and multi-head attention, and a full GPT model in PyTorch, following Sebastian Raschka's book.
