@@ -13,7 +13,7 @@ image:
   alt: Animated H100 Roofline model showing batching moving LLM decode from memory-bound at Batch 1 to compute-bound past the ridge point
 ---
 
-> **Kernel Engineering Series — Part 1:** This post builds the high-level intuition for why GPUs sit idle in LLM serving (FLOPs, MFU, Memory Wall, and the Roofline model). Ready to go inside the silicon? Continue to [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/).
+> **Kernel Engineering Series — Part 1:** Why GPUs sit idle in LLM serving (FLOPs, MFU, Memory Wall, and the Roofline model). *Next:* [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/).
 {: .prompt-info }
 
 Imagine hiring an Olympic-class speed-reader who can process 1,000 pages every second. You sit down in front of them, hand over a single index card with one sentence, wait for them to read it, and then hand over another card five seconds later.
@@ -247,7 +247,7 @@ When you prompt an LLM today and watch words stream across your screen, you are 
 
 But as AI shifts from interactive chatbots to autonomous long-horizon agents working non-stop in the background, latency constraints fall away. In an agent-driven world, GPUs will no longer sit idle waiting for index cards—they will run at full saturation, day and night.
 
-> **Next in the Kernel Engineering Series →** Batching and asynchronous agents amortize *weight reads*, but they don't solve un-fused kernels, per-request KV-cache traffic, or newer GPUs pushing the Roofline ridge even further right. In [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/), we drop the kitchen analogies and open up the H100 die—down to SMs, warps, Tensor Cores, and the `max()` kernel time bound.
+> **Next in the Kernel Engineering Series →** Batching and asynchronous agents amortize *weight reads*, but they don't solve everything. In [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/), we drop the kitchen analogies and open up the H100 die—down to SMs, warps, Tensor Cores, and the `max()` kernel time bound.
 {: .prompt-tip }
 
 ---

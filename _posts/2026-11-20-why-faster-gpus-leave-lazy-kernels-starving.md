@@ -14,7 +14,7 @@ image:
 > **Kernel Engineering Series — Part 2:** Builds directly on [Part 1: The Great AI Compromise](/ml/2026/08/26/the_great_ai_compromise.html), moving from serving economics and analogies down into the H100 silicon and kernel-level math.
 {: .prompt-info }
 
-In [Part 1: The Great AI Compromise](/ml/2026/08/26/the_great_ai_compromise.html), we saw a frustrating paradox: AI accelerators advertise enormous peak compute numbers, yet single-user LLM generation leaves most of that capacity sitting idle while waiting on memory. High-concurrency batching—and asynchronous agent workloads—helps by amortizing model weight reads across many tokens.
+In Part 1, we saw a frustrating paradox: AI accelerators advertise enormous peak compute numbers, yet single-user LLM generation leaves most of that capacity sitting idle while waiting on memory. High-concurrency batching—and asynchronous agent workloads—helps by amortizing model weight reads across many tokens.
 
 But batching alone does not solve the memory wall. It cannot save un-fused kernels that round-trip intermediate tensors to HBM, it cannot share per-request KV caches across users, and as we will see below, newer GPUs keep raising the compute-to-bandwidth bar faster than old kernels can keep up. To understand why—and why kernel engineering is the practical way out—we need to open up the GPU and look at where data lives, how far it travels, and what sets the physical speed limit of any kernel.
 
@@ -57,7 +57,7 @@ That is a **16× gap** between dense BF16 Tensor Core throughput and FP32 CUDA c
 
 ## 2. Arithmetic Intensity: The Kernel Engineer's Compass
 
-In Part 1, we met **arithmetic intensity** intuitively through batching. At the kernel level, it is the single number that tells you whether a kernel is letting the GPU compute or forcing it to wait—defined as the ratio of math performed to bytes moved (typically across HBM):
+In Part 1, we met **arithmetic intensity ($I$)** intuitively through batching. At the kernel level, it is the single number that tells you whether a kernel is letting the GPU compute or forcing it to wait—defined as the ratio of math performed to bytes moved (typically across HBM):
 
 $$I = \frac{\text{Total FLOPs}}{\text{Total Bytes Transferred}}$$
 
