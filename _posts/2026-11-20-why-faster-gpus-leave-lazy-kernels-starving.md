@@ -11,9 +11,12 @@ image:
   alt: Animated Roofline plot showing the ridge point shifting right from V100 to A100 to H100, stranding a fixed kernel in the memory-bound zone
 ---
 
-In [The Great AI Compromise](/ml/2026/08/26/the_great_ai_compromise.html), we saw a frustrating paradox: AI accelerators advertise enormous peak compute numbers, yet real workloads leave most of that capacity sitting idle. During LLM token generation, a single user step feels instant to a person while the GPU's math units spend almost all of their time waiting for data.
+> **Kernel Engineering Series — Part 2:** Builds directly on [Part 1: The Great AI Compromise](/ml/2026/08/26/the_great_ai_compromise.html), moving from serving economics and analogies down into the H100 silicon and kernel-level math.
+{: .prompt-info }
 
-To understand why, and why kernel engineering is the practical way out, we need to open up the GPU and look at where data lives, how far it travels, and what sets the physical speed limit of any kernel.
+In Part 1, we saw a frustrating paradox: AI accelerators advertise enormous peak compute numbers, yet single-user LLM generation leaves most of that capacity sitting idle while waiting on memory. High-concurrency batching—and asynchronous agent workloads—helps by amortizing model weight reads across many tokens.
+
+But batching alone does not solve the memory wall. It cannot save un-fused kernels that round-trip intermediate tensors to HBM, it cannot share per-request KV caches across users, and as we will see below, newer GPUs keep raising the compute-to-bandwidth bar faster than old kernels can keep up. To understand why—and why kernel engineering is the practical way out—we need to open up the GPU and look at where data lives, how far it travels, and what sets the physical speed limit of any kernel.
 
 ---
 
@@ -54,11 +57,11 @@ That is a **16× gap** between dense BF16 Tensor Core throughput and FP32 CUDA c
 
 ## 2. Arithmetic Intensity: The Kernel Engineer's Compass
 
-To tell whether a kernel is letting the GPU compute or forcing it to wait, measure its **Arithmetic Intensity ($I$)**, defined as the ratio of math performed to bytes moved (typically across HBM):
+In Part 1, we met **arithmetic intensity ($I$)** intuitively through batching. At the kernel level, it is the single number that tells you whether a kernel is letting the GPU compute or forcing it to wait—defined as the ratio of math performed to bytes moved (typically across HBM):
 
 $$I = \frac{\text{Total FLOPs}}{\text{Total Bytes Transferred}}$$
 
-- **Low arithmetic intensity** means moving a lot of bytes for very little math. Serving a single user on an 8B parameter model in BF16 streams roughly 16 GB of weights (plus KV cache) to perform ~16 billion FLOPs per generated token: right around **1 FLOP/byte**. A naive matmul that re-fetches both BF16 inputs from HBM on every FMA without reuse drops to **0.5 FLOPs/byte** (2 FLOPs per FMA divided by 4 bytes for two BF16 operands).
+- **Low arithmetic intensity** means moving a lot of bytes for very little math. Serving a single user on a modern 8B parameter model (like Llama 3 8B) in BF16 streams roughly 16 GB of weights (plus KV cache) to perform ~16 billion FLOPs per generated token: right around **1 FLOP/byte**. A naive matmul that re-fetches both BF16 inputs from HBM on every FMA without reuse drops to **0.5 FLOPs/byte** (2 FLOPs per FMA divided by 4 bytes for two BF16 operands).
 - **High arithmetic intensity** means reusing every loaded byte across many multiply-adds, such as a well-tiled GEMM or a larger batch where weights are amortized across many tokens.
 
 Because a **kernel** is an atomic unit of GPU execution, splitting a forward pass into many tiny, un-fused kernels that write intermediate tensors out to HBM and read them right back inflates the denominator while adding almost nothing to the numerator.
@@ -79,7 +82,7 @@ Plug our 8B single-user token step on an H100 into that formula:
 - **Tensor Core math time:** $16\text{ GFLOPs} / 989\text{ TFLOP/s} \approx 0.016\text{ ms}$
 - **Result:** $\max(4.78\text{ ms}, 0.016\text{ ms}) = 4.78\text{ ms}$. The Tensor Cores are active for **0.3%** of the step and waiting for **99.7%**.
 
-Plotting that bound across all arithmetic intensities gives the **Roofline plot**:
+Plotting that bound across all arithmetic intensities formalizes the **Roofline plot** from Part 1:
 
 - **X-axis:** Arithmetic intensity ($\text{FLOPs/byte}$).
 - **Y-axis:** Attainable compute throughput ($\text{TFLOP/s}$).
@@ -121,7 +124,7 @@ You cannot widen the HBM bus or add more shared memory in software. The only way
 
 We will stop here before opening the optimization playbook. Keep these three questions in mind for the next post:
 
-1. **Batching vs. KV cache:** Batching more users raises arithmetic intensity and pushes you right along the Roofline. Why doesn't higher concurrency simply give every user low latency, and where does KV-cache traffic start pushing back?
+1. **Batching vs. the KV-cache wall:** In Part 1 we saw how batching amortizes model weight reads (and why latency limits how far you can batch). Inside attention, however, every request carries its own unshared KV cache—where does KV-cache bandwidth start pushing back even at high batch sizes?
 2. **Un-fused glue around matmuls:** When most raw FLOPs live inside Tensor Core matmuls, how much wall-clock time gets lost to tiny CUDA-core steps and extra HBM reads and writes in between?
 3. **On-chip layout traps:** Once data reaches shared memory or registers, how do global memory coalescing, shared-memory bank conflicts, and register/SMEM budgets dictate whether a kernel actually runs fast?
 

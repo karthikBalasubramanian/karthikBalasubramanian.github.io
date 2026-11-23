@@ -13,6 +13,9 @@ image:
   alt: Animated H100 Roofline model showing batching moving LLM decode from memory-bound at Batch 1 to compute-bound past the ridge point
 ---
 
+> **Kernel Engineering Series — Part 1:** Why GPUs sit idle in LLM serving (FLOPs, MFU, Memory Wall, and the Roofline model). *Next:* [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/).
+{: .prompt-info }
+
 Imagine hiring an Olympic-class speed-reader who can process 1,000 pages every second. You sit down in front of them, hand over a single index card with one sentence, wait for them to read it, and then hand over another card five seconds later.
 
 Your reader is capable of staggering throughput, but they spend 99% of their day twiddling their thumbs waiting for you to pass the next sheet.
@@ -106,7 +109,7 @@ If an H100 GPU can theoretically output ~1,000 TFLOPS, but your workload only ex
 To get an intuitive mental model for MFU without getting bogged down in hardware jargon, imagine hiring a **world-class master chef**:
 
 * **The Chef (GPU Tensor Cores):** Capable of chopping, dicing, and cooking at staggering speeds—making 1,000 knife cuts every second.
-* **The Small Kitchen Counter (On-Chip SRAM Cache):** The tiny local workspace (~50–250MB) right on the GPU die—ultra-fast, but only big enough to hold one recipe page at a time.
+* **The Small Kitchen Counter (On-Chip SRAM Cache):** The tiny local workspace (~50–100 MB across L2 cache and per-SM SRAM) right on the GPU die—ultra-fast, but only big enough to hold one recipe page at a time.
 * **The Pantry (Off-Chip VRAM / HBM):** The massive storage room down the hall (~80GB–140GB) where all 140 Gigabytes of ingredients and recipe volumes (Model Weights) live.
 
 If you ask the chef to make **one single tiny dumpling** (generating 1 token for a single chat user):
@@ -243,6 +246,9 @@ When we remove the human from the real-time interaction loop, we eliminate the l
 When you prompt an LLM today and watch words stream across your screen, you are witnessing an intentional economic trade-off: data centers sacrifice raw hardware efficiency—letting 90% of GPU compute capacity sit idle—just to satisfy human real-time perception.
 
 But as AI shifts from interactive chatbots to autonomous long-horizon agents working non-stop in the background, latency constraints fall away. In an agent-driven world, GPUs will no longer sit idle waiting for index cards—they will run at full saturation, day and night.
+
+> **Next in the Kernel Engineering Series →** Batching and asynchronous agents amortize *weight reads*, but they don't solve everything. In [Part 2: Why Faster GPUs Leave Lazy Kernels Starving](/posts/why-faster-gpus-leave-lazy-kernels-starving/), we drop the kitchen analogies and open up the H100 die—down to SMs, warps, Tensor Cores, and the `max()` kernel time bound.
+{: .prompt-tip }
 
 ---
 
