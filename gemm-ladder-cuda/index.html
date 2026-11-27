@@ -1,0 +1,4129 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Climbing the CUDA GEMM Ladder — Interactive Silicon Explainer | Karthik Balasubramanian</title>
+  <meta name="description" content="Interactive animated walkthrough of climbing the CUDA GEMM optimization ladder from naive matrix multiplication to warp tiling, float4 vectorization, 7-knob autotuning, and epilogue fusion." />
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%230d1117'/%3E%3Crect x='5' y='5' width='9' height='9' rx='2' fill='%23f97316'/%3E%3Crect x='18' y='5' width='9' height='9' rx='2' fill='%2306b6d4'/%3E%3Crect x='5' y='18' width='9' height='9' rx='2' fill='%238b5cf6'/%3E%3Crect x='18' y='18' width='9' height='9' rx='2' fill='%2310b981'/%3E%3C/svg%3E" />
+
+  <!-- Match blog Chirpy light/dark mode before first paint (same localStorage key: "theme") -->
+  <script>
+    (function () {
+      var m = null;
+      try { m = localStorage.getItem('theme'); } catch (e) {}
+      if (m !== 'light' && m !== 'dark') {
+        m = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+      }
+      document.documentElement.setAttribute('data-bs-theme', m);
+    })();
+  </script>
+
+  <style>
+    /* =========================================================================
+     * Design Tokens — Dark & Light (aligned with karthikbalasubramanian.github.io)
+     * Semantic Hardware Palette:
+     *   HBM / Global Memory  -> Amber/Coral (#f97316 / #ef4444)
+     *   SMEM / Shared SRAM   -> Cyan        (#06b6d4 / #22d3ee)
+     *   Registers / Accum    -> Emerald     (#10b981 / #34d399)
+     *   Warp / Tensor Core   -> Violet      (#8b5cf6 / #a78bfa)
+     *   Barrier / Diagnostic -> Gold        (#eab308)
+     * ========================================================================= */
+    :root,
+    :root[data-bs-theme='dark'] {
+      --bg-page: #0b0f17;
+      --bg-surface: #121824;
+      --bg-elevated: #182132;
+      --bg-inset: #0d121c;
+      --bg-chrome: #161b22;
+      --border: #243045;
+      --border-strong: #334361;
+      --text: #e6edf3;
+      --text-secondary: #b4bfd0;
+      --text-muted: #7f8ea6;
+      --link: #7cc0ff;
+      --hover-bg: rgba(124, 192, 255, 0.09);
+
+      --c-hbm: #f97316;
+      --c-hbm-soft: rgba(249, 115, 22, 0.14);
+      --c-danger: #f43f5e;
+      --c-danger-soft: rgba(244, 63, 94, 0.14);
+      --c-smem: #22d3ee;
+      --c-smem-soft: rgba(34, 211, 238, 0.14);
+      --c-reg: #34d399;
+      --c-reg-soft: rgba(52, 211, 153, 0.14);
+      --c-warp: #a78bfa;
+      --c-warp-soft: rgba(167, 139, 250, 0.16);
+      --c-gold: #facc15;
+      --c-gold-soft: rgba(250, 204, 21, 0.14);
+
+      --code-bg: #0c1018;
+      --code-kw: #c084fc;
+      --code-fn: #60a5fa;
+      --code-num: #fb923c;
+      --code-str: #34d399;
+      --code-cm: #64748b;
+      --code-hl: rgba(34, 211, 238, 0.12);
+      --code-hl-border: #22d3ee;
+      --shadow-card: 0 10px 30px rgba(0, 0, 0, 0.35);
+    }
+
+    :root[data-bs-theme='light'] {
+      --bg-page: #f4f6fa;
+      --bg-surface: #ffffff;
+      --bg-elevated: #f8fafc;
+      --bg-inset: #eef2f7;
+      --bg-chrome: #f6f8fa;
+      --border: #d8e1ec;
+      --border-strong: #b9c7da;
+      --text: #0f172a;
+      --text-secondary: #334155;
+      --text-muted: #64748b;
+      --link: #0056b2;
+      --hover-bg: rgba(0, 86, 178, 0.07);
+
+      --c-hbm: #ea580c;
+      --c-hbm-soft: rgba(234, 88, 12, 0.11);
+      --c-danger: #e11d48;
+      --c-danger-soft: rgba(225, 29, 72, 0.1);
+      --c-smem: #0891b2;
+      --c-smem-soft: rgba(8, 145, 178, 0.11);
+      --c-reg: #059669;
+      --c-reg-soft: rgba(5, 150, 105, 0.11);
+      --c-warp: #7c3aed;
+      --c-warp-soft: rgba(124, 58, 237, 0.11);
+      --c-gold: #b45309;
+      --c-gold-soft: rgba(180, 83, 9, 0.12);
+
+      --code-bg: #f8fafc;
+      --code-kw: #7c3aed;
+      --code-fn: #0284c7;
+      --code-num: #c2410c;
+      --code-str: #047857;
+      --code-cm: #64748b;
+      --code-hl: rgba(8, 145, 178, 0.11);
+      --code-hl-border: #0891b2;
+      --shadow-card: 0 8px 24px rgba(15, 23, 42, 0.07);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', 'Source Sans Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--bg-page);
+      color: var(--text);
+      line-height: 1.55;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    code, pre, .mono {
+      font-family: 'JetBrains Mono', 'SFMono-Regular', Menlo, Monaco, Consolas, monospace;
+    }
+
+    a { color: var(--link); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* ---- Site Chrome (matches shared/site-chrome/chrome.css) ---- */
+    .kb-chrome {
+      background: var(--bg-chrome);
+      color: var(--text-secondary);
+      font-size: 14.5px;
+    }
+    .kb-site-header {
+      border-bottom: 1px solid var(--border);
+    }
+    .kb-chrome-inner {
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 0.65rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    .kb-brand {
+      font-weight: 700;
+      color: var(--text) !important;
+      margin-right: auto;
+      white-space: nowrap;
+      text-decoration: none !important;
+    }
+    .kb-brand small {
+      font-weight: 400;
+      color: var(--text-muted);
+      margin-left: 0.5rem;
+    }
+    .kb-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.2rem;
+      align-items: center;
+    }
+    .kb-nav a {
+      padding: 0.3rem 0.65rem;
+      border-radius: 0.45rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      text-decoration: none;
+    }
+    .kb-nav a:hover { background: var(--hover-bg); color: var(--link); }
+    .kb-mode-toggle {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      border-radius: 999px;
+      width: 2rem;
+      height: 2rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, color 0.15s;
+    }
+    .kb-mode-toggle:hover { background: var(--hover-bg); color: var(--link); }
+
+    /* ---- Main Container ---- */
+    .container {
+      width: 100%;
+      max-width: 1360px;
+      margin: 0 auto;
+      padding: 1.5rem 1.25rem 3rem;
+      flex: 1;
+    }
+
+    /* ---- Hero Header ---- */
+    .hero {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1.25rem 2rem;
+      align-items: end;
+      padding-bottom: 1.25rem;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 1.25rem;
+    }
+    .series-pill {
+      display: inline-flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.45rem;
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.55rem;
+    }
+    .series-badge {
+      padding: 0.18rem 0.55rem;
+      border-radius: 999px;
+      background: var(--c-smem-soft);
+      color: var(--c-smem);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+    .hero h1 {
+      margin: 0 0 0.45rem;
+      font-size: clamp(1.55rem, 2.7vw, 2.25rem);
+      line-height: 1.15;
+      letter-spacing: -0.02em;
+      font-weight: 800;
+    }
+    .hero-sub {
+      margin: 0;
+      color: var(--text-secondary);
+      max-width: 52rem;
+      font-size: 0.98rem;
+    }
+    .hero-controls {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0.55rem;
+    }
+    .gpu-selector {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 0.65rem;
+      padding: 0.25rem;
+    }
+    .gpu-selector-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0 0.55rem;
+    }
+    .gpu-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 0.35rem 0.65rem;
+      border-radius: 0.45rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .gpu-btn.active {
+      background: var(--c-warp-soft);
+      color: var(--c-warp);
+      box-shadow: inset 0 0 0 1px rgba(167, 139, 250, 0.35);
+    }
+    .gpu-spec-mini {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+
+    /* ---- Hardware Color Legend ---- */
+    .legend-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      font-size: 0.78rem;
+      color: var(--text-muted);
+    }
+    .legend-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.95rem;
+      align-items: center;
+    }
+    .legend-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    .dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 50%;
+      display: inline-block;
+      flex-shrink: 0;
+    }
+    .kbd-hint {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+    }
+    kbd {
+      display: inline-block;
+      padding: 0.08rem 0.36rem;
+      font-size: 0.7rem;
+      font-family: inherit;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: 0.3rem;
+      color: var(--text-secondary);
+    }
+
+    /* ---- Sticky Ladder Navigation Rail ---- */
+    .ladder-rail-wrap {
+      position: sticky;
+      top: 0;
+      z-index: 40;
+      background: var(--bg-page);
+      padding: 0.55rem 0 0.75rem;
+      margin-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .ladder-rail {
+      display: grid;
+      grid-template-columns: repeat(9, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+    .rung-tab {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.14rem;
+      padding: 0.52rem 0.62rem;
+      border-radius: 0.6rem;
+      border: 1px solid var(--border);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      cursor: pointer;
+      text-align: left;
+      transition: transform 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    }
+    .rung-tab:hover {
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
+    }
+    .rung-tab.active {
+      background: var(--bg-elevated);
+      border-color: var(--c-smem);
+      color: var(--text);
+      box-shadow: 0 0 0 1px var(--c-smem), 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+    .rung-tab.passed:not(.active) {
+      border-color: rgba(52, 211, 153, 0.35);
+    }
+    .rung-num {
+      font-size: 0.66rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+    }
+    .rung-tab.active .rung-num { color: var(--c-smem); }
+    .rung-tab[data-kind="epilogue"].active {
+      border-color: var(--c-warp);
+      box-shadow: 0 0 0 1px var(--c-warp), 0 6px 18px rgba(0, 0, 0, 0.2);
+    }
+    .rung-tab[data-kind="epilogue"].active .rung-num { color: var(--c-warp); }
+    .rung-name {
+      font-size: 0.78rem;
+      font-weight: 700;
+      line-height: 1.2;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+    .rung-tag {
+      font-size: 0.66rem;
+      color: var(--text-muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      width: 100%;
+    }
+
+    /* ---- Main Interactive Stage (Canvas + Telemetry) ---- */
+    .stage-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(330px, 1fr);
+      gap: 1.15rem;
+      align-items: start;
+      margin-bottom: 1.25rem;
+    }
+
+    .card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 0.9rem;
+      box-shadow: var(--shadow-card);
+      overflow: hidden;
+    }
+
+    .stage-card-header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      padding: 0.85rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .stage-title-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+    }
+    .stage-kicker {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--c-smem);
+    }
+    .stage-title {
+      margin: 0;
+      font-size: 1.15rem;
+      font-weight: 800;
+      letter-spacing: -0.01em;
+    }
+
+    .stage-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem;
+      align-items: center;
+    }
+    .pill-toggle {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 0.34rem 0.7rem;
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .pill-toggle:hover { border-color: var(--c-smem); color: var(--text); }
+    .pill-toggle.active {
+      background: var(--c-smem-soft);
+      border-color: var(--c-smem);
+      color: var(--c-smem);
+    }
+    .pill-toggle.warn.active {
+      background: var(--c-hbm-soft);
+      border-color: var(--c-hbm);
+      color: var(--c-hbm);
+    }
+
+    /* Autotuner 7-Knob Bar (shown only on Rung 8) */
+    .autotune-panel {
+      display: none;
+      padding: 0.8rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-inset);
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+    .autotune-panel.visible { display: flex; }
+    .autotune-presets {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .autotune-presets-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-right: 0.25rem;
+    }
+    .preset-btn {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 600;
+      padding: 0.24rem 0.58rem;
+      border-radius: 0.45rem;
+      cursor: pointer;
+    }
+    .preset-btn:hover { border-color: var(--c-reg); color: var(--text); }
+    .preset-btn.bad:hover { border-color: var(--c-danger); color: var(--c-danger); }
+
+    .knobs-grid {
+      display: grid;
+      grid-template-columns: repeat(7, minmax(0, 1fr));
+      gap: 0.45rem;
+    }
+    .knob-box {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 0.5rem;
+      padding: 0.35rem 0.45rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.28rem;
+    }
+    .knob-label {
+      font-size: 0.68rem;
+      font-weight: 800;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+    }
+    .knob-label span:last-child { color: var(--c-smem); }
+    .knob-opts {
+      display: flex;
+      gap: 0.2rem;
+    }
+    .knob-opt {
+      flex: 1;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.2rem 0;
+      border-radius: 0.32rem;
+      cursor: pointer;
+    }
+    .knob-opt.active {
+      background: var(--c-smem);
+      border-color: var(--c-smem);
+      color: #061018;
+    }
+
+    /* Main Animation Canvas */
+    .canvas-shell {
+      position: relative;
+      background: var(--bg-inset);
+      width: 100%;
+      aspect-ratio: 16 / 10;
+      min-height: 410px;
+      max-height: 540px;
+    }
+    .canvas-shell canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Transport + Phase Caption Footer */
+    .transport-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.72rem 1.1rem;
+      border-top: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .transport-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .t-btn {
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-size: 0.76rem;
+      font-weight: 700;
+      padding: 0.34rem 0.68rem;
+      border-radius: 0.45rem;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    .t-btn:hover { border-color: var(--c-smem); color: var(--c-smem); }
+    .t-btn.primary {
+      background: var(--c-smem);
+      border-color: var(--c-smem);
+      color: #061018;
+    }
+    .t-btn.primary:hover { filter: brightness(1.08); color: #061018; }
+    .speed-group {
+      display: inline-flex;
+      border: 1px solid var(--border);
+      border-radius: 0.45rem;
+      overflow: hidden;
+      margin-left: 0.25rem;
+    }
+    .spd-btn {
+      border: none;
+      background: var(--bg-surface);
+      color: var(--text-muted);
+      font-size: 0.72rem;
+      font-weight: 700;
+      padding: 0.32rem 0.5rem;
+      cursor: pointer;
+    }
+    .spd-btn.active { background: var(--c-warp-soft); color: var(--c-warp); }
+    .phase-caption {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      flex: 1;
+      justify-content: flex-end;
+      text-align: right;
+    }
+    .phase-pulse {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--c-reg);
+      box-shadow: 0 0 8px var(--c-reg);
+      flex-shrink: 0;
+    }
+    .phase-pulse.paused {
+      background: var(--text-muted);
+      box-shadow: none;
+    }
+
+    /* ---- Telemetry Column (Bottleneck Handoff + Roofline + 4 Gauges) ---- */
+    .telemetry-col {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .handoff-card {
+      padding: 0.9rem 1.05rem;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.6rem;
+      align-items: center;
+    }
+    .handoff-box {
+      display: flex;
+      flex-direction: column;
+      gap: 0.16rem;
+    }
+    .handoff-label {
+      font-size: 0.66rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+    .handoff-label.fixed { color: var(--c-reg); }
+    .handoff-label.next { color: var(--c-hbm); }
+    .handoff-val {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text);
+      line-height: 1.25;
+    }
+    .handoff-arrow {
+      font-size: 1.15rem;
+      color: var(--text-muted);
+      font-weight: 800;
+    }
+
+    .roofline-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.68rem 1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .roofline-card-head h2 {
+      margin: 0;
+      font-size: 0.84rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+    }
+    .tc-toggle {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.72rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      user-select: none;
+    }
+    .roofline-wrap {
+      position: relative;
+      height: 225px;
+      background: var(--bg-inset);
+    }
+    .roofline-wrap canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .roofline-note {
+      padding: 0.45rem 0.9rem;
+      font-size: 0.72rem;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border);
+      background: var(--bg-surface);
+    }
+
+    .metrics-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.7rem;
+    }
+    .metric-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 0.75rem;
+      padding: 0.78rem 0.9rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+    .metric-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+    }
+    .metric-value {
+      font-size: 1.25rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      line-height: 1.15;
+    }
+    .metric-sub {
+      font-size: 0.73rem;
+      color: var(--text-muted);
+      line-height: 1.3;
+    }
+    .metric-bar-track {
+      height: 5px;
+      border-radius: 999px;
+      background: var(--bg-inset);
+      overflow: hidden;
+      margin-top: 0.25rem;
+    }
+    .metric-bar-fill {
+      height: 100%;
+      border-radius: 999px;
+      transition: width 0.35s ease, background 0.35s ease;
+    }
+
+    /* ---- Deep-Dive Row: Physics + Failure Mode & ncu + Code Spotlight ---- */
+    .detail-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, 1.15fr);
+      gap: 1.15rem;
+      margin-bottom: 1.5rem;
+    }
+    .detail-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.15rem;
+    }
+    .section-card {
+      padding: 1.15rem 1.25rem;
+    }
+    .section-eyebrow {
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--c-smem);
+      margin-bottom: 0.35rem;
+    }
+    .section-card h3 {
+      margin: 0 0 0.55rem;
+      font-size: 1.08rem;
+      font-weight: 800;
+    }
+    .physics-body {
+      margin: 0 0 0.75rem;
+      color: var(--text-secondary);
+      font-size: 0.93rem;
+    }
+    .formula-box {
+      background: var(--bg-inset);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--c-smem);
+      border-radius: 0.5rem;
+      padding: 0.65rem 0.85rem;
+      font-size: 0.84rem;
+      line-height: 1.65;
+      color: var(--text);
+      white-space: pre-wrap;
+      overflow-x: auto;
+    }
+
+    /* Failure Mode & ncu Diagnostic Card */
+    .diag-card {
+      border-color: rgba(249, 115, 22, 0.35);
+      background: linear-gradient(180deg, var(--c-hbm-soft) 0%, var(--bg-surface) 38%);
+    }
+    .diag-card .section-eyebrow { color: var(--c-hbm); }
+    .diag-list {
+      margin: 0 0 0.8rem;
+      padding-left: 1.15rem;
+      color: var(--text-secondary);
+      font-size: 0.89rem;
+    }
+    .diag-list li { margin-bottom: 0.38rem; }
+    .diag-list strong { color: var(--text); }
+    .ncu-cmd-box {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.65rem;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 0.55rem;
+      padding: 0.55rem 0.75rem;
+      font-size: 0.76rem;
+      color: var(--c-gold);
+      overflow-x: auto;
+    }
+    .copy-btn {
+      flex-shrink: 0;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      font-size: 0.7rem;
+      font-weight: 700;
+      padding: 0.24rem 0.55rem;
+      border-radius: 0.38rem;
+      cursor: pointer;
+    }
+    .copy-btn:hover { border-color: var(--c-gold); color: var(--c-gold); }
+
+    /* Code Spotlight Card */
+    .code-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.78rem 1.1rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .code-file-badge {
+      font-size: 0.76rem;
+      font-weight: 700;
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+    }
+    .code-lines-pill {
+      font-size: 0.7rem;
+      padding: 0.14rem 0.48rem;
+      border-radius: 999px;
+      background: var(--c-warp-soft);
+      color: var(--c-warp);
+      font-weight: 700;
+    }
+    .code-pre {
+      margin: 0;
+      padding: 0.85rem 0;
+      background: var(--code-bg);
+      font-size: 0.79rem;
+      line-height: 1.55;
+      overflow-x: auto;
+      max-height: 445px;
+    }
+    .code-line {
+      display: flex;
+      padding: 0 1rem 0 0;
+      white-space: pre;
+    }
+    .code-line.hl {
+      background: var(--code-hl);
+      box-shadow: inset 3px 0 0 var(--code-hl-border);
+    }
+    .ln {
+      user-select: none;
+      width: 3.1rem;
+      text-align: right;
+      padding-right: 0.9rem;
+      color: var(--text-muted);
+      opacity: 0.6;
+      flex-shrink: 0;
+    }
+    .tok-kw { color: var(--code-kw); font-weight: 600; }
+    .tok-fn { color: var(--code-fn); }
+    .tok-num { color: var(--code-num); }
+    .tok-str { color: var(--code-str); }
+    .tok-cm { color: var(--code-cm); font-style: italic; }
+
+    /* Prev / Next Footer Navigation inside Main */
+    .rung-pager {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    .pager-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.65rem 1.05rem;
+      border-radius: 0.65rem;
+      border: 1px solid var(--border-strong);
+      background: var(--bg-surface);
+      color: var(--text);
+      font-weight: 700;
+      font-size: 0.86rem;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+    .pager-btn:hover:not(:disabled) {
+      border-color: var(--c-smem);
+      transform: translateY(-1px);
+    }
+    .pager-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+    /* ---- Full Ladder Summary Matrix ---- */
+    .matrix-section {
+      margin-top: 0.5rem;
+    }
+    .matrix-header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.5rem;
+      margin-bottom: 0.75rem;
+    }
+    .matrix-header h2 {
+      margin: 0;
+      font-size: 1.2rem;
+      font-weight: 800;
+    }
+    .matrix-header p {
+      margin: 0;
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+    .table-wrap {
+      overflow-x: auto;
+    }
+    table.ladder-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.83rem;
+    }
+    .ladder-table th {
+      text-align: left;
+      padding: 0.72rem 0.85rem;
+      background: var(--bg-elevated);
+      color: var(--text-muted);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid var(--border);
+      white-space: nowrap;
+    }
+    .ladder-table td {
+      padding: 0.68rem 0.85rem;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-secondary);
+      vertical-align: middle;
+    }
+    .ladder-table tbody tr {
+      cursor: pointer;
+      transition: background 0.12s;
+    }
+    .ladder-table tbody tr:hover { background: var(--hover-bg); }
+    .ladder-table tbody tr.active-row {
+      background: var(--c-smem-soft);
+    }
+    .ladder-table tbody tr.active-row td:first-child {
+      color: var(--c-smem);
+      font-weight: 800;
+    }
+    .badge-mini {
+      display: inline-block;
+      padding: 0.14rem 0.48rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .b-hbm { background: var(--c-hbm-soft); color: var(--c-hbm); }
+    .b-smem { background: var(--c-smem-soft); color: var(--c-smem); }
+    .b-reg { background: var(--c-reg-soft); color: var(--c-reg); }
+    .b-warp { background: var(--c-warp-soft); color: var(--c-warp); }
+
+    /* ---- Footer ---- */
+    .kb-site-footer {
+      border-top: 1px solid var(--border);
+      font-size: 0.84rem;
+      color: var(--text-muted);
+    }
+    .kb-site-footer .kb-chrome-inner {
+      justify-content: space-between;
+      padding-top: 1rem;
+      padding-bottom: 1rem;
+    }
+    .kb-site-footer nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+
+    /* ---- Responsive Breakpoints ---- */
+    @media (max-width: 1120px) {
+      .ladder-rail { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .stage-grid { grid-template-columns: 1fr; }
+      .detail-grid { grid-template-columns: 1fr; }
+      .hero { grid-template-columns: 1fr; }
+      .hero-controls { align-items: flex-start; }
+    }
+    @media (max-width: 720px) {
+      .ladder-rail { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .knobs-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .kb-brand small { display: none; }
+      .handoff-card { grid-template-columns: 1fr; }
+      .handoff-arrow { transform: rotate(90deg); justify-self: start; }
+      .canvas-shell { aspect-ratio: 4 / 3; min-height: 340px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Site Chrome Header -->
+  <header class="kb-chrome kb-site-header">
+    <div class="kb-chrome-inner">
+      <a class="kb-brand" href="/">
+        Karthik Balasubramanian
+        <small>ML Inference &amp; GPU Systems</small>
+      </a>
+      <nav class="kb-nav" aria-label="Site navigation">
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="/projects/">Projects</a>
+        <a href="/tools/">Tools</a>
+        <a href="/about/">About</a>
+      </nav>
+      <button type="button" class="kb-mode-toggle" id="themeToggle" aria-label="Toggle light and dark theme" title="Toggle light/dark mode">
+        <svg id="themeIconSun" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <circle cx="12" cy="12" r="4"></circle>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"></path>
+        </svg>
+        <svg id="themeIconMoon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true" style="display:none">
+          <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"></path>
+        </svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Hero -->
+    <section class="hero">
+      <div>
+        <div class="series-pill">
+          <span class="series-badge">Kernel Engineering Series · Interactive Lab</span>
+          <span>Companion to</span>
+          <a href="/posts/every-fix-moves-the-bottleneck-cuda-gemm-ladder/">Part 3: Climbing the CUDA GEMM Ladder</a>
+          <span>·</span>
+          <a href="/posts/why-faster-gpus-leave-lazy-kernels-starving/">Part 2: Silicon Bottleneck</a>
+          <span>·</span>
+          <a href="https://github.com/karthikBalasubramanian/Kernel-Engg/blob/assignment-2/lecture8/my_matmul_kernels.py" target="_blank" rel="noopener">Source on GitHub</a>
+        </div>
+        <h1>Climbing the CUDA GEMM Ladder: Eliminating the Byte Tax</h1>
+        <p class="hero-sub">
+          Every rung is a <strong>physics experiment</strong> against one enemy: moving bytes that don't earn their keep.
+          Step through all 8 kernels from <code class="mono">my_matmul_kernels.py</code>—watching each optimization crush one silicon bottleneck and immediately expose the next.
+        </p>
+      </div>
+      <div class="hero-controls">
+        <div class="gpu-selector" role="group" aria-label="Reference GPU Target">
+          <span class="gpu-selector-label">Target GPU</span>
+          <button type="button" class="gpu-btn active" data-gpu="h100">H100 SXM5</button>
+          <button type="button" class="gpu-btn" data-gpu="a100">A100 SXM4</button>
+          <button type="button" class="gpu-btn" data-gpu="t4">T4 (Colab)</button>
+        </div>
+        <div class="gpu-spec-mini mono" id="gpuSpecLine">132 SMs · 61.8 TFLOP/s FP32 · 3.35 TB/s HBM3 · FP32 Ridge 18.4 FLOP/B</div>
+      </div>
+    </section>
+
+    <!-- Legend + Keyboard Hints -->
+    <div class="legend-bar">
+      <div class="legend-items">
+        <span class="legend-chip"><span class="dot" style="background:var(--c-hbm)"></span>HBM / Global Memory (slow, 32B sectors)</span>
+        <span class="legend-chip"><span class="dot" style="background:var(--c-smem)"></span>Shared Memory / SRAM (fast on-chip)</span>
+        <span class="legend-chip"><span class="dot" style="background:var(--c-reg)"></span>Registers / Accumulators (fastest)</span>
+        <span class="legend-chip"><span class="dot" style="background:var(--c-warp)"></span>Warp Tile / Broadcast / Tensor Core</span>
+      </div>
+      <div class="kbd-hint">
+        Navigate: <kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>1</kbd>–<kbd>9</kbd> &nbsp;·&nbsp; <kbd>Space</kbd> Play/Pause
+      </div>
+    </div>
+
+    <!-- Sticky 9-Step Ladder Rail -->
+    <nav class="ladder-rail-wrap" aria-label="GEMM Optimization Ladder">
+      <div class="ladder-rail" id="ladderRail"></div>
+    </nav>
+
+    <!-- Main Interactive Stage -->
+    <section class="stage-grid">
+      <!-- Left: Live Silicon Animation -->
+      <div class="card">
+        <div class="stage-card-header">
+          <div class="stage-title-group">
+            <span class="stage-kicker" id="stageKicker">Rung 1 · Global Memory Baseline</span>
+            <h2 class="stage-title" id="stageTitle">Naive MatMul (Uncoalesced Sector Explosion)</h2>
+          </div>
+          <div class="stage-toggles" id="stageToggles"></div>
+        </div>
+
+        <!-- 7-Knob Autotuner Sandbox (Rung 8 only) -->
+        <div class="autotune-panel" id="autotunePanel">
+          <div class="autotune-presets">
+            <span class="autotune-presets-label">Presets:</span>
+            <button type="button" class="preset-btn" data-preset="baseline">Default (64×64×16)</button>
+            <button type="button" class="preset-btn" data-preset="high_ai">Cross FP32 Ridge (128×128×16)</button>
+            <button type="button" class="preset-btn" data-preset="max_reuse">8×8 Thread Patch (High Regs)</button>
+            <button type="button" class="preset-btn" data-preset="small_block">Small Tile (32×32×32)</button>
+            <button type="button" class="preset-btn bad" data-preset="invalid_warp">Break Warp Rule (≠32 lanes)</button>
+            <button type="button" class="preset-btn bad" data-preset="invalid_fit">Break Tile Fit (BM &lt; WM)</button>
+          </div>
+          <div class="knobs-grid" id="knobsGrid"></div>
+        </div>
+
+        <div class="canvas-shell" id="canvasShell">
+          <canvas id="simCanvas" aria-label="Animated CUDA GEMM execution visualization"></canvas>
+        </div>
+
+        <div class="transport-bar">
+          <div class="transport-controls">
+            <button type="button" class="t-btn primary" id="btnPlayPause">Pause</button>
+            <button type="button" class="t-btn" id="btnStep" title="Advance animation phase">Step +</button>
+            <button type="button" class="t-btn" id="btnReset" title="Restart rung animation">Replay</button>
+            <div class="speed-group" role="group" aria-label="Playback speed">
+              <button type="button" class="spd-btn" data-speed="0.5">0.5×</button>
+              <button type="button" class="spd-btn active" data-speed="1">1×</button>
+              <button type="button" class="spd-btn" data-speed="2">2×</button>
+            </div>
+          </div>
+          <div class="phase-caption">
+            <span class="phase-pulse" id="phasePulse"></span>
+            <span id="phaseCaption">Loading animation...</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right: Bottleneck Handoff + Live Roofline + 4 Physics Gauges -->
+      <div class="telemetry-col">
+        <div class="card handoff-card">
+          <div class="handoff-box">
+            <span class="handoff-label fixed">Bottleneck Crushed</span>
+            <span class="handoff-val" id="handoffFixed">—</span>
+          </div>
+          <div class="handoff-arrow" aria-hidden="true">&rarr;</div>
+          <div class="handoff-box">
+            <span class="handoff-label next">Next Wall Exposed</span>
+            <span class="handoff-val" id="handoffNext">—</span>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="roofline-card-head">
+            <h2>Live Roofline Shift (FP32 CUDA Cores)</h2>
+            <label class="tc-toggle">
+              <input type="checkbox" id="toggleTensorRoof" />
+              <span id="tcToggleLabel">Show BF16 Tensor Roof</span>
+            </label>
+          </div>
+          <div class="roofline-wrap" id="rooflineWrap">
+            <canvas id="rooflineCanvas" aria-label="Animated GPU Roofline model plot"></canvas>
+          </div>
+          <div class="roofline-note" id="rooflineNote">
+            <strong>Analytical model (not measured GPU runs):</strong> Ceilings = official NVIDIA datasheet specs; X-axis = exact closed-form HBM AI from <code>my_matmul_kernels.py</code>; dot height below roof illustrates on-chip stall headroom from CUDA literature.
+          </div>
+        </div>
+
+        <div class="metrics-grid" id="metricsGrid"></div>
+      </div>
+    </section>
+
+    <!-- Deep Dive: Physics + Failure Mode/ncu + Code Spotlight -->
+    <section class="detail-grid">
+      <div class="detail-stack">
+        <article class="card section-card">
+          <div class="section-eyebrow" id="physicsEyebrow">First-Principles Physics</div>
+          <h3 id="physicsHeading">Why Naive MatMul Starves the SM</h3>
+          <p class="physics-body" id="physicsBody"></p>
+          <div class="formula-box mono" id="formulaBox"></div>
+        </article>
+
+        <article class="card section-card diag-card">
+          <div class="section-eyebrow">Failure Mode &amp; Nsight Compute Diagnostic</div>
+          <h3 id="diagHeading">What Breaks If You Slip — and What Moves in ncu</h3>
+          <ul class="diag-list" id="diagList"></ul>
+          <div class="ncu-cmd-box mono">
+            <span id="ncuCmdText"></span>
+            <button type="button" class="copy-btn" id="btnCopyNcu">Copy</button>
+          </div>
+        </article>
+      </div>
+
+      <article class="card">
+        <div class="code-card-head">
+          <div class="code-file-badge mono">
+            <a id="codeGithubLink" href="https://github.com/karthikBalasubramanian/Kernel-Engg/blob/assignment-2/lecture8/my_matmul_kernels.py#L21-L36" target="_blank" rel="noopener">my_matmul_kernels.py ↗</a>
+            <span class="code-lines-pill" id="codeLines">L21–L36</span>
+          </div>
+          <span style="font-size:0.73rem;color:var(--text-muted)">Highlighted lines drive the bottleneck shift</span>
+        </div>
+        <pre class="code-pre mono" id="codeBlock"></pre>
+      </article>
+    </section>
+
+    <!-- Prev / Next Rung Pager -->
+    <div class="rung-pager">
+      <button type="button" class="pager-btn" id="btnPrevRung">&larr; <span id="prevLabel">Previous</span></button>
+      <span class="mono" style="font-size:0.8rem;color:var(--text-muted)" id="pagerCounter">Rung 1 / 9</span>
+      <button type="button" class="pager-btn" id="btnNextRung"><span id="nextLabel">Next</span> &rarr;</button>
+    </div>
+
+    <!-- Complete Ladder Summary Table -->
+    <section class="card matrix-section">
+      <div class="stage-card-header">
+        <div class="matrix-header" style="margin:0;width:100%">
+          <h2>The Full GEMM Ladder at a Glance</h2>
+          <p>Click any row to jump directly to its live simulation · All numbers derived analytically for FP32 (4 B/float, 32B sectors)</p>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table class="ladder-table">
+          <thead>
+            <tr>
+              <th>Rung</th>
+              <th>Kernel / Mechanism</th>
+              <th>Tile Hierarchy</th>
+              <th>HBM AI (FP32)</th>
+              <th>SMEM / MIO Pressure</th>
+              <th>Bottleneck Fixed</th>
+              <th>Next Bottleneck Exposed</th>
+            </tr>
+          </thead>
+          <tbody id="ladderTableBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <!-- Site Chrome Footer -->
+  <footer class="kb-chrome kb-site-footer">
+    <div class="kb-chrome-inner">
+      <span>
+        &copy; 2026 <a href="/about/">Karthik Balasubramanian</a> · Interactive companion to <code class="mono">my_matmul_kernels.py</code> (inspired by Vizuara AI Kernel Engineering &amp; Simon Boehm's CUDA MMM).
+      </span>
+      <nav aria-label="Footer navigation">
+        <a href="/">Home</a>
+        <a href="/blog/">Blog</a>
+        <a href="/projects/">Projects</a>
+        <a href="/tools/">Tools</a>
+        <a href="/about/">About</a>
+      </nav>
+    </div>
+  </footer>
+
+  <script>
+  (function () {
+    'use strict';
+
+    /* =========================================================================
+     * 1. GPU Architecture Profiles (matching Part 2 H100/A100 + Colab T4)
+     * ========================================================================= */
+    const GPUS = {
+      h100: {
+        name: 'H100 SXM5',
+        sms: 132,
+        fp32Tflops: 61.8,     // 132 SMs * 128 FP32 cores * 2 FLOPs * 1.83 GHz
+        bf16Tflops: 989.4,    // 132 SMs * 4 TCs * 512 MACs * 2 * 1.83 GHz
+        bwTbs: 3.35,          // HBM3
+        maxSmemKiB: 228,
+        regsPerSm: 65536,
+        maxThreadsPerSm: 2048,
+        maxBlocksPerSm: 32,
+        memLabel: 'HBM3',
+        tcLabel: 'BF16 TC',
+        tcShort: 'BF16',
+        tcDesc: '4th-gen Tensor Cores (wgmma)'
+      },
+      a100: {
+        name: 'A100 SXM4',
+        sms: 108,
+        fp32Tflops: 19.5,
+        bf16Tflops: 312.0,
+        bwTbs: 2.04,
+        maxSmemKiB: 164,
+        regsPerSm: 65536,
+        maxThreadsPerSm: 2048,
+        maxBlocksPerSm: 32,
+        memLabel: 'HBM2e',
+        tcLabel: 'BF16 TC',
+        tcShort: 'BF16',
+        tcDesc: '3rd-gen Tensor Cores (mma)'
+      },
+      t4: {
+        name: 'T4 (Colab)',
+        sms: 40,
+        fp32Tflops: 8.1,
+        bf16Tflops: 65.0,
+        bwTbs: 0.32,
+        maxSmemKiB: 64,
+        regsPerSm: 65536,
+        maxThreadsPerSm: 1024,
+        maxBlocksPerSm: 16,
+        memLabel: 'GDDR6',
+        tcLabel: 'FP16 TC',
+        tcShort: 'FP16',
+        tcDesc: '2nd-gen Turing Tensor Cores (mma)'
+      }
+    };
+
+    /* =========================================================================
+     * 2. Autotuner Search Space & Exact Validator from my_matmul_kernels.py
+     * ========================================================================= */
+    const SEARCH_SPACE = {
+      BM: [32, 64, 128],
+      BN: [32, 64, 128],
+      BK: [8, 16, 32],
+      WM: [16, 32, 64],
+      WN: [16, 32, 64],
+      TM: [4, 8],
+      TN: [4, 8]
+    };
+
+    const PRESETS = {
+      baseline:     { BM: 64,  BN: 64,  BK: 16, WM: 16, WN: 32, TM: 4, TN: 4 },
+      high_ai:      { BM: 128, BN: 128, BK: 16, WM: 32, WN: 64, TM: 8, TN: 8 },
+      max_reuse:    { BM: 128, BN: 64,  BK: 16, WM: 64, WN: 32, TM: 8, TN: 8 },
+      small_block:  { BM: 32,  BN: 32,  BK: 32, WM: 16, WN: 32, TM: 4, TN: 4 },
+      invalid_warp: { BM: 64,  BN: 64,  BK: 16, WM: 32, WN: 32, TM: 4, TN: 4 },
+      invalid_fit:  { BM: 32,  BN: 64,  BK: 16, WM: 64, WN: 32, TM: 8, TN: 8 }
+    };
+
+    function evaluateConfig(cfg, gpu) {
+      const { BM, BN, BK, WM, WN, TM, TN } = cfg;
+      const WARP_SIZE = 32;
+      const LOAD_SIZE = 4;
+      const lanesPerWarp = (WM / TM) * (WN / TN);
+      const NT = (BM / TM) * (BN / TN);
+      const smemBytes = (BM * BK + BK * BN) * 4;
+      const smemKiB = smemBytes / 1024;
+      const estRegs = (TM * TN) + (TM + TN) + 24;
+
+      const checks = [
+        { label: 'BM % WM == 0 & BN % WN == 0', ok: (BM % WM === 0) && (BN % WN === 0) },
+        { label: 'WM % TM == 0 & WN % TN == 0', ok: (WM % TM === 0) && (WN % TN === 0) },
+        { label: '(WM/TM)*(WN/TN) == 32 lanes', ok: lanesPerWarp === WARP_SIZE, detail: `${lanesPerWarp}` },
+        { label: '32 <= NT <= 1024 threads/block', ok: Number.isInteger(NT) && NT >= WARP_SIZE && NT <= 1024, detail: `${Math.round(NT)}` },
+        { label: 'BK, BN, TM, TN % 4 == 0 (float4)', ok: BK % LOAD_SIZE === 0 && BN % LOAD_SIZE === 0 && TM % LOAD_SIZE === 0 && TN % LOAD_SIZE === 0 },
+        { label: 'SMEM <= 48 KiB default cap', ok: smemBytes <= 48 * 1024, detail: `${smemKiB.toFixed(1)}K` },
+        { label: 'Est. Regs <= 255 / thread', ok: estRegs <= 255, detail: `${estRegs}r` }
+      ];
+      const valid = checks.every(c => c.ok);
+
+      // Analytical physics
+      // HBM AI per K-tile: 2*BM*BN*BK FLOPs / ((BM*BK + BK*BN)*4 bytes) = (BM*BN) / (2*(BM+BN))
+      const hbmAI = (BM * BN) / (2 * (BM + BN));
+      const smemReadsPerFma = (TM + TN) / (TM * TN);
+      const lds128PerFma = smemReadsPerFma / 4;
+      const warpUniqueFloats = WM + WN;
+
+      // SM Occupancy estimate on selected GPU (register allocation quantized to 256-reg chunks per warp)
+      const safeNT = Math.max(32, Math.round(NT));
+      const warpsPerBlock = Math.max(1, Math.ceil(safeNT / 32));
+      const regsPerWarp = Math.ceil((estRegs * 32) / 256) * 256;
+      const regsPerBlock = regsPerWarp * warpsPerBlock;
+      const blocksByRegs = Math.floor(gpu.regsPerSm / Math.max(1, regsPerBlock));
+      const blocksBySmem = Math.floor((gpu.maxSmemKiB * 1024) / Math.max(1, smemBytes));
+      const blocksByThreads = Math.floor(gpu.maxThreadsPerSm / safeNT);
+      const activeBlocksPerSm = valid ? Math.max(0, Math.min(gpu.maxBlocksPerSm, blocksByRegs, blocksBySmem, blocksByThreads)) : 0;
+      const activeThreadsPerSm = activeBlocksPerSm * safeNT;
+      const occupancyPct = Math.min(100, (activeThreadsPerSm / gpu.maxThreadsPerSm) * 100);
+
+      // Limiting resource
+      let limiter = 'Valid';
+      if (!valid) limiter = 'Invalid Config';
+      else if (activeBlocksPerSm === blocksByRegs) limiter = 'Registers/SM';
+      else if (activeBlocksPerSm === blocksByThreads) limiter = 'Max Threads/SM';
+      else if (activeBlocksPerSm === blocksBySmem) limiter = 'SMEM/SM';
+      else limiter = 'Max Blocks/SM';
+
+      // Wave quantization for 2048x2048x2048
+      const gridBlocks = Math.ceil(2048 / BN) * Math.ceil(2048 / BM);
+      const blocksPerWave = Math.max(1, activeBlocksPerSm * gpu.sms);
+      const waves = valid && activeBlocksPerSm > 0 ? gridBlocks / blocksPerWave : 0;
+
+      return {
+        valid, checks, NT: Math.round(NT), warpsPerBlock, smemKiB, estRegs,
+        hbmAI, smemReadsPerFma, lds128PerFma, warpUniqueFloats,
+        blocksByRegs, blocksBySmem, blocksByThreads, activeBlocksPerSm,
+        occupancyPct, limiter, gridBlocks, waves
+      };
+    }
+
+    /* =========================================================================
+     * 3. All 9 Rungs (Kernels 1–6 + Vectorization + 7-Knob Autotuner + Epilogue)
+     * ========================================================================= */
+    const RUNGS = [
+      {
+        id: 'naive',
+        num: 'Rung 01',
+        short: 'Naive',
+        tag: '33 sectors/warp',
+        kicker: 'Rung 1 · Kernel 1 · my_naive_matmul',
+        title: 'Naive MatMul — Uncoalesced HBM Sector Explosion',
+        tileSummary: '32×32 block (1,024 thr)',
+        hbmAI: 0.061,        // 64 FLOPs / (33 sectors * 32B) = 0.0606 FLOP/B sector-adjusted
+        stallFactor: 0.45,   // severe latency + uncoalesced waste
+        smemLabel: '0 KiB (direct HBM)',
+        mioSummary: 'Direct HBM (no SMEM)',
+        fixed: 'Correctness Baseline',
+        next: 'Uncoalesced HBM Access (33 sectors/warp)',
+        toggles: [],
+        metrics: [
+          { label: 'Effective HBM AI', value: '0.06 FLOP/B', sub: '64 FLOPs / 1,056 B fetched (sector-adjusted)', pct: 3, color: 'var(--c-danger)' },
+          { label: 'HBM Sectors / Warp / k', value: '33 sectors', sub: '32 strided from A + 1 broadcast from B', pct: 100, color: 'var(--c-danger)' },
+          { label: 'Useful Sector Bytes', value: '12.5% on A', sub: '1 float used out of 8 floats per 32B crate', pct: 12.5, color: 'var(--c-hbm)' },
+          { label: 'matC Store Sectors', value: '32 / warp', sub: 'Column-major stride-N global writes', pct: 100, color: 'var(--c-danger)' }
+        ],
+        physicsHeading: 'Every Warp Lane Jumps K Floats Apart in HBM',
+        physicsBody: 'CUDA groups consecutive threadIdx.x values (tx = 0..31) into a single 32-lane warp executing in lockstep. Because Kernel 1 maps tx to out_row instead of out_col, Lane 0 reads matA[0, k] while Lane 1 reads matA[1, k] — separated by K × 4 bytes (4.8 KB at K=1200). HBM serves memory in 32-byte sectors ("crates"), so the warp triggers 32 separate transactions on matA while discarding 87.5% of every crate!',
+        formula: 'Warp sectors / k-step = 32 (strided matA) + 1 (broadcast matB) = 33 sectors = 1,056 B\nEffective HBM Intensity = (32 FMAs × 2 FLOPs) / 1,056 B ≈ 0.061 FLOPs/byte  (vs 18.4 H100 FP32 ridge)',
+        diagHeading: 'The Classic 2D Index Swap Trap',
+        diagBullets: [
+          '<strong>What breaks:</strong> Assigning <code>threadIdx.x</code> to the slow-varying row index destroys coalescing on both <code>matA</code> reads and <code>matC</code> writes.',
+          '<strong>What moves in ncu:</strong> <code>l1tex__t_sectors_pipe_lsu_mem_global_op_ld.sum</code> explodes by ~6.6×, and <em>Uncoalesced Global Accesses</em> flashes red in Memory Workload Analysis.'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_naive_matmul -f -o my_matmul_01_naive.ncu-rep python3 my_matmul_kernels.py --kernel naive --profile',
+        codeLines: 'L21–L36',
+        codeStart: 21,
+        codeHighlights: [26, 27, 34, 36],
+        code: `@cuda.jit
+def my_naive_matmul(matA, matB, matC, M, K, N):
+    # Each thread computes one C[out_row, out_col]
+    # TRAP: threadIdx.x varies fastest inside a warp (lanes 0..31),
+    # so mapping it to out_row strides down rows of matA by K*4 bytes!
+    out_row = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
+    out_col = cuda.threadIdx.y + cuda.blockIdx.y * cuda.blockDim.y
+    dot_product = float32(0.0)
+    if out_col >= N or out_row >= M:
+        return
+
+    for k in range(K):
+        # 32 separate 32B sectors from matA + 1 broadcast from matB = 33!
+        dot_product += matA[out_row, k] * matB[k, out_col]
+
+    matC[out_row, out_col] = dot_product  # 32 uncoalesced store sectors`
+      },
+      {
+        id: 'coalesced',
+        num: 'Rung 02',
+        short: 'Coalesced',
+        tag: '33 → 5 sectors',
+        kicker: 'Rung 2 · Kernel 2 · my_mem_coalesced_matmul',
+        title: 'Global Memory Coalescing — One Line, 6.6× Fewer Sectors',
+        tileSummary: '32×32 block (1,024 thr)',
+        hbmAI: 0.40,         // 64 FLOPs / (5 sectors * 32B = 160 B) = 0.40 FLOP/B
+        stallFactor: 0.72,
+        smemLabel: '0 KiB (direct HBM)',
+        mioSummary: 'Direct HBM (0× reuse)',
+        fixed: 'Uncoalesced Sectors (33 → 5)',
+        next: 'Zero Data Reuse (Still Fetching Every k From HBM)',
+        toggles: [
+          { key: 'compare', label: 'Compare K1 vs K2 Sectors', warn: false }
+        ],
+        metrics: [
+          { label: 'Effective HBM AI', value: '0.40 FLOP/B', sub: '64 FLOPs / 160 B (still 46× under H100 ridge)', pct: 10, color: 'var(--c-hbm)' },
+          { label: 'HBM Sectors / Warp / k', value: '5 sectors', sub: '1 broadcast from A + 4 contiguous from B (6.6× drop)', pct: 15, color: 'var(--c-reg)' },
+          { label: 'matB Sector Efficiency', value: '100%', sub: '32 contiguous floats fill 4 exact 32B crates', pct: 100, color: 'var(--c-reg)' },
+          { label: 'matC Store Sectors', value: '4 / warp', sub: 'Down from 32 sectors (8× store speedup)', pct: 12.5, color: 'var(--c-reg)' }
+        ],
+        physicsHeading: 'Same Math, Rotated Warp — Packing Requests Into Contiguous Crates',
+        physicsBody: 'Simply swapping threadIdx.x to out_col and threadIdx.y to out_row rotates Warp 0 from a vertical column to a horizontal row in matC. Now all 32 lanes share the exact same out_row (fetching matA[row, k] once via hardware broadcast = 1 sector) and walk 32 adjacent columns in matB (128 contiguous bytes = 4 exact 32B sectors). Yet even with perfect coalescing, every thread still marches back to HBM (~400–800 cycles) on every single k step.',
+        formula: 'Warp sectors / k-step = 1 (broadcast matA) + 4 (coalesced matB) = 5 sectors = 160 B  (6.6× reduction!)\nEffective HBM Intensity = 64 FLOPs / 160 B = 0.40 FLOPs/byte  (HBM bandwidth wall remains!)',
+        diagHeading: 'Bytes Requested ≠ Sectors Fetched',
+        diagBullets: [
+          '<strong>What breaks:</strong> Unaligned matrix leading dimensions (non-multiple-of-8 <code>N</code>) or forgetting to swap <code>grid.x</code>/<code>grid.y</code> launch dims alongside <code>out_col</code>/<code>out_row</code>.',
+          '<strong>What moves in ncu:</strong> Global Load/Store Sectors-per-Request drops cleanly to <strong>4.0</strong> on <code>matB</code>/<code>matC</code>; HBM DRAM throughput spikes, but Compute (SM) throughput stays tiny (<5%).'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_mem_coalesced_matmul -f -o my_matmul_02_coalesced.ncu-rep python3 my_matmul_kernels.py --kernel coalesced --profile',
+        codeLines: 'L38–L63',
+        codeStart: 38,
+        codeHighlights: [54, 55, 61, 63],
+        code: `@cuda.jit
+def my_mem_coalesced_matmul(matA, matB, matC, M, K, N):
+    # Swap x & y: lanes 0..31 now share out_row and walk adjacent out_col!
+    # 32 crates from A + 1 from B  -->  1 broadcast from A + 4 coalesced from B
+    # Total HBM sectors/warp/k drops 33 -> 5; matC store drops 32 -> 4!
+    out_row = cuda.threadIdx.y + cuda.blockIdx.y * cuda.blockDim.y
+    out_col = cuda.threadIdx.x + cuda.blockIdx.x * cuda.blockDim.x
+    dot_product = float32(0.0)
+    if out_col >= N or out_row >= M:
+        return
+
+    for k in range(K):
+        dot_product += matA[out_row, k] * matB[k, out_col]
+
+    matC[out_row, out_col] = dot_product`
+      },
+      {
+        id: 'smem',
+        num: 'Rung 03',
+        short: 'Shared Mem',
+        tag: '32× HBM reuse',
+        kicker: 'Rung 3 · Kernel 3 · make_shared_memory_matmul',
+        title: 'Shared Memory Tiling — 32× Fewer HBM Reads, Then MIO Stalls',
+        tileSummary: '32×32×32 (8 KiB SMEM)',
+        hbmAI: 8.0,          // 2*32*32*32 / (2*32*32*4) = 8.0 FLOP/B
+        stallFactor: 0.48,   // MIO queue saturates: 2 SMEM reads per FMA!
+        smemLabel: '8.0 KiB / block',
+        mioSummary: '2.00 SMEM rd / FMA',
+        fixed: 'Redundant HBM Fetches (32× Reuse)',
+        next: 'MIO Throttling (2.00 SMEM Reads per 1 FMA)',
+        toggles: [],
+        metrics: [
+          { label: 'HBM Arithmetic Intensity', value: '8.0 FLOP/B', sub: '65,536 FLOPs / 8,192 B per K-tile (20× jump!)', pct: 43, color: 'var(--c-smem)' },
+          { label: 'HBM Reads / K-Tile', value: '2,048', sub: 'Down from 65,536 across 1,024 threads (32× reuse)', pct: 18, color: 'var(--c-reg)' },
+          { label: 'SMEM Reads / FMA', value: '2.00 rd/FMA', sub: 'Floods SM MIO queue (1 from A + 1 from B)', pct: 100, color: 'var(--c-danger)' },
+          { label: 'SMEM Footprint / Block', value: '8.0 KiB', sub: '2 × (32×32 × 4B) — fits easily in 228 KiB/SM', pct: 16, color: 'var(--c-smem)' }
+        ],
+        physicsHeading: 'Why 32× Reuse (and Not 1024×)? — And Why Fast SRAM Still Stalls',
+        physicsBody: 'A 32×32 thread block stages one 32×32 tile of matA and one 32×32 tile of matB into fast on-chip Shared Memory (8 KiB). Even though the block has 1,024 threads, each element tileA[r, k] is reused by the 32 threads in row r, and tileB[k, c] by the 32 threads in col c — cutting HBM reads per tile from 65,536 to 2,048 (32×). Immediately, a new bottleneck surfaces: the inner loop still fires TWO shared-memory loads for every ONE FMA, jamming the SM\'s MIO (Memory I/O) queue.',
+        formula: 'HBM Reads / K-tile: 1,024 thr × (32 A + 32 B) = 65,536  →  1,024 + 1,024 = 2,048  (32× reuse)\nHBM AI = (2 × 32 × 32 × 32 FLOPs) / (2 × 32 × 32 × 4 B) = 8.0 FLOPs/byte  |  MIO ratio = 2.00 SMEM reads/FMA',
+        diagHeading: 'The Missing Second Barrier Race & MIO Throttle',
+        diagBullets: [
+          '<strong>What breaks:</strong> Omitting the <em>second</em> <code>cuda.syncthreads()</code> after compute lets fast warps jump to tile <code>t+1</code> and overwrite <code>sh_memA/B</code> while slower warps are still reading tile <code>t</code> — silent numeric corruption!',
+          '<strong>What moves in ncu:</strong> HBM traffic plummets ~32×, while <code>smsp__warp_issue_stalled_mio_throttle</code> climbs to the #1 warp stall reason.'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_shared_memory_matmul -f -o my_matmul_03_smem.ncu-rep python3 my_matmul_kernels.py --kernel smem --profile',
+        codeLines: 'L97–L129',
+        codeStart: 97,
+        codeHighlights: [97, 98, 120, 124, 126],
+        code: `sh_memA = cuda.shared.array(shape=(TILE_DIM, TILE_DIM), dtype=float32)
+sh_memB = cuda.shared.array(shape=(TILE_DIM, TILE_DIM), dtype=float32)
+...
+for t in range(total_tiles):
+    tile_row = t * TILE_DIM + ty
+    tile_col = t * TILE_DIM + tx
+    sh_memA[ty, tx] = matA[out_row, tile_col] if (out_row < M and tile_col < K) else float32(0.0)
+    sh_memB[ty, tx] = matB[tile_row, out_col] if (out_col < N and tile_row < K) else float32(0.0)
+
+    cuda.syncthreads()  # Barrier 1: wait for all 1,024 threads to finish loading
+
+    for i in range(TILE_DIM):
+        # 2 SMEM loads per 1 FMA -> floods the SM's MIO queue!
+        dot_product += sh_memA[ty, i] * sh_memB[i, tx]
+
+    cuda.syncthreads()  # Barrier 2: don't overwrite SMEM before slow warps finish!`
+      },
+      {
+        id: '1d',
+        num: 'Rung 04',
+        short: '1D Tiled',
+        tag: '1.125 rd/FMA',
+        kicker: 'Rung 4 · Kernel 4 · make_one_d_tiled_matmul',
+        title: '1D Thread Tiling (TM=8) — Reusing SMEM Inside Registers',
+        tileSummary: '32×32×32 · TM=8 (128 thr)',
+        hbmAI: 8.0,          // Same 32x32 block tile => 8.0 FLOP/B, proving MIO gain at fixed HBM AI!
+        stallFactor: 0.68,   // MIO pressure cut 44% -> much closer to HBM roof
+        smemLabel: '8.0 KiB / block',
+        mioSummary: '1.125 SMEM rd / FMA',
+        fixed: 'Half of SMEM MIO Traffic (2.00 → 1.125)',
+        next: '1D Asymptote (Cannot Break Below 1.0 rd/FMA)',
+        toggles: [],
+        metrics: [
+          { label: 'SMEM Reads / FMA', value: '1.125 rd/FMA', sub: '9 reads per 8 FMAs (down 43.8% from 2.00)', pct: 56, color: 'var(--c-reg)' },
+          { label: 'HBM Arithmetic Intensity', value: '8.0 FLOP/B', sub: 'Same 32×32 tile — speedup comes purely from MIO!', pct: 43, color: 'var(--c-smem)' },
+          { label: 'Threads / Block (NT)', value: '128 (4 warps)', sub: '8× fewer threads, each doing 8× more work', pct: 25, color: 'var(--c-warp)' },
+          { label: 'Register Accumulators', value: '8 floats / thr', sub: 'thread_results[0..7] live in SM register file', pct: 18, color: 'var(--c-reg)' }
+        ],
+        physicsHeading: 'Move One Operand Into Registers — and Hit the 1D Floor',
+        physicsBody: 'Registers sit right inside the SM (65,536 32-bit registers/SM on H100) and are even faster than Shared Memory. Instead of 1,024 threads computing 1 cell each, Kernel 4 launches 128 threads where each thread owns a vertical strip of TM=8 output cells in thread_results[0..7]. At every dot_k, we load b_val ONCE from shmem_B into a register and reuse it across 8 FMAs. SMEM reads drop from 16 → 9 per 8 FMAs (1 + 1/TM = 1.125). The catch? shmem_A still costs 1 load per FMA, locking 1D tiling forever above 1.0 read/FMA.',
+        formula: 'SMEM reads per FMA (1D) = (TM + 1) / TM = 1 + 1/TM  →  (8 + 1) / 8 = 1.125  (floor = 1.0 as TM → ∞)\nThreads/Block NT = (BM × BN) / TM = 1,024 / 8 = 128 threads (4 warps)',
+        diagHeading: 'Cooperative Load Indexing & The Horizontal vs. Vertical Choice',
+        diagBullets: [
+          '<strong>What breaks:</strong> Tiling horizontally instead of vertically without keeping consecutive threads on adjacent <code>thread_col</code> values breaks coalescing on <code>matC</code> writes and causes SMEM bank conflicts on <code>b_val</code>.',
+          '<strong>What moves in ncu:</strong> <code>l1tex__data_pipe_lsu_wavefronts_mem_shared</code> drops nearly in half while HBM traffic stays identical — proving the speedup came from relieving MIO, not HBM.'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_one_d_tiled_mat_mul -f -o my_matmul_04_1d.ncu-rep python3 my_matmul_kernels.py --kernel 1d --profile',
+        codeLines: 'L164–L208',
+        codeStart: 164,
+        codeHighlights: [165, 166, 172, 204, 206],
+        code: `tid = cuda.threadIdx.x
+thread_col = tid % BN               # 0..31: adjacent lanes -> coalesced matC!
+thread_row_base = (tid // BN) * TM  # 0, 8, 16, or 24: top of TM-row strip
+...
+thread_results = cuda.local.array(TM, dtype=float32)  # 8 register accumulators
+...
+for bk_offset in range(0, K, BK):
+    # Cooperatively load 32x32 shmem_A and 32x32 shmem_B (8 elems/thread each)
+    ...
+    cuda.syncthreads()
+
+    for dot_k in range(BK):
+        b_val = shmem_B[dot_k, thread_col]            # Load B ONCE into register!
+        for tm in range(TM):
+            thread_results[tm] += shmem_A[thread_row_base + tm, dot_k] * b_val
+
+    cuda.syncthreads()`
+      },
+      {
+        id: '2d',
+        num: 'Rung 05',
+        short: '2D Tiled',
+        tag: '0.50 rd/FMA',
+        kicker: 'Rung 5 · Kernel 5 · make_two_d_tiled_matmul',
+        title: '2D Thread Tiling (4×4 Outer Product) — Area Beats Perimeter',
+        tileSummary: '64×64×16 · 4×4 (256 thr)',
+        hbmAI: 16.0,         // 2*64*64*16 / (2*64*16*4) = 16.0 FLOP/B!
+        stallFactor: 0.78,   // Huge leap, but warp ribbon (8x64) + stride-BK bank conflicts remain
+        smemLabel: '8.0 KiB / block',
+        mioSummary: '0.50 SMEM rd / FMA',
+        fixed: '1D MIO Floor (1.125 → 0.50) & 2× HBM AI',
+        next: 'Skinny 8×64 Warp Ribbon & SMEM Bank Conflicts',
+        toggles: [
+          { key: 'warpFootprint', label: 'Inspect Warp 0 Footprint (Hidden Flaw)', warn: true }
+        ],
+        metrics: [
+          { label: 'SMEM Reads / FMA', value: '0.50 rd/FMA', sub: '(4 + 4) / 16 — 4× fewer than Rung 3! (0.25 at 8×8)', pct: 25, color: 'var(--c-reg)' },
+          { label: 'HBM Arithmetic Intensity', value: '16.0 FLOP/B', sub: '64×64 block doubles HBM reuse at same 8 KiB SMEM!', pct: 86, color: 'var(--c-smem)' },
+          { label: 'Register Footprint', value: '24+ floats', sub: '16 accumulators + reg_M[4] + reg_N[4] per thread', pct: 38, color: 'var(--c-reg)' },
+          { label: 'Warp 0 Unique SMEM', value: '72 floats/k', sub: 'Hidden flaw: 8×64 ribbon wastes perimeter!', pct: 72, color: 'var(--c-hbm)' }
+        ],
+        physicsHeading: 'Register Outer Products Smash the 1.0 Wall — Then Expose Warp Geometry',
+        physicsBody: 'To break below 1.0 SMEM read/FMA, reuse BOTH operands in registers! Each thread now computes a 2D TM×TN (4×4 = 16) patch of matC. At each dot_k, it loads TM=4 floats into reg_M and TN=4 floats into reg_N, then executes all TM×TN = 16 FMAs as a pure register outer product (perimeter 8 feeds area 16 → 0.50 reads/FMA). Meanwhile, doubling the block to 64×64 with BK=16 keeps SMEM at 8 KiB while doubling HBM intensity to 16.0 FLOPs/byte. Toggle "Inspect Warp 0 Footprint" above to see what breaks next: Warp 0 stretches into a skinny 8×64 ribbon!',
+        formula: 'SMEM reads per FMA (2D) = (TM + TN) / (TM × TN) = 1/TM + 1/TN  →  (4 + 4)/16 = 0.50\nHBM AI (64×64×16) = (2 × 64 × 64 × 16) / ((64×16 + 16×64) × 4 B) = 16.0 FLOPs/byte',
+        diagHeading: 'Hidden Ribbon Footprint & Uninitialized Accumulators',
+        diagBullets: [
+          '<strong>What breaks:</strong> Forgetting to zero-initialize <code>dot_products[TM, TN]</code> leaks register garbage into <code>+=</code>; also storing <code>sh_memA</code> as <code>(64, 16)</code> makes <code>reg_M</code> loads stride by 16 floats (hitting 2-way/4-way bank conflicts).',
+          '<strong>What moves in ncu:</strong> MIO stalls drop sharply, while <em>Shared Load Bank Conflicts</em> (<code>l1tex__data_bank_conflicts_pipe_lsu_mem_shared_op_ld</code>) become clearly visible.'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_two_d_tiled_mat_mul -f -o my_matmul_05_2d.ncu-rep python3 my_matmul_kernels.py --kernel 2d --profile',
+        codeLines: 'L253–L304',
+        codeStart: 253,
+        codeHighlights: [254, 255, 261, 297, 299, 302],
+        code: `tid = cuda.threadIdx.x
+thread_patch_row_base = TM * (tid // patches_per_row)  # Warp 0 spans 8x64!
+thread_patch_col_base = TN * (tid % patches_per_row)
+...
+dot_products = cuda.local.array(shape=(TM, TN), dtype=float32)
+reg_M = cuda.local.array(TM, dtype=float32)
+reg_N = cuda.local.array(TN, dtype=float32)
+...
+for dot_k in range(BK):
+    for tm in range(TM):
+        reg_M[tm] = sh_memA[tm + thread_patch_row_base, dot_k]  # stride-BK!
+    for tn in range(TN):
+        reg_N[tn] = sh_memB[dot_k, tn + thread_patch_col_base]
+    for i in range(TM):
+        for j in range(TN):
+            dot_products[i, j] += reg_M[i] * reg_N[j]           # 4x4 outer product`
+      },
+      {
+        id: 'warp',
+        num: 'Rung 06',
+        short: 'Warp Tiled',
+        tag: '72 → 48 floats',
+        kicker: 'Rung 6 · Kernel 6 Geometry · make_warp_tiled_matmul',
+        title: 'Explicit Warp Tiling (16×32) — 3-Level Nesting & Broadcasts',
+        tileSummary: '64×64 → 16×32 → 4×4',
+        hbmAI: 16.0,
+        stallFactor: 0.86,
+        smemLabel: '8.0 KiB / block',
+        mioSummary: '48 floats/warp · 0 BC',
+        fixed: 'Warp Ribbon Perimeter (72 → 48 floats, -33%)',
+        next: 'Scalar 32-bit Loads & Stride-BK sh_memA Layout',
+        toggles: [],
+        metrics: [
+          { label: 'Unique SMEM / Warp / k', value: '48 floats', sub: '16 + 32 compact tile vs K5\'s 8 + 64 = 72 (-33%!)', pct: 48, color: 'var(--c-warp)' },
+          { label: 'Hardware Broadcasts', value: '8× A · 4× B', sub: '4×8 lane grid turns shared reads into free multicasts', pct: 95, color: 'var(--c-reg)' },
+          { label: 'Warp FMAs / dot_k', value: '512 FMAs', sub: '32 lanes × 16 FMAs — exact same work, 33% less SRAM!', pct: 80, color: 'var(--c-smem)' },
+          { label: 'Block → Warp → Lane', value: '8 × (4×8)', sub: '4×2 grid of 16×32 warps; each 4×8 lanes of 4×4', pct: 64, color: 'var(--c-warp)' }
+        ],
+        physicsHeading: 'Perimeter-vs-Area Works at the Warp Level Too',
+        physicsBody: 'A GPU doesn\'t jump straight from Thread Block to Thread — it executes 32-lane Warps. Kernel 5 let Warp 0 sprawl into an 8×64 strip (perimeter 72) for 512 FMAs. Kernel 6 introduces explicit 3-level nesting: Block (64×64) → 8 compact Warp Tiles (WM×WN = 16×32) → 32 Lanes arranged as a 4×8 grid of 4×4 patches. By simple geometry, 16 + 32 = 48 unique floats (33% fewer SMEM bytes per warp!) drive the exact same 512 FMAs — with 8-way horizontal broadcasts on tileA and 4-way vertical broadcasts on tileB!',
+        formula: 'Kernel 5 Warp 0 (8 × 64 ribbon):  8 + 64 = 72 unique SMEM floats  →  512 FMAs (7.11 FMA/float)\nKernel 6 Warp 0 (16 × 32 tile):  16 + 32 = 48 unique SMEM floats  →  512 FMAs (10.67 FMA/float, +50%!)',
+        diagHeading: 'Lane Count Mismatch & Register Occupancy Cliff',
+        diagBullets: [
+          '<strong>What breaks:</strong> If <code>(WM // TM) * (WN // TN) != 32</code>, lanes either overlap output cells or leave silent uncomputed holes inside the warp tile.',
+          '<strong>What moves in ncu:</strong> Shared-memory wavefronts per instruction drop because hardware broadcasts serve 8 lanes from one <code>tileA</code> bank read and 4 lanes from one <code>tileB</code> bank read.'
+        ],
+        ncuCmd: 'ncu --set full -k regex:my_warp_tiled_mat_mul -f -o my_matmul_06_warp.ncu-rep python3 my_matmul_kernels.py --kernel warp --profile',
+        codeLines: 'L374–L389',
+        codeStart: 374,
+        codeHighlights: [376, 377, 379, 380, 382, 383],
+        code: `# 2. 3-level nested coordinates: Block (BMxBN) -> Warp (WMxWN) -> Thread (TMxTN)
+tid = cuda.threadIdx.x
+warp_id = tid // WARP_SIZE          # 0..7 (8 warps per 64x64 block)
+lane_id = tid % WARP_SIZE           # 0..31 (4x8 grid inside 16x32 warp tile)
+
+warp_row = (warp_id // warps_per_BN) * WM     # 0, 16, 32, or 48
+warp_col = (warp_id % warps_per_BN) * WN      # 0 or 32
+
+patch_row = (lane_id // patches_per_warp_tile) * TM  # 0, 4, 8, or 12
+patch_col = (lane_id % patches_per_warp_tile) * TN   # 0, 4, ..., 28
+
+thread_row = warp_row + patch_row
+thread_col = warp_col + patch_col
+block_row = cuda.blockIdx.y * BM
+block_col = cuda.blockIdx.x * BN`
+      },
+      {
+        id: 'vec',
+        num: 'Rung 07',
+        short: 'Vectorized',
+        tag: 'LDS.128 · 0 BC',
+        kicker: 'Rung 7 · Kernel 6 Moves 1–3 · sh_memA Transpose + float4',
+        title: 'Transposed sh_memA & 128-bit Vector Loads (LDS.128)',
+        tileSummary: 'sh_memA (BK×BM) · float4',
+        hbmAI: 16.0,
+        stallFactor: 0.94,
+        smemLabel: '8.0 KiB (0 Bank Conf)',
+        mioSummary: '0.125 LDS.128 / FMA',
+        fixed: '4× Load Instructions & Stride-BK Bank Conflicts',
+        next: 'Fixed Tile Shape (Still Under 18.4 FP32 Ridge)',
+        toggles: [
+          { key: 'beforeTranspose', label: 'Before: (BM×BK) Scalar LDS.32', warn: true }
+        ],
+        metrics: [
+          { label: 'MIO Load Inst / FMA', value: '0.125 LDS.128', sub: '2 vector loads drive 16 FMAs (4× fewer instructions!)', pct: 12.5, color: 'var(--c-reg)' },
+          { label: 'SMEM Bank Conflicts', value: '0-way', sub: 'Transposed (BK×BM) puts reg_M in 4 adjacent banks', pct: 4, color: 'var(--c-reg)' },
+          { label: 'Load Width (LOAD_SIZE)', value: '128-bit (4×f32)', sub: '16 bytes per LDG.128 / LDS.128 transaction', pct: 100, color: 'var(--c-smem)' },
+          { label: 'Global Load Loops', value: '4× fewer iters', sub: 'Packed 4-float unrolled chunks with safe tail guard', pct: 25, color: 'var(--c-warp)' }
+        ],
+        physicsHeading: 'Transpose on Load So Compute Reads Contiguous 128-Bit Vectors',
+        physicsBody: 'In Kernel 5, sh_memA was stored as (BM × BK) = (64 × 16). Reading reg_M[0..3] stepped down a column by stride BK=16 — causing 2-way/4-way SMEM bank conflicts and forcing 4 separate scalar LDS.32 instructions. In Kernel 6 Moves 1–3, Karthik transposes sh_memA to (BK × BM) = (16 × 64) during the HBM→SMEM load. Now BOTH reg_M = sh_memA[dot_k, thread_row + 0..3] and reg_N = sh_memB[dot_k, thread_col + 0..3] are stride-1 contiguous 16-byte vectors — unlocking single-instruction 128-bit LDS.128 loads with zero bank conflicts!',
+        formula: 'Before: sh_memA[row + i, dot_k] → stride BK=16 → 4 × LDS.32 + bank conflicts\nAfter:  sh_memA[dot_k, row + i] → stride 1 → 1 × LDS.128 (4× fewer MIO load instructions, 0 bank conflicts!)',
+        diagHeading: 'Vector Alignment & Non-Multiple-of-4 Tail Bounds',
+        diagBullets: [
+          '<strong>What breaks:</strong> Vectorized <code>float4</code> reads require 16-byte alignment and safe tail bounds! If <code>global_a_col + 3 &gt;= K</code> without a scalar fallback loop, edge threads read past buffer end or corrupt padding.',
+          '<strong>What moves in ncu:</strong> Shared bank conflicts drop to <strong>0</strong>, SASS switches from <code>LDS</code> to <code>LDS.128</code>, and instruction issue pressure on the LSU/MIO pipe plunges 4×.'
+        ],
+        ncuCmd: 'ncu --section InstructionStats --section MemoryWorkloadAnalysis -k regex:my_warp_tiled_mat_mul python3 my_matmul_kernels.py --kernel warp --profile',
+        codeLines: 'L371–L458',
+        codeStart: 371,
+        codeHighlights: [371, 410, 413, 445, 448, 451, 454],
+        code: `sh_memA = cuda.shared.array(shape=(BK, BM), dtype=float32)  # TRANSPOSED!
+sh_memB = cuda.shared.array(shape=(BK, BN), dtype=float32)
+...
+# Move 1: Load 4 contiguous matA floats -> write transposed into sh_memA
+if global_a_row < M and global_a_col + 3 < K:
+    sh_memA[a_col + 0, a_row] = matA[global_a_row, global_a_col + 0]
+    sh_memA[a_col + 1, a_row] = matA[global_a_row, global_a_col + 1]
+    sh_memA[a_col + 2, a_row] = matA[global_a_row, global_a_col + 2]
+    sh_memA[a_col + 3, a_row] = matA[global_a_row, global_a_col + 3]
+...
+# Move 3: BOTH reg_M and reg_N are now stride-1 contiguous -> LDS.128!
+for dot_k in range(BK):
+    for i in range(0, TM, LOAD_SIZE):
+        reg_M[i + 0] = sh_memA[dot_k, thread_row + i + 0]
+        reg_M[i + 1] = sh_memA[dot_k, thread_row + i + 1]
+        reg_M[i + 2] = sh_memA[dot_k, thread_row + i + 2]
+        reg_M[i + 3] = sh_memA[dot_k, thread_row + i + 3]
+    for j in range(0, TN, LOAD_SIZE):
+        reg_N[j + 0] = sh_memB[dot_k, thread_col + j + 0]
+        reg_N[j + 1] = sh_memB[dot_k, thread_col + j + 1]
+        reg_N[j + 2] = sh_memB[dot_k, thread_col + j + 2]
+        reg_N[j + 3] = sh_memB[dot_k, thread_col + j + 3]`
+      },
+      {
+        id: 'autotune',
+        num: 'Rung 08',
+        short: 'Autotune 7',
+        tag: '216 valid cfgs',
+        kicker: 'Rung 8 · Grid-Search Autotuner · BM, BN, BK, WM, WN, TM, TN',
+        title: 'Autotuning the 7 Hyperparameters — Navigating Silicon Trade-offs',
+        tileSummary: 'Dynamic 7-knob factory',
+        hbmAI: 32.0,         // dynamically overridden from active autotuner config!
+        stallFactor: 0.92,
+        smemLabel: 'Dynamic SMEM',
+        mioSummary: 'Dynamic LDS.128/FMA',
+        fixed: 'Crossing the FP32 Ridge (16 → 32 FLOP/B)',
+        next: 'Registers vs. SM Occupancy & Wave Quantization',
+        toggles: [],
+        metrics: [],         // computed dynamically from active autotuner config!
+        physicsHeading: 'Why One Tile Size Never Rules Every Shape or GPU',
+        physicsBody: 'Numba requires shared and local array shapes to be compile-time constants, so make_warp_tiled_matmul freezes all 7 knobs in a closure and is_valid_config() filters 972 Cartesian tuples down to exactly 216 valid kernels. Play with the 7 knobs above! Notice the physical tension: scaling BM=BN=128 pushes HBM intensity to 32 FLOPs/byte (past H100\'s 18.4 FP32 ridge!), and TM=TN=8 cuts SMEM loads/FMA to 0.25 — but jumps registers/thread from ~48 to ~104, shrinking active blocks/SM and exposing wave quantization on small matrices.',
+        formula: 'HBM AI = (BM × BN) / (2 × (BM + BN))   [32×32 → 8  |  64×64 → 16  |  128×128 → 32 FLOPs/byte]\nActive Blocks/SM = min(MaxBlocks, ⌊RegsSM/RegsBlk⌋, ⌊SMEM_SM/SMEM_Blk⌋, ⌊MaxThrSM/NT⌋)',
+        diagHeading: 'Register Spilling, Occupancy Cliffs & Wave Tail',
+        diagBullets: [
+          '<strong>What breaks:</strong> Exceeding 255 registers/thread spills accumulators to <em>Local Memory</em> (backed by slow L2/HBM!), destroying performance overnight. Over-large <code>BM, BN</code> on small <code>M, N</code> leaves SMs idle (wave quantization).',
+          '<strong>What moves in ncu:</strong> Check <em>Launch Statistics</em> (<code>Registers Per Thread</code>, <code>Static Shared Memory</code>), <code>Achieved Occupancy</code>, and <em>Local Memory Spill</em> bytes (must be 0!).'
+        ],
+        ncuCmd: 'python3 my_matmul_kernels.py --autotune --size 2048 2048 2048',
+        codeLines: 'L478–L506',
+        codeStart: 478,
+        codeHighlights: [491, 495, 498, 500, 502, 504],
+        code: `SEARCH_SPACE = {
+    "BM": [32, 64, 128], "BN": [32, 64, 128], "BK": [8, 16, 32],
+    "WM": [16, 32, 64],  "WN": [16, 32, 64],  "TM": [4, 8], "TN": [4, 8],
+}
+
+def is_valid_config(BM, BN, BK, WM, WN, TM, TN, max_smem_bytes=48 * 1024):
+    if BM % WM != 0 or BN % WN != 0: return False
+    if WM % TM != 0 or WN % TN != 0: return False
+    if (WM // TM) * (WN // TN) != WARP_SIZE: return False      # Exactly 32 lanes
+    NT = (BM // TM) * (BN // TN)
+    if NT < WARP_SIZE or NT > 1024: return False               # Block thread cap
+    if BK % 4 != 0 or BN % 4 != 0 or TM % 4 != 0 or TN % 4 != 0: return False
+    if (BM * BK + BK * BN) * 4 > max_smem_bytes: return False  # SMEM cap
+    if (TM * TN) + (TM + TN) + 24 > 255: return False          # Reg spill guard
+    return True  # Filters 972 raw tuples -> exactly 216 valid kernels`
+      },
+      {
+        id: 'epilogue',
+        num: 'Epilogue',
+        short: 'cuBLAS & Fuse',
+        tag: 'Why custom wins',
+        kind: 'epilogue',
+        kicker: 'Epilogue · Beyond CUDA Cores & Where Custom Kernels Win',
+        title: 'Why It Still Isn\'t cuBLAS — And How Epilogue Fusion Wins End-to-End',
+        tileSummary: 'GEMM + Bias + GELU Fused',
+        hbmAI: 32.0,
+        stallFactor: 0.98,
+        smemLabel: 'Async Double-Buf / TMA',
+        mioSummary: 'Zero Extra HBM Trips',
+        fixed: 'Unfused Post-GEMM HBM Round-Trips',
+        next: 'Tensor Cores (wgmma), Triton/CuTe & FlashAttention',
+        toggles: [
+          { key: 'unfused', label: 'Show Unfused (3 Kernels · 5× HBM)', warn: true }
+        ],
+        metrics: [
+          { label: 'cuBLAS Extra Weapons', value: 'TC + Async', sub: 'Tensor Cores (16× BF16 peak), cp.async/TMA, swizzle', pct: 100, color: 'var(--c-warp)' },
+          { label: 'Unfused Output HBM', value: '5× M·N·4B', sub: 'GEMM wr + Bias rd/wr + GELU rd/wr (huge byte tax!)', pct: 100, color: 'var(--c-danger)' },
+          { label: 'Fused Output HBM', value: '1× M·N·4B', sub: 'Bias + GELU run in registers before single matC store', pct: 20, color: 'var(--c-reg)' },
+          { label: 'Next in This Series', value: 'Triton / FA', sub: 'DSL tiling, Tensor Cores & FlashAttention SRAM fusion', pct: 85, color: 'var(--c-smem)' }
+        ],
+        physicsHeading: 'Beating Standalone cuBLAS Isn\'t the Point — Eliminating HBM Trips Is',
+        physicsBody: 'Even a well-tuned FP32 CUDA-core kernel won\'t match cuBLAS across every shape: cuBLAS dispatches shape-specific heuristics, overlaps HBM loads with compute via asynchronous double-buffering (cp.async / Hopper TMA), swizzles SMEM, and drives 4th-gen Tensor Cores (989.4 vs 61.8 TFLOP/s on H100 — a 16× compute gap from Part 2!). Yet in real LLM serving, GEMMs never live alone. Fusing Bias + GELU/SiLU right onto dot_products[TM, TN] while it already lives in registers eliminates 4 full M×N HBM transfers — letting a custom fused kernel beat unfused cuBLAS end-to-end. And the index boilerplate across Rungs 1–8 is exactly why Triton, CuTe, and FlashAttention exist.',
+        formula: 'Unfused (GEMM → Bias → GELU):  5 × (M × N × 4 B) output HBM traffic + 3 kernel launches\nFused Epilogue (in registers): 1 × (M × N × 4 B) output HBM traffic + 1 kernel launch  (5× less epilogue traffic!)',
+        diagHeading: 'Where This Ladder Leads Next',
+        diagBullets: [
+          '<strong>Why cuBLAS still wins standalone:</strong> Hardware Tensor Cores (<code>mma</code>/<code>wgmma</code>), TMA async multi-stage pipelines hiding HBM latency behind math, and Split-K / Stream-K for tall-skinny LLM decode shapes.',
+          '<strong>Why you climbed this ladder:</strong> Triton and CuTe automate the index arithmetic, swizzling, and pipelining you just built by hand — but every tile choice, bank conflict, register cliff, and FlashAttention SRAM fusion follows these <em>exact same laws of physics</em>.'
+        ],
+        ncuCmd: 'python3 my_matmul_kernels.py --kernel all --size 2048 2048 2048',
+        codeLines: 'L462–L471 (Epilogue Hook)',
+        codeStart: 462,
+        codeHighlights: [469, 470],
+        code: `# Phase 3: dot_products[i, j] is ALREADY hot in SM registers!
+# Unfused: write matC -> HBM, launch bias kernel, write -> HBM, launch GELU...
+# Fused:   apply Bias + GELU right here at ZERO extra HBM cost!
+abs_row_base = block_row + thread_row
+abs_col_base = block_col + thread_col
+for i in range(TM):
+    for j in range(TN):
+        out_row = abs_row_base + i
+        out_col = abs_col_base + j
+        if out_row < M and out_col < N:
+            # Fuse epilogue in registers before the single HBM write:
+            val = dot_products[i, j] + bias[out_col]   # +0 HBM trips!
+            matC[out_row, out_col] = gelu(val)         # Single HBM store!`
+      }
+    ];
+
+    /* =========================================================================
+     * 4. Application State
+     * ========================================================================= */
+    const state = {
+      rungIdx: 0,
+      gpuKey: 'h100',
+      playing: true,
+      speed: 1,
+      simTime: 0,
+      lastFrameTs: 0,
+      showTensorRoof: false,
+      toggles: {
+        compare: false,
+        warpFootprint: false,
+        beforeTranspose: false,
+        unfused: false
+      },
+      cfg: { ...PRESETS.baseline },
+      // Smoothly animated Roofline cursor
+      roofCurAI: RUNGS[0].hbmAI,
+      roofCurEff: RUNGS[0].stallFactor
+    };
+
+    /* =========================================================================
+     * 5. Theme-Aware Canvas Palette
+     * ========================================================================= */
+    function isLight() {
+      return document.documentElement.getAttribute('data-bs-theme') === 'light';
+    }
+
+    function getPal() {
+      if (isLight()) {
+        return {
+          bg: '#eef2f7',
+          panel: '#ffffff',
+          panelBorder: '#cbd5e1',
+          grid: 'rgba(15, 23, 42, 0.08)',
+          text: '#0f172a',
+          textSub: '#334155',
+          muted: '#64748b',
+          onSolid: '#ffffff',
+          hbm: '#ea580c',
+          hbmBg: 'rgba(234, 88, 12, 0.14)',
+          danger: '#e11d48',
+          dangerBg: 'rgba(225, 29, 72, 0.14)',
+          smem: '#0891b2',
+          smemBg: 'rgba(8, 145, 178, 0.14)',
+          reg: '#059669',
+          regBg: 'rgba(5, 150, 105, 0.15)',
+          warp: '#7c3aed',
+          warpBg: 'rgba(124, 58, 237, 0.14)',
+          gold: '#b45309',
+          goldBg: 'rgba(180, 83, 9, 0.14)',
+          cellEmpty: '#e2e8f0',
+          cellStroke: '#cbd5e1'
+        };
+      }
+      return {
+        bg: '#0d121c',
+        panel: '#141c2b',
+        panelBorder: '#283650',
+        grid: 'rgba(148, 163, 184, 0.10)',
+        text: '#e6edf3',
+        textSub: '#b4bfd0',
+        muted: '#7f8ea6',
+        onSolid: '#06131a',
+        hbm: '#f97316',
+        hbmBg: 'rgba(249, 115, 22, 0.18)',
+        danger: '#f43f5e',
+        dangerBg: 'rgba(244, 63, 94, 0.18)',
+        smem: '#22d3ee',
+        smemBg: 'rgba(34, 211, 238, 0.18)',
+        reg: '#34d399',
+        regBg: 'rgba(52, 211, 153, 0.18)',
+        warp: '#a78bfa',
+        warpBg: 'rgba(167, 139, 250, 0.20)',
+        gold: '#facc15',
+        goldBg: 'rgba(250, 204, 21, 0.18)',
+        cellEmpty: '#1b263b',
+        cellStroke: '#2a3954'
+      };
+    }
+
+    /* =========================================================================
+     * 6. Canvas Drawing Primitives
+     * ========================================================================= */
+    function roundRect(ctx, x, y, w, h, r) {
+      const rr = Math.min(r, w / 2, h / 2);
+      ctx.beginPath();
+      ctx.moveTo(x + rr, y);
+      ctx.arcTo(x + w, y, x + w, y + h, rr);
+      ctx.arcTo(x + w, y + h, x, y + h, rr);
+      ctx.arcTo(x, y + h, x, y, rr);
+      ctx.arcTo(x, y, x + w, y, rr);
+      ctx.closePath();
+    }
+
+    function drawBox(ctx, x, y, w, h, r, fill, stroke, lw = 1.2) {
+      roundRect(ctx, x, y, w, h, r);
+      if (fill) { ctx.fillStyle = fill; ctx.fill(); }
+      if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = lw; ctx.stroke(); }
+    }
+
+    function drawArrow(ctx, x1, y1, x2, y2, color, lw = 2, head = 7) {
+      const ang = Math.atan2(y2 - y1, x2 - x1);
+      ctx.save();
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = lw;
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(x2, y2);
+      ctx.lineTo(x2 - head * Math.cos(ang - 0.45), y2 - head * Math.sin(ang - 0.45));
+      ctx.lineTo(x2 - head * Math.cos(ang + 0.45), y2 - head * Math.sin(ang + 0.45));
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawPacket(ctx, x1, y1, x2, y2, t, color, radius = 4.5) {
+      const clamped = ((t % 1) + 1) % 1;
+      const x = x1 + (x2 - x1) * clamped;
+      const y = y1 + (y2 - y1) * clamped;
+      ctx.save();
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      ctx.arc(x, y, radius, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBadge(ctx, x, y, text, bg, fg, align = 'left', opaqueUnder = null) {
+      ctx.save();
+      ctx.font = '700 11px Inter, system-ui, sans-serif';
+      const tw = ctx.measureText(text).width;
+      const pw = tw + 18;
+      const ph = 22;
+      const bx = align === 'center' ? x - pw / 2 : align === 'right' ? x - pw : x;
+      if (opaqueUnder) {
+        drawBox(ctx, bx, y, pw, ph, 11, opaqueUnder, null, 0);
+      }
+      drawBox(ctx, bx, y, pw, ph, 11, bg, fg, 1.2);
+      ctx.fillStyle = fg;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(text, bx + pw / 2, y + ph / 2 + 0.5);
+      ctx.restore();
+    }
+
+    function drawFitText(ctx, text, x, y, maxW, fontSpec, color, align = 'left') {
+      ctx.save();
+      ctx.font = fontSpec;
+      ctx.fillStyle = color;
+      ctx.textAlign = align;
+      ctx.fillText(text, x, y, maxW);
+      ctx.restore();
+    }
+
+    /* =========================================================================
+     * 7. Bespoke Animated Renderers for Each Rung
+     * ========================================================================= */
+    function setPhaseText(text) {
+      const el = document.getElementById('phaseCaption');
+      if (el.textContent !== text) el.textContent = text;
+    }
+
+    // ---- RUNG 1: NAIVE (Uncoalesced 33 sectors) ----
+    function renderRung1(ctx, W, H, t, pal) {
+      const kStep = Math.floor(t * 0.9) % 8;
+      const pulse = (t * 0.9) % 1;
+      setPhaseText(`k = ${kStep} · Warp 0 (tx=0..31) strides down 32 rows of matA → 32 separate red HBM crates + 1 B broadcast = 33 sectors!`);
+
+      // Panel headers — balanced across full canvas width
+      const pad = 18;
+      const topY = 44;
+      const availMatW = W - pad * 2 - 64;
+      const matW = Math.min(196, availMatW / 3);
+      const matH = Math.min(180, H * 0.43);
+      const gapX = (W - pad * 2 - matW * 3) / 2;
+      const ax = pad;
+      const bx = ax + matW + gapX;
+      const cx = bx + matW + gapX;
+
+      drawFitText(ctx, 'matA (M × K) · Row-Major HBM', ax, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+      drawFitText(ctx, 'matB (K × N) · Broadcast', bx, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+      drawFitText(ctx, 'matC (M × N) · Warp 0', cx, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+
+      // Draw 8x8 stylized grids representing 32x32 slices
+      const N = 8;
+      const cw = matW / N;
+      const ch = matH / N;
+
+      // matA: highlight vertical column kStep (32 strided rows!)
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = c === kStep;
+          const x = ax + c * cw;
+          const y = topY + r * ch;
+          ctx.fillStyle = active ? pal.danger : pal.cellEmpty;
+          ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+          if (active) {
+            ctx.strokeStyle = pal.gold;
+            ctx.lineWidth = 1.3;
+            ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3);
+          }
+        }
+      }
+      // Show row-stride jump indicators on matA
+      ctx.strokeStyle = pal.danger;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([3, 3]);
+      ctx.strokeRect(ax + kStep * cw - 1, topY - 1, cw + 2, matH + 2);
+      ctx.setLineDash([]);
+
+      // matB: single cell (kStep, 0) broadcast to all 32 lanes
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = r === kStep && c === 0;
+          const x = bx + c * cw;
+          const y = topY + r * ch;
+          ctx.fillStyle = active ? pal.reg : pal.cellEmpty;
+          ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+          if (active) {
+            ctx.strokeStyle = pal.text;
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3);
+          }
+        }
+      }
+
+      // matC: Warp 0 owns vertical column 0 (out_row = tx)
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = c === 0;
+          const x = cx + c * cw;
+          const y = topY + r * ch;
+          ctx.fillStyle = active ? pal.hbmBg : pal.cellEmpty;
+          ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+          if (active) {
+            ctx.strokeStyle = pal.hbm;
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3);
+            ctx.fillStyle = pal.text;
+            ctx.font = '700 9px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`t${r * 4}`, x + cw / 2, y + ch / 2);
+          }
+        }
+      }
+
+      // Animated data packets flying from matA & matB to matC
+      const bSrcX = bx + cw * 0.5;
+      const bSrcY = topY + kStep * ch + ch * 0.5;
+      for (let r = 0; r < N; r += 2) {
+        const aSrcX = ax + kStep * cw + cw * 0.5;
+        const aSrcY = topY + r * ch + ch * 0.5;
+        const cDstX = cx + cw * 0.5;
+        const cDstY = topY + r * ch + ch * 0.5;
+        drawPacket(ctx, aSrcX, aSrcY, cDstX, cDstY, (pulse + r * 0.06) % 1, pal.danger, 3.8);
+      }
+      drawPacket(ctx, bSrcX, bSrcY, cx + cw * 0.5, topY + matH * 0.5, pulse, pal.reg, 4.5);
+
+      // Lower section: HBM 32-Byte Sector ("Crate") Visualizer!
+      const secY = topY + matH + 34;
+      const secH = H - secY - 18;
+      drawBox(ctx, pad, secY, W - pad * 2, secH, 10, pal.panel, pal.panelBorder);
+
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.danger;
+      ctx.textAlign = 'left';
+      ctx.fillText('HBM 32-Byte Sectors ("Crates") Triggered per Warp at This k-Step', pad + 14, secY + 22);
+
+      // Draw 32 tiny red crates for matA (each 8 floats wide, only 1 used!)
+      const cratesX = pad + 14;
+      const cratesY = secY + 38;
+      const availW = (W - pad * 2) * 0.65;
+      const cols = 8, rows = 4;
+      const crateW = (availW - (cols - 1) * 6) / cols;
+      const crateH = Math.min(24, (secH - 66) / rows - 5);
+
+      for (let i = 0; i < 32; i++) {
+        const r = Math.floor(i / cols);
+        const c = i % cols;
+        const x = cratesX + c * (crateW + 6);
+        const y = cratesY + r * (crateH + 6);
+        const lit = i <= Math.floor(pulse * 36);
+        drawBox(ctx, x, y, crateW, crateH, 4, lit ? pal.dangerBg : pal.cellEmpty, lit ? pal.danger : pal.cellStroke, 1);
+        // 1/8 used slice
+        ctx.fillStyle = lit ? pal.danger : pal.muted;
+        ctx.fillRect(x + 2, y + 2, Math.max(4, (crateW - 4) / 8), crateH - 4);
+        ctx.font = '700 8.5px JetBrains Mono, monospace';
+        ctx.fillStyle = pal.textSub;
+        ctx.textAlign = 'right';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(`A[${i}]`, x + crateW - 4, y + crateH / 2 + 0.5);
+      }
+
+      // Right summary inside bottom box
+      const sumX = cratesX + availW + 22;
+      const sumW = (W - pad * 2) - (sumX - pad) - 14;
+      drawBox(ctx, sumX, cratesY, sumW, Math.max(95, secH - 54), 8, pal.bg, pal.danger, 1.4);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = pal.danger;
+      ctx.font = '800 18px JetBrains Mono, monospace';
+      ctx.fillText('33 SECTORS', sumX + 12, cratesY + 28);
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '600 11px Inter, system-ui, sans-serif';
+      ctx.fillText('32 from A + 1 from B', sumX + 12, cratesY + 48);
+      ctx.fillText('= 1,056 bytes / warp', sumX + 12, cratesY + 64);
+      ctx.fillStyle = pal.hbm;
+      ctx.font = '700 11px JetBrains Mono, monospace';
+      ctx.fillText('87.5% of A crates WASTED!', sumX + 12, cratesY + 84);
+    }
+
+    // ---- RUNG 2: MEMORY COALESCED (33 -> 5 sectors) ----
+    function renderRung2(ctx, W, H, t, pal) {
+      const kStep = Math.floor(t * 0.9) % 8;
+      const pulse = (t * 0.9) % 1;
+      const compareMode = state.toggles.compare;
+
+      if (compareMode) {
+        setPhaseText('Side-by-Side Comparison: Swapping tx ↔ ty cuts HBM transactions from 33 → 5 sectors (6.6× bandwidth efficiency!)');
+        const pad = 18;
+        const halfW = (W - pad * 3) / 2;
+
+        // Left: Naive
+        drawBox(ctx, pad, 24, halfW, H - 42, 10, pal.panel, pal.danger, 1.5);
+        ctx.font = '800 13px Inter, system-ui, sans-serif';
+        ctx.fillStyle = pal.danger;
+        ctx.textAlign = 'left';
+        ctx.fillText('Kernel 1: Naive (out_row = tx)', pad + 14, 48);
+        ctx.fillStyle = pal.textSub;
+        ctx.font = '600 11px JetBrains Mono, monospace';
+        ctx.fillText('32 strided A + 1 B = 33 sectors (1,056 B)', pad + 14, 66);
+
+        const cw1 = (halfW - 44) / 4;
+        for (let i = 0; i < 32; i++) {
+          const r = Math.floor(i / 4), c = i % 4;
+          const x = pad + 14 + c * (cw1 + 5);
+          const y = 84 + r * 24;
+          drawBox(ctx, x, y, cw1, 18, 4, pal.dangerBg, pal.danger, 1);
+          ctx.fillStyle = pal.danger;
+          ctx.fillRect(x + 2, y + 2, Math.max(4, (cw1 - 4) / 8), 14);
+        }
+        drawBadge(ctx, pad + halfW / 2, H - 56, '0.061 FLOPs/byte · 12.5% A Efficiency', pal.dangerBg, pal.danger, 'center');
+
+        // Right: Coalesced
+        const rx = pad * 2 + halfW;
+        drawBox(ctx, rx, 24, halfW, H - 42, 10, pal.panel, pal.reg, 1.5);
+        ctx.font = '800 13px Inter, system-ui, sans-serif';
+        ctx.fillStyle = pal.reg;
+        ctx.textAlign = 'left';
+        ctx.fillText('Kernel 2: Coalesced (out_col = tx)', rx + 14, 48);
+        ctx.fillStyle = pal.textSub;
+        ctx.font = '600 11px JetBrains Mono, monospace';
+        ctx.fillText('1 broadcast A + 4 contiguous B = 5 sectors (160 B)', rx + 14, 66);
+
+        // 1 broadcast sector for A
+        ctx.fillStyle = pal.warp;
+        ctx.font = '700 11px Inter, system-ui, sans-serif';
+        ctx.fillText('matA[row, k]: 1 Broadcast Crate (shared by all 32 lanes)', rx + 14, 102);
+        drawBox(ctx, rx + 14, 112, halfW - 28, 30, 6, pal.warpBg, pal.warp, 1.5);
+        ctx.fillStyle = pal.warp;
+        ctx.fillRect(rx + 18, 116, (halfW - 36) / 8, 22);
+        ctx.fillStyle = pal.text;
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('A[row, k] → Broadcast to Lanes 0..31', rx + halfW / 2, 131);
+
+        // 4 full coalesced sectors for B (label above 8-slot bar so dividers never cross text!)
+        ctx.textAlign = 'left';
+        ctx.fillStyle = pal.reg;
+        ctx.font = '700 11px Inter, system-ui, sans-serif';
+        ctx.fillText('matB[k, col..col+31]: 4 Full 32B Crates (100% Utilized!)', rx + 14, 168);
+        for (let s = 0; s < 4; s++) {
+          const sy = 178 + s * 40;
+          drawBox(ctx, rx + 14, sy, halfW - 28, 34, 6, pal.bg, pal.reg, 1.3);
+          ctx.fillStyle = pal.text;
+          ctx.font = '700 9.5px JetBrains Mono, monospace';
+          ctx.textAlign = 'left';
+          ctx.fillText(`Sector ${s}: Lanes ${s * 8}..${s * 8 + 7}`, rx + 22, sy + 13);
+          ctx.fillStyle = pal.reg;
+          ctx.textAlign = 'right';
+          ctx.fillText('8/8 floats (100%)', rx + halfW - 22, sy + 13);
+
+          const segW = (halfW - 40) / 8;
+          for (let j = 0; j < 8; j++) {
+            const lit = s * 8 + j <= Math.floor(pulse * 36);
+            ctx.fillStyle = lit ? pal.reg : pal.regBg;
+            ctx.fillRect(rx + 20 + j * segW, sy + 19, segW - 2, 10);
+          }
+        }
+        drawBadge(ctx, rx + halfW / 2, H - 56, '6.6× Fewer Sectors · 0.40 FLOPs/byte', pal.regBg, pal.reg, 'center');
+        return;
+      }
+
+      setPhaseText(`k = ${kStep} · Warp 0 (tx=0..31) broadcasts 1 cell of matA + coalesces 32 adjacent floats of matB into 4 exact 32B sectors!`);
+      const pad = 18;
+      const topY = 44;
+      const availMatW = W - pad * 2 - 64;
+      const matW = Math.min(196, availMatW / 3);
+      const matH = Math.min(180, H * 0.43);
+      const gapX = (W - pad * 2 - matW * 3) / 2;
+      const ax = pad;
+      const bx = ax + matW + gapX;
+      const cx = bx + matW + gapX;
+
+      drawFitText(ctx, 'matA — 1 Broadcast Cell', ax, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+      drawFitText(ctx, 'matB — 32 Contiguous Floats', bx, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+      drawFitText(ctx, 'matC — Warp 0 Row', cx, topY - 12, matW, '800 12px Inter, system-ui, sans-serif', pal.text, 'left');
+
+      const N = 8, cw = matW / N, ch = matH / N;
+
+      // matA: single cell (0, kStep) broadcast!
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = r === 0 && c === kStep;
+          ctx.fillStyle = active ? pal.warp : pal.cellEmpty;
+          ctx.fillRect(ax + c * cw + 1, topY + r * ch + 1, cw - 2, ch - 2);
+        }
+      }
+
+      // matB: horizontal row kStep (contiguous!)
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = r === kStep;
+          ctx.fillStyle = active ? pal.reg : pal.cellEmpty;
+          ctx.fillRect(bx + c * cw + 1, topY + r * ch + 1, cw - 2, ch - 2);
+        }
+      }
+      ctx.strokeStyle = pal.gold;
+      ctx.lineWidth = 1.6;
+      ctx.strokeRect(bx - 1, topY + kStep * ch - 1, matW + 2, ch + 2);
+
+      // matC: horizontal row 0
+      for (let r = 0; r < N; r++) {
+        for (let c = 0; c < N; c++) {
+          const active = r === 0;
+          const x = cx + c * cw, y = topY + r * ch;
+          ctx.fillStyle = active ? pal.smemBg : pal.cellEmpty;
+          ctx.fillRect(x + 1, y + 1, cw - 2, ch - 2);
+          if (active) {
+            ctx.strokeStyle = pal.smem;
+            ctx.lineWidth = 1.2;
+            ctx.strokeRect(x + 1.5, y + 1.5, cw - 3, ch - 3);
+            ctx.fillStyle = pal.text;
+            ctx.font = '700 9px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`t${c * 4}`, x + cw / 2, y + ch / 2);
+          }
+        }
+      }
+
+      // Flowing packets: 1 broadcast from A + 4 coalesced streams from B
+      drawPacket(ctx, ax + kStep * cw + cw / 2, topY + ch / 2, cx + matW / 2, topY + ch / 2, pulse, pal.warp, 5);
+      for (let c = 0; c < N; c += 2) {
+        drawPacket(ctx, bx + c * cw + cw / 2, topY + kStep * ch + ch / 2, cx + c * cw + cw / 2, topY + ch / 2, (pulse + c * 0.04) % 1, pal.reg, 4);
+      }
+
+      // Bottom: 5 clean sectors vs remaining HBM bottleneck
+      const secY = topY + matH + 34;
+      const secH = H - secY - 18;
+      drawBox(ctx, pad, secY, W - pad * 2, secH, 10, pal.panel, pal.panelBorder);
+      ctx.textAlign = 'left';
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.reg;
+      ctx.fillText('Only 5 HBM Sectors Needed per Warp (Down From 33!)', pad + 14, secY + 22);
+
+      const boxY = secY + 38;
+      const boxH = Math.min(54, secH - 70);
+      const totalInner = W - pad * 2 - 28;
+      const unitW = (totalInner - 48) / 5;
+
+      // 1 Broadcast A
+      drawBox(ctx, pad + 14, boxY, unitW, boxH, 7, pal.warpBg, pal.warp, 1.5);
+      ctx.fillStyle = pal.warp;
+      ctx.textAlign = 'center';
+      ctx.font = '800 11px JetBrains Mono, monospace';
+      ctx.fillText('1 × matA', pad + 14 + unitW / 2, boxY + 20);
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '600 10px Inter, system-ui, sans-serif';
+      ctx.fillText('32-lane broadcast', pad + 14 + unitW / 2, boxY + 38);
+
+      // 4 Coalesced B sectors
+      for (let s = 0; s < 4; s++) {
+        const sx = pad + 14 + (s + 1) * (unitW + 12);
+        drawBox(ctx, sx, boxY, unitW, boxH, 7, pal.regBg, pal.reg, 1.5);
+        ctx.fillStyle = pal.reg;
+        ctx.font = '800 11px JetBrains Mono, monospace';
+        ctx.fillText(`matB Sec ${s}`, sx + unitW / 2, boxY + 20);
+        ctx.fillStyle = pal.textSub;
+        ctx.font = '600 10px Inter, system-ui, sans-serif';
+        ctx.fillText(`Lanes ${s * 8}..${s * 8 + 7} (100%)`, sx + unitW / 2, boxY + 38);
+      }
+
+      // Warning pill about next wall
+      drawBadge(ctx, W / 2, secY + secH - 28, 'Next Wall: Every thread STILL returns to slow HBM on all K steps (0× inter-thread reuse!)', pal.hbmBg, pal.hbm, 'center');
+    }
+
+    // ---- RUNG 3: SHARED MEMORY TILING (32x HBM reuse + MIO queue fills red!) ----
+    function renderRung3(ctx, W, H, t, pal) {
+      // 4-phase cycle (duration 6.4s)
+      const cycle = (t * 0.55) % 4;
+      const tileIdx = Math.floor((t * 0.55) / 4) % 4;
+      const phase = Math.floor(cycle); // 0=Load HBM->SMEM, 1=Sync1, 2=Compute from SMEM, 3=Sync2
+      const frac = cycle - phase;
+
+      const phaseLabels = [
+        `Tile t=${tileIdx} · Step 1/4: 1,024 threads cooperatively load 32×32 tiles HBM → SMEM (8 KiB total)`,
+        `Tile t=${tileIdx} · Step 2/4: cuda.syncthreads() #1 — waiting until all 1,024 threads finish filling SMEM`,
+        `Tile t=${tileIdx} · Step 3/4: 32 FMAs from SMEM (32× HBM reuse!), BUT 2 SMEM loads/FMA flood the MIO queue!`,
+        `Tile t=${tileIdx} · Step 4/4: cuda.syncthreads() #2 — preventing fast warps from overwriting SMEM early`
+      ];
+      setPhaseText(phaseLabels[phase]);
+
+      const pad = 18;
+      // Left: HBM Source Tiles | Center: On-Chip SMEM (8 KiB) | Right: Compute + MIO Gauge
+      const colW = (W - pad * 4) / 3;
+      const topY = 38;
+      const boxH = H - 96;
+
+      // 1. HBM Panel
+      drawBox(ctx, pad, topY, colW, boxH, 10, pal.panel, phase === 0 ? pal.hbm : pal.panelBorder, phase === 0 ? 1.8 : 1.2);
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.hbm;
+      ctx.textAlign = 'left';
+      ctx.fillText('1. Off-Chip HBM (~500 cyc)', pad + 12, topY + 22);
+
+      // Sliding K-tile in matA (horizontal strip of 4 tiles)
+      const stripW = colW - 28;
+      const stripH = 58;
+      const sx = pad + 14;
+      const aY = topY + 46;
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '700 10.5px JetBrains Mono, monospace';
+      ctx.fillText('matA: sliding K-tile', sx, aY - 6);
+      for (let i = 0; i < 4; i++) {
+        const tw = stripW / 4;
+        const active = i === tileIdx;
+        drawBox(ctx, sx + i * tw + 2, aY, tw - 4, stripH, 5, active ? pal.hbmBg : pal.cellEmpty, active ? pal.hbm : pal.cellStroke, active ? 1.8 : 1);
+        ctx.fillStyle = active ? pal.hbm : pal.muted;
+        ctx.textAlign = 'center';
+        ctx.fillText(`t=${i}`, sx + i * tw + tw / 2, aY + stripH / 2 + 4);
+      }
+
+      // Sliding K-tile in matB (vertical strip of 4 tiles)
+      const bY = aY + stripH + 28;
+      ctx.textAlign = 'left';
+      ctx.fillStyle = pal.textSub;
+      ctx.fillText('matB: sliding K-tile', sx, bY - 6);
+      const bTileH = Math.min(34, (boxH - (bY - topY) - 24) / 4);
+      for (let i = 0; i < 4; i++) {
+        const active = i === tileIdx;
+        drawBox(ctx, sx, bY + i * (bTileH + 4), stripW, bTileH, 5, active ? pal.hbmBg : pal.cellEmpty, active ? pal.hbm : pal.cellStroke, active ? 1.8 : 1);
+        ctx.fillStyle = active ? pal.hbm : pal.muted;
+        ctx.textAlign = 'center';
+        ctx.fillText(`B tile t=${i} (32×32)`, sx + stripW / 2, bY + i * (bTileH + 4) + bTileH / 2 + 4);
+      }
+
+      // 2. SMEM Panel (Center)
+      const mx = pad * 2 + colW;
+      const syncGlow = (phase === 1 || phase === 3);
+      drawBox(ctx, mx, topY, colW, boxH, 10, pal.panel, syncGlow ? pal.gold : pal.smem, syncGlow ? 2.2 : 1.5);
+      ctx.textAlign = 'left';
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.smem;
+      ctx.fillText('2. On-Chip SMEM (8 KiB)', mx + 12, topY + 22);
+
+      // sh_memA & sh_memB 8x8 visual grids
+      const gSize = Math.min(colW - 36, (boxH - 94) / 2);
+      const gx = mx + (colW - gSize) / 2;
+      const gaY = topY + 42;
+      const gbY = gaY + gSize + 30;
+      const innerK = phase === 2 ? Math.floor(frac * 8) : -1;
+
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '700 10px JetBrains Mono, monospace';
+      ctx.fillText('sh_memA[32, 32] (4 KiB)', gx, gaY - 6);
+      ctx.fillText('sh_memB[32, 32] (4 KiB)', gx, gbY - 6);
+
+      const cell = gSize / 8;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const filled = phase > 0 || (r * 8 + c) / 64 <= frac;
+          const activeA = phase === 2 && r === 2 && c === innerK;
+          ctx.fillStyle = activeA ? pal.gold : (filled ? pal.smemBg : pal.cellEmpty);
+          ctx.fillRect(gx + c * cell + 1, gaY + r * cell + 1, cell - 2, cell - 2);
+          if (phase === 2 && r === 2) {
+            ctx.strokeStyle = pal.smem;
+            ctx.lineWidth = 0.8;
+            ctx.strokeRect(gx + c * cell + 1, gaY + r * cell + 1, cell - 2, cell - 2);
+          }
+
+          const activeB = phase === 2 && r === innerK && c === 5;
+          ctx.fillStyle = activeB ? pal.gold : (filled ? pal.smemBg : pal.cellEmpty);
+          ctx.fillRect(gx + c * cell + 1, gbY + r * cell + 1, cell - 2, cell - 2);
+          if (phase === 2 && c === 5) {
+            ctx.strokeStyle = pal.smem;
+            ctx.lineWidth = 0.8;
+            ctx.strokeRect(gx + c * cell + 1, gbY + r * cell + 1, cell - 2, cell - 2);
+          }
+        }
+      }
+
+      // Sync wave flash across SMEM
+      if (syncGlow) {
+        const waveY = topY + 30 + frac * (boxH - 42);
+        ctx.save();
+        ctx.strokeStyle = pal.gold;
+        ctx.lineWidth = 3;
+        ctx.shadowColor = pal.gold;
+        ctx.shadowBlur = 12;
+        ctx.beginPath();
+        ctx.moveTo(mx + 6, waveY);
+        ctx.lineTo(mx + colW - 6, waveY);
+        ctx.stroke();
+        ctx.restore();
+        drawBadge(ctx, mx + colW / 2, topY + boxH / 2 - 11, phase === 1 ? 'syncthreads() #1: Load Done' : 'syncthreads() #2: Safe to Reuse', pal.goldBg, pal.gold, 'center');
+      }
+
+      // Packets HBM -> SMEM during phase 0
+      if (phase === 0) {
+        for (let p = 0; p < 3; p++) {
+          drawPacket(ctx, pad + colW, aY + 14 + p * 16, mx, gaY + 14 + p * 22, (frac * 2 + p * 0.2) % 1, pal.hbm, 4);
+          drawPacket(ctx, pad + colW, bY + 20 + p * 22, mx, gbY + 14 + p * 22, (frac * 2 + p * 0.25) % 1, pal.hbm, 4);
+        }
+      }
+
+      // 3. SM Compute + MIO Throttle Panel (Right)
+      const rx = pad * 3 + colW * 2;
+      drawBox(ctx, rx, topY, colW, boxH, 10, pal.panel, phase === 2 ? pal.danger : pal.panelBorder, phase === 2 ? 1.8 : 1.2);
+      ctx.textAlign = 'left';
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.reg;
+      ctx.fillText('3. Thread Compute + MIO', rx + 12, topY + 22);
+
+      // 32x Reuse counter box
+      drawBox(ctx, rx + 12, topY + 38, colW - 24, 62, 7, pal.regBg, pal.reg, 1.2);
+      ctx.fillStyle = pal.reg;
+      ctx.font = '800 16px JetBrains Mono, monospace';
+      ctx.fillText('32× HBM Reuse!', rx + 22, topY + 62);
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '600 10.5px Inter, system-ui, sans-serif';
+      ctx.fillText('65,536 → 2,048 HBM reads/tile', rx + 22, topY + 82);
+
+      // MIO Queue Throttle Meter!
+      const mioY = topY + 118;
+      ctx.fillStyle = pal.danger;
+      ctx.font = '800 11.5px Inter, system-ui, sans-serif';
+      ctx.fillText('NEW WALL: SM MIO Queue Pressure', rx + 12, mioY);
+
+      const mioLoad = phase === 2 ? 0.55 + 0.45 * Math.sin(frac * Math.PI) : 0.18;
+      drawBox(ctx, rx + 12, mioY + 10, colW - 24, 22, 6, pal.bg, pal.panelBorder, 1);
+      drawBox(ctx, rx + 14, mioY + 12, Math.max(8, (colW - 28) * mioLoad), 18, 4, mioLoad > 0.65 ? pal.danger : pal.smem, null);
+      ctx.fillStyle = pal.text;
+      ctx.font = '700 10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(phase === 2 ? 'SATURATED: 2 SMEM rd / 1 FMA' : 'Idle during load/sync', rx + colW / 2, mioY + 24);
+
+      // 1-FMA schematic (fitted cleanly inside box padding)
+      const fmaY = mioY + 52;
+      const fmaW = colW - 24;
+      drawBox(ctx, rx + 12, fmaY, fmaW, Math.max(82, boxH - (fmaY - topY) - 14), 8, pal.bg, pal.panelBorder, 1);
+      drawFitText(ctx, 'sh_memA[ty,i] + sh_memB[i,tx]', rx + colW / 2, fmaY + 24, fmaW - 18, '700 10.5px JetBrains Mono, monospace', pal.smem, 'center');
+      drawFitText(ctx, '↓ 2 SMEM loads ↓', rx + colW / 2, fmaY + 45, fmaW - 18, '700 10.5px JetBrains Mono, monospace', pal.danger, 'center');
+      drawFitText(ctx, 'acc += a * b  (only 1 FMA!)', rx + colW / 2, fmaY + 66, fmaW - 18, '700 10.5px JetBrains Mono, monospace', pal.reg, 'center');
+
+      if (phase === 2) {
+        drawPacket(ctx, mx + colW, gaY + gSize * 0.35, rx, fmaY + 24, (frac * 4) % 1, pal.smem, 4);
+        drawPacket(ctx, mx + colW, gbY + gSize * 0.5, rx, fmaY + 24, (frac * 4 + 0.5) % 1, pal.smem, 4);
+      }
+
+      // Bottom phase progress strip
+      const pY = H - 36;
+      const stepW = (W - pad * 2 - 24) / 4;
+      const names = ['1. HBM → SMEM', '2. syncthreads()', '3. SMEM Compute (MIO!)', '4. syncthreads()'];
+      for (let i = 0; i < 4; i++) {
+        const x = pad + i * (stepW + 8);
+        const act = i === phase;
+        drawBox(ctx, x, pY, stepW, 24, 6, act ? (i === 2 ? pal.dangerBg : pal.smemBg) : pal.panel, act ? (i === 2 ? pal.danger : pal.smem) : pal.panelBorder, act ? 1.5 : 1);
+        ctx.fillStyle = act ? pal.text : pal.muted;
+        ctx.font = '700 10.5px Inter, system-ui, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(names[i], x + stepW / 2, pY + 15);
+      }
+    }
+
+    // ---- RUNG 4: 1D THREAD TILING (TM=8 Register Reuse + 1.0 Asymptote) ----
+    function renderRung4(ctx, W, H, t, pal) {
+      const dotK = Math.floor(t * 1.1) % 8;
+      const subTm = Math.floor((t * 1.1 - Math.floor(t * 1.1)) * 8);
+      setPhaseText(`dot_k = ${dotK} · Loaded b_val ONCE into register → reusing across tm = 0..7 (currently tm=${subTm})! 9 SMEM reads drive 8 FMAs.`);
+
+      const pad = 18;
+      const topY = 42;
+      const leftW = (W - pad * 4) * 0.30;
+      const midW = (W - pad * 4) * 0.38;
+      const rightW = (W - pad * 4) * 0.32;
+      const mainH = H - 62;
+
+      // Left: shmem_A & shmem_B slices
+      const lx = pad;
+      drawBox(ctx, lx, topY, leftW, mainH, 10, pal.panel, pal.smem, 1.3);
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.smem;
+      ctx.textAlign = 'left';
+      ctx.fillText('SMEM Tiles (32×32)', lx + 12, topY + 22);
+
+      // shmem_A column of 8 rows at dotK
+      const aX = lx + 14, aY = topY + 46, aW = leftW - 28, aH = 148;
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '700 10px JetBrains Mono, monospace';
+      ctx.fillText(`shmem_A[0..7, k=${dotK}] (8 reads)`, aX, aY - 6);
+      const rH = aH / 8;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const isCol = c === dotK;
+          const isCur = isCol && r === subTm;
+          ctx.fillStyle = isCur ? pal.gold : isCol ? pal.smemBg : pal.cellEmpty;
+          ctx.fillRect(aX + c * (aW / 8) + 1, aY + r * rH + 1, aW / 8 - 2, rH - 2);
+        }
+      }
+
+      // shmem_B single element at (dotK, col)
+      const bY = aY + aH + 34;
+      const bH = Math.min(96, mainH - (bY - topY) - 18);
+      ctx.fillStyle = pal.reg;
+      ctx.fillText(`shmem_B[k=${dotK}, col] (1 read!)`, aX, bY - 6);
+      const bRowH = bH / 8;
+      for (let r = 0; r < 8; r++) {
+        for (let c = 0; c < 8; c++) {
+          const isB = r === dotK && c === 2;
+          ctx.fillStyle = isB ? pal.reg : pal.cellEmpty;
+          ctx.fillRect(aX + c * (aW / 8) + 1, bY + r * bRowH + 1, aW / 8 - 2, Math.max(3, bRowH - 2));
+        }
+      }
+
+      // Center: Thread 0 Register File (b_val fanning out to thread_results[0..7])
+      const mx = lx + leftW + pad;
+      drawBox(ctx, mx, topY, midW, mainH, 10, pal.panel, pal.reg, 1.5);
+      ctx.fillStyle = pal.reg;
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillText('Thread 0 Registers (TM = 8)', mx + 12, topY + 22);
+
+      // b_val register pill on left-middle
+      const bvX = mx + 14;
+      const bvY = topY + mainH * 0.44;
+      const bvW = 86;
+      const bvH = 44;
+      drawBox(ctx, bvX, bvY, bvW, bvH, 8, pal.regBg, pal.reg, 2);
+      ctx.fillStyle = pal.reg;
+      ctx.textAlign = 'center';
+      ctx.font = '800 12px JetBrains Mono, monospace';
+      ctx.fillText('b_val', bvX + bvW / 2, bvY + 18);
+      ctx.fillStyle = pal.textSub;
+      ctx.font = '600 9.5px Inter, system-ui, sans-serif';
+      ctx.fillText('Reused 8×!', bvX + bvW / 2, bvY + 34);
+
+      // 8 accumulator registers on right side of center panel
+      const accX = mx + midW - 122;
+      const accW = 108;
+      const accTop = topY + 42;
+      const accStep = (mainH - 58) / 8;
+      for (let tm = 0; tm < 8; tm++) {
+        const y = accTop + tm * accStep;
+        const active = tm === subTm;
+        // Fan-out ray from b_val -> accumulator
+        ctx.strokeStyle = active ? pal.gold : 'rgba(52, 211, 153, 0.35)';
+        ctx.lineWidth = active ? 2.4 : 1.1;
+        ctx.beginPath();
+        ctx.moveTo(bvX + bvW, bvY + bvH / 2);
+        ctx.lineTo(accX, y + (accStep - 5) / 2);
+        ctx.stroke();
+
+        drawBox(ctx, accX, y, accW, accStep - 5, 5, active ? pal.regBg : pal.bg, active ? pal.gold : pal.reg, active ? 1.8 : 1);
+        ctx.fillStyle = active ? pal.text : pal.textSub;
+        ctx.font = '700 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`res[${tm}] += A*b`, accX + accW / 2, y + (accStep - 5) / 2 + 3.5);
+      }
+
+      // Packet along active ray
+      const activeAccY = accTop + subTm * accStep + (accStep - 5) / 2;
+      drawPacket(ctx, bvX + bvW, bvY + bvH / 2, accX, activeAccY, (t * 6) % 1, pal.gold, 4);
+
+      // Right: 32x32 Output Block (4 warps = 128 threads) + 1D Asymptote Mini-Chart
+      const rx = mx + midW + pad;
+      drawBox(ctx, rx, topY, rightW, mainH, 10, pal.panel, pal.panelBorder, 1.2);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = pal.text;
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillText('Block C (4 Warps, 128 thr)', rx + 12, topY + 22);
+
+      // 4 horizontal warp bands, each 8 rows tall x 32 cols
+      const cX = rx + 14, cY = topY + 38, cW = rightW - 28, cH = 124;
+      const bandH = cH / 4;
+      for (let w = 0; w < 4; w++) {
+        drawBox(ctx, cX, cY + w * bandH + 2, cW, bandH - 4, 4, w === 0 ? pal.warpBg : pal.cellEmpty, w === 0 ? pal.warp : pal.cellStroke, 1);
+        drawFitText(ctx, `Warp ${w} (rows ${w * 8}..${w * 8 + 7})`, cX + 24, cY + w * bandH + bandH / 2 + 3.5, cW - 30, '700 10px JetBrains Mono, monospace', w === 0 ? pal.warp : pal.muted, 'left');
+      }
+      // Highlight Thread 0 vertical 8x1 strip cleanly to the left of Warp 0 text
+      drawBox(ctx, cX + 6, cY + 4, 11, bandH - 8, 2, pal.reg, pal.gold, 1.4);
+
+      // Asymptote Chart: SMEM reads/FMA vs TM
+      const chY = cY + cH + 26;
+      const chH = mainH - (chY - topY) - 16;
+      drawBox(ctx, cX, chY, cW, chH, 7, pal.bg, pal.hbm, 1.2);
+      ctx.fillStyle = pal.hbm;
+      ctx.font = '800 10.5px Inter, system-ui, sans-serif';
+      ctx.fillText('THE 1D WALL: 1 + 1/TM > 1.0', cX + 10, chY + 18);
+
+      const pL = cX + 26, pR = cX + cW - 12, pT = chY + 28, pB = chY + chH - 22;
+      // Floor line y = 1.0
+      const yOf = v => pB - ((v - 0.5) / 1.7) * (pB - pT);
+      const yFloor = yOf(1.0);
+      ctx.strokeStyle = pal.danger;
+      ctx.setLineDash([4, 3]);
+      ctx.beginPath();
+      ctx.moveTo(pL, yFloor);
+      ctx.lineTo(pR, yFloor);
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = pal.danger;
+      ctx.font = '700 9px JetBrains Mono, monospace';
+      ctx.fillText('1.0 floor', pL + 4, yFloor - 4);
+
+      // Plot TM = 1, 2, 4, 8, 16
+      const tms = [1, 2, 4, 8, 16];
+      ctx.strokeStyle = pal.smem;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      tms.forEach((tm, idx) => {
+        const px = pL + (idx / (tms.length - 1)) * (pR - pL);
+        const py = yOf(1 + 1 / tm);
+        if (idx === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      });
+      ctx.stroke();
+      tms.forEach((tm, idx) => {
+        const px = pL + (idx / (tms.length - 1)) * (pR - pL);
+        const py = yOf(1 + 1 / tm);
+        const is8 = tm === 8;
+        ctx.fillStyle = is8 ? pal.gold : pal.smem;
+        ctx.beginPath();
+        ctx.arc(px, py, is8 ? 4.5 : 3, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = pal.muted;
+        ctx.textAlign = 'center';
+        ctx.fillText(`${tm}`, px, pB + 12);
+      });
+    }
+
+    // ---- RUNG 5: 2D THREAD TILING (4x4 Outer Product + Hidden Warp 0 Ribbon) ----
+    function renderRung5(ctx, W, H, t, pal) {
+      if (state.toggles.warpFootprint) {
+        setPhaseText('HIDDEN FLAW in Kernel 5: Warp 0 (tid 0..31) stretches across 2 rows of 16 patches = skinny 8×64 ribbon (72 unique SMEM floats/k)!');
+        const pad = 20;
+        const topY = 44;
+        const size = Math.min(H - 110, W * 0.45);
+        const bx = pad + 78;
+        const by = topY + 40;
+
+        // Title
+        ctx.font = '800 13px Inter, system-ui, sans-serif';
+        ctx.fillStyle = pal.hbm;
+        ctx.textAlign = 'left';
+        ctx.fillText('64×64 Block Tile (16×16 Grid of 4×4 Thread Patches) — Where Does Warp 0 Land?', pad, 26);
+
+        // Top SMEM_B ribbon (64 wide)
+        drawBox(ctx, bx, topY, size, 24, 5, pal.dangerBg, pal.danger, 1.5);
+        ctx.fillStyle = pal.danger;
+        ctx.font = '700 11px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText('sh_memB: 64 unique floats loaded by Warp 0!', bx + size / 2, topY + 15.5);
+
+        // Left SMEM_A strip (8 tall)
+        const patchSz = size / 16;
+        drawBox(ctx, bx - 64, by, 54, patchSz * 2, 5, pal.dangerBg, pal.danger, 1.5);
+        ctx.fillStyle = pal.danger;
+        ctx.fillText('8 A', bx - 37, by + patchSz + 4);
+
+        // 16x16 patch grid
+        const pulseLane = Math.floor(t * 14) % 32;
+        for (let pr = 0; pr < 16; pr++) {
+          for (let pc = 0; pc < 16; pc++) {
+            const tid = pr * 16 + pc;
+            const isWarp0 = tid < 32;
+            const isWarp1 = tid >= 32 && tid < 64;
+            const x = bx + pc * patchSz;
+            const y = by + pr * patchSz;
+            ctx.fillStyle = tid === pulseLane ? pal.gold : isWarp0 ? pal.dangerBg : isWarp1 ? pal.warpBg : pal.cellEmpty;
+            ctx.fillRect(x + 0.8, y + 0.8, patchSz - 1.6, patchSz - 1.6);
+            if (isWarp0) {
+              ctx.strokeStyle = pal.danger;
+              ctx.lineWidth = 0.9;
+              ctx.strokeRect(x + 0.8, y + 0.8, patchSz - 1.6, patchSz - 1.6);
+            }
+          }
+        }
+        ctx.strokeStyle = pal.danger;
+        ctx.lineWidth = 2.2;
+        ctx.strokeRect(bx, by, size, patchSz * 2);
+
+        // Right explanation box
+        const rx = bx + size + 28;
+        const rw = W - rx - pad;
+        drawBox(ctx, rx, by - 10, rw, size + 10, 10, pal.panel, pal.hbm, 1.5);
+        ctx.textAlign = 'left';
+        ctx.fillStyle = pal.danger;
+        ctx.font = '800 15px JetBrains Mono, monospace';
+        ctx.fillText('Warp 0 = 8 × 64 Ribbon', rx + 16, by + 22);
+        ctx.fillStyle = pal.textSub;
+        ctx.font = '600 12px Inter, system-ui, sans-serif';
+        const lines = [
+          '• patches_per_row = 64 / 4 = 16',
+          '• 32 lanes fill 2 full rows of 16 patches',
+          '• Output area: 8 × 64 = 512 FMAs/k',
+          '• Perimeter: 8 (A) + 64 (B) = 72 floats!',
+          '• 2-way bank conflict on sh_memB',
+          '• Stride-16 conflicts on sh_memA',
+          '',
+          '→ Fix in Rung 6: Reshape Warp 0',
+          '   into a compact 16 × 32 tile',
+          '   (only 16 + 32 = 48 floats!)'
+        ];
+        lines.forEach((ln, i) => {
+          ctx.fillStyle = ln.startsWith('→') || ln.startsWith('   ') ? pal.reg : pal.textSub;
+          ctx.font = ln.startsWith('→') ? '800 12px Inter, system-ui, sans-serif' : '600 11.5px Inter, system-ui, sans-serif';
+          ctx.fillText(ln, rx + 16, by + 50 + i * 21);
+        });
+        return;
+      }
+
+      // Default Mode: Animated 4x4 Outer Product in Registers!
+      const cellIdx = Math.floor(t * 5.2) % 16;
+      const curI = Math.floor(cellIdx / 4);
+      const curJ = cellIdx % 4;
+      setPhaseText(`Outer Product Step (${curI}, ${curJ}) · reg_M[${curI}] × reg_N[${curJ}] → dot_products[${curI}, ${curJ}] (8 SMEM reads drive 16 FMAs = 0.50 rd/FMA!)`);
+
+      const pad = 20;
+      const gridCell = Math.min(54, (H - 170) / 4);
+      const gridSz = gridCell * 4;
+      const gx = pad + 115;
+      const gy = 122;
+
+      // Top reg_N[0..3] (loaded from sh_memB)
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.smem;
+      ctx.textAlign = 'left';
+      ctx.fillText('reg_N[0..3] ← 4 SMEM loads from sh_memB[dot_k, col..col+3]', gx, 42);
+
+      for (let j = 0; j < 4; j++) {
+        const x = gx + j * gridCell;
+        const active = j === curJ;
+        drawBox(ctx, x + 3, 54, gridCell - 6, 42, 7, active ? pal.smem : pal.smemBg, pal.smem, active ? 2 : 1.3);
+        ctx.fillStyle = active ? pal.onSolid : pal.text;
+        ctx.font = '800 11.5px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`N[${j}]`, x + gridCell / 2, 79);
+      }
+
+      // Left reg_M[0..3] (loaded from sh_memA)
+      ctx.save();
+      ctx.translate(28, gy + gridSz / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillStyle = pal.reg;
+      ctx.font = '800 11.5px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('reg_M[0..3] ← 4 SMEM loads (sh_memA)', 0, 0);
+      ctx.restore();
+
+      for (let i = 0; i < 4; i++) {
+        const y = gy + i * gridCell;
+        const active = i === curI;
+        drawBox(ctx, 48, y + 3, 50, gridCell - 6, 7, active ? pal.reg : pal.regBg, pal.reg, active ? 2 : 1.3);
+        ctx.fillStyle = active ? pal.onSolid : pal.text;
+        ctx.font = '800 11.5px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`M[${i}]`, 73, y + gridCell / 2 + 4);
+      }
+
+      // Intersecting highlight beams
+      ctx.fillStyle = pal.smemBg;
+      ctx.fillRect(gx + curJ * gridCell + 2, 98, gridCell - 4, gy + gridSz - 98);
+      ctx.fillStyle = pal.regBg;
+      ctx.fillRect(100, gy + curI * gridCell + 2, gx + gridSz - 100, gridCell - 4);
+
+      // 4x4 Accumulator Matrix dot_products[i, j]
+      for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+          const idx = i * 4 + j;
+          const x = gx + j * gridCell;
+          const y = gy + i * gridCell;
+          const isCur = i === curI && j === curJ;
+          const done = idx < cellIdx;
+          drawBox(ctx, x + 3, y + 3, gridCell - 6, gridCell - 6, 7, isCur ? pal.goldBg : done ? pal.regBg : pal.panel, isCur ? pal.gold : done ? pal.reg : pal.panelBorder, isCur ? 2.2 : 1.2);
+          ctx.fillStyle = isCur ? pal.gold : done ? pal.reg : pal.textSub;
+          ctx.font = '700 10.5px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`C${i}${j}`, x + gridCell / 2, y + gridCell / 2 - 2);
+          ctx.font = '600 9px JetBrains Mono, monospace';
+          ctx.fillStyle = pal.muted;
+          ctx.fillText(isCur ? 'FMA!' : done ? '✓' : '···', x + gridCell / 2, y + gridCell / 2 + 12);
+        }
+      }
+
+      // Right card: Area vs Perimeter payoff + HBM jump
+      const rx = gx + gridSz + 30;
+      const rw = W - rx - pad;
+      drawBox(ctx, rx, 54, rw, gy + gridSz - 54, 10, pal.panel, pal.panelBorder, 1.3);
+      ctx.textAlign = 'left';
+      ctx.fillStyle = pal.reg;
+      ctx.font = '800 14px Inter, system-ui, sans-serif';
+      ctx.fillText('Area-to-Perimeter Win', rx + 16, 82);
+
+      const statRows = [
+        { k: 'SMEM Loads / dot_k', v: '4 + 4 = 8 floats', c: pal.smem },
+        { k: 'Register FMAs / dot_k', v: '4 × 4 = 16 FMAs', c: pal.reg },
+        { k: 'SMEM Reads / FMA', v: '0.50  (breaks 1.0!)', c: pal.gold },
+        { k: 'Block Tile (64×64×16)', v: 'Still 8 KiB SMEM!', c: pal.warp },
+        { k: 'HBM AI Jump', v: '8.0 → 16.0 FLOP/B', c: pal.smem }
+      ];
+      statRows.forEach((s, idx) => {
+        const sy = 110 + idx * 44;
+        drawBox(ctx, rx + 14, sy, rw - 28, 36, 6, pal.bg, pal.panelBorder, 1);
+        ctx.fillStyle = pal.muted;
+        ctx.font = '700 9.5px Inter, system-ui, sans-serif';
+        ctx.fillText(s.k, rx + 24, sy + 13);
+        ctx.fillStyle = s.c;
+        ctx.font = '800 12.5px JetBrains Mono, monospace';
+        ctx.fillText(s.v, rx + 24, sy + 29);
+      });
+    }
+
+    // ---- RUNG 6: EXPLICIT WARP TILING (4x8 Lane Grid + 8-Way A / 4-Way B Broadcasts) ----
+    function renderRung6(ctx, W, H, t, pal) {
+      const bcastRow = Math.floor(t * 1.4) % 4;
+      const bcastCol = Math.floor(t * 2.1) % 8;
+      const pulse = (t * 2.1) % 1;
+      setPhaseText(`Warp 0 (16×32) · tileA broadcasts 8-way across row ${bcastRow} (L${bcastRow * 8}..L${bcastRow * 8 + 7}) · tileB broadcasts 4-way down col ${bcastCol} — 48 unique floats, 0 bank conflicts!`);
+
+      const pad = 18;
+      const leftW = Math.min(205, W * 0.28);
+      const topY = 42;
+
+      // Left Panel: 64x64 Block -> 8 compact 16x32 Warp Tiles (plus ghost K5 8x64 ribbon!)
+      drawBox(ctx, pad, topY, leftW, H - 62, 10, pal.panel, pal.warp, 1.3);
+      ctx.fillStyle = pal.warp;
+      ctx.font = '800 11.5px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText('Block 64×64 → 8 Warps', pad + 12, topY + 20);
+
+      const blkSz = leftW - 28;
+      const bx = pad + 14, by = topY + 34;
+      const ww = blkSz / 2, wh = blkSz / 4;
+      for (let wr = 0; wr < 4; wr++) {
+        for (let wc = 0; wc < 2; wc++) {
+          const wid = wr * 2 + wc;
+          const isW0 = wid === 0;
+          drawBox(ctx, bx + wc * ww + 2, by + wr * wh + 2, ww - 4, wh - 4, 5, isW0 ? pal.warpBg : pal.cellEmpty, isW0 ? pal.warp : pal.cellStroke, isW0 ? 2 : 1);
+          ctx.fillStyle = isW0 ? pal.warp : pal.muted;
+          ctx.font = '800 10px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          // Row 0 labels sit cleanly in the lower half below the K5 8x64 dashed ghost line
+          const labelY = wr === 0 ? by + wr * wh + wh * 0.78 : by + wr * wh + wh / 2 + 4;
+          ctx.fillText(`W${wid} (16×32)`, bx + wc * ww + ww / 2, labelY);
+        }
+      }
+      // Dashed ghost outline of Kernel 5's 8x64 ribbon (top half of row 0, clear of W0/W1 labels)
+      ctx.strokeStyle = pal.danger;
+      ctx.lineWidth = 1.4;
+      ctx.setLineDash([4, 3]);
+      ctx.strokeRect(bx + 2, by + 2, blkSz - 4, wh * 0.48);
+      ctx.setLineDash([]);
+      ctx.fillStyle = pal.danger;
+      ctx.font = '700 8.5px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('K5 Warp 0 (8×64)', bx + blkSz / 2, by + wh * 0.30);
+
+      // Comparison summary under block
+      const sumY = by + blkSz + 18;
+      ctx.textAlign = 'left';
+      ctx.font = '700 10px JetBrains Mono, monospace';
+      ctx.fillStyle = pal.danger;
+      ctx.fillText('--- K5 Warp: 8×64 (72 flt)', bx, sumY);
+      ctx.fillStyle = pal.warp;
+      ctx.fillText('■  K6 Warp: 16×32 (48 flt)', bx, sumY + 18);
+      ctx.fillStyle = pal.reg;
+      ctx.font = '800 11px Inter, system-ui, sans-serif';
+      ctx.fillText('-33% SMEM for same 512 FMAs!', bx, sumY + 40);
+
+      // Right Panel: Karthik's 4x8 Lane Broadcast Grid (L0..L31)!
+      const rx = pad * 2 + leftW;
+      const rw = W - rx - pad;
+      drawBox(ctx, rx, topY, rw, H - 62, 10, pal.panel, pal.panelBorder, 1.3);
+      ctx.fillStyle = pal.text;
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillText('Inside Warp 0: 32 Lanes (4×8 Grid of 4×4 Patches) — Hardware Multicast', rx + 14, topY + 20);
+
+      const gridLeft = rx + 96;
+      const gridTop = topY + 76;
+      const gridW = rw - 114;
+      const gridH = H - 62 - 114;
+      const cw = gridW / 8;
+      const ch = gridH / 4;
+
+      // Top bar: tileB[dot_k, 0..31] (8 groups of 4 floats -> 4-way broadcast down!)
+      ctx.fillStyle = pal.smem;
+      ctx.font = '700 10px JetBrains Mono, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText('tileB[dot_k, 0..31]  —  4-Way Vertical Broadcast Down Each Column ↓', gridLeft + gridW / 2, topY + 40);
+
+      for (let c = 0; c < 8; c++) {
+        const x = gridLeft + c * cw;
+        const act = c === bcastCol;
+        drawBox(ctx, x + 2, topY + 48, cw - 4, 20, 4, act ? pal.smem : pal.smemBg, pal.smem, act ? 1.8 : 1);
+        ctx.fillStyle = act ? pal.onSolid : pal.smem;
+        ctx.font = '700 9px JetBrains Mono, monospace';
+        ctx.fillText(`${c * 4}..${c * 4 + 3}`, x + cw / 2, topY + 61);
+      }
+
+      // Left bar: tileA[dot_k, 0..15] (4 groups of 4 floats -> 8-way broadcast across!)
+      for (let r = 0; r < 4; r++) {
+        const y = gridTop + r * ch;
+        const act = r === bcastRow;
+        drawBox(ctx, rx + 14, y + 6, 72, ch - 12, 5, act ? pal.reg : pal.regBg, pal.reg, act ? 1.8 : 1);
+        ctx.fillStyle = act ? pal.onSolid : pal.reg;
+        ctx.font = '700 9.5px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`A[${r * 4}..${r * 4 + 3}]`, rx + 50, y + ch / 2 - 2);
+        ctx.font = '600 8.5px Inter, system-ui, sans-serif';
+        ctx.fillText('8-way →', rx + 50, y + ch / 2 + 11);
+      }
+
+      // Broadcast beams
+      ctx.fillStyle = pal.regBg;
+      ctx.fillRect(gridLeft, gridTop + bcastRow * ch + 2, gridW, ch - 4);
+      ctx.fillStyle = pal.smemBg;
+      ctx.fillRect(gridLeft + bcastCol * cw + 2, gridTop, cw - 4, gridH);
+
+      // 4x8 Lane Cells L0..L31
+      for (let r = 0; r < 4; r++) {
+        for (let c = 0; c < 8; c++) {
+          const lane = r * 8 + c;
+          const x = gridLeft + c * cw;
+          const y = gridTop + r * ch;
+          const cross = r === bcastRow && c === bcastCol;
+          const onRow = r === bcastRow;
+          const onCol = c === bcastCol;
+          drawBox(
+            ctx, x + 3, y + 4, cw - 6, ch - 8, 6,
+            cross ? pal.goldBg : (onRow || onCol) ? pal.warpBg : pal.bg,
+            cross ? pal.gold : (onRow ? pal.reg : onCol ? pal.smem : pal.panelBorder),
+            cross ? 2.2 : 1.2
+          );
+          ctx.fillStyle = cross ? pal.gold : pal.text;
+          ctx.font = '800 10.5px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`L${lane}`, x + cw / 2, y + ch / 2 - 1);
+          ctx.fillStyle = pal.muted;
+          ctx.font = '600 8.5px JetBrains Mono, monospace';
+          ctx.fillText('4×4', x + cw / 2, y + ch / 2 + 12);
+        }
+      }
+
+      // Broadcast packets sliding along row & column
+      drawPacket(ctx, gridLeft, gridTop + bcastRow * ch + ch / 2, gridLeft + gridW, gridTop + bcastRow * ch + ch / 2, pulse, pal.reg, 4.5);
+      drawPacket(ctx, gridLeft + bcastCol * cw + cw / 2, gridTop, gridLeft + bcastCol * cw + cw / 2, gridTop + gridH, pulse, pal.smem, 4.5);
+
+      drawBadge(ctx, rx + rw / 2, H - 46, '8-Way Broadcast on tileA + 4-Way Broadcast on tileB  →  0 Bank Conflicts', pal.regBg, pal.reg, 'center');
+    }
+
+    // ---- RUNG 7: TRANSPOSED sh_memA + float4 / LDS.128 VECTORIZATION (32 Banks!) ----
+    function renderRung7(ctx, W, H, t, pal) {
+      const beforeMode = state.toggles.beforeTranspose;
+      const pulse = (t * 0.85) % 1;
+      const step4 = Math.floor(pulse * 4);
+      const pad = 18;
+
+      if (beforeMode) {
+        setPhaseText(`BEFORE (Kernel 5): sh_memA is (64×16) → reading reg_M[0..3] jumps stride-16 across SMEM banks → 4× LDS.32 + 2-Way Bank Conflicts!`);
+      } else {
+        setPhaseText(`AFTER (Kernel 6): sh_memA transposed to (16×64) → reg_M[0..3] sits in 4 adjacent banks → 1× LDS.128 (4× fewer MIO instructions, 0 bank conflicts!)`);
+      }
+
+      // Top: 32 Physical Shared Memory Banks (Bank 0 .. Bank 31)
+      const topY = 38;
+      drawBox(ctx, pad, topY, W - pad * 2, 118, 10, pal.panel, beforeMode ? pal.danger : pal.reg, 1.5);
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = beforeMode ? pal.danger : pal.reg;
+      ctx.textAlign = 'left';
+      ctx.fillText(
+        beforeMode
+          ? '32 Physical SMEM Banks (4B wide each) — Stride-16 Collisions on Bank 0 & Bank 16!'
+          : '32 Physical SMEM Banks (4B wide each) — Contiguous 128-Bit (4-Bank) Conflict-Free Reads!',
+        pad + 14, topY + 22
+      );
+
+      const bankLeft = pad + 14;
+      const bankW = (W - pad * 2 - 28) / 32;
+      const bankY = topY + 36;
+      const bankH = 54;
+
+      for (let b = 0; b < 32; b++) {
+        let fill = pal.cellEmpty;
+        let stroke = pal.cellStroke;
+        if (beforeMode) {
+          // Reading col dot_k=0 with stride BK=16 hits Bank 0, Bank 16, Bank 0, Bank 16!
+          const hit = (b === 0 || b === 16);
+          fill = hit ? pal.danger : pal.cellEmpty;
+          stroke = hit ? pal.gold : pal.cellStroke;
+        } else {
+          // After transpose: 4 warp rows read banks 0..3, 4..7, 8..11, 12..15 cleanly!
+          if (b < 16) {
+            const grp = Math.floor(b / 4);
+            const activeGrp = grp === step4;
+            fill = activeGrp ? pal.reg : pal.smemBg;
+            stroke = activeGrp ? pal.gold : pal.smem;
+          }
+        }
+        ctx.fillStyle = fill;
+        ctx.fillRect(bankLeft + b * bankW + 1, bankY, bankW - 2, bankH);
+        ctx.strokeStyle = stroke;
+        ctx.lineWidth = 1;
+        ctx.strokeRect(bankLeft + b * bankW + 1, bankY, bankW - 2, bankH);
+
+        if (b % 4 === 0) {
+          ctx.fillStyle = pal.muted;
+          ctx.font = '700 8.5px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(`B${b}`, bankLeft + b * bankW + bankW / 2, bankY + bankH + 14);
+        }
+      }
+
+      // Bottom Split: Left = sh_memA Layout, Right = Instruction Stream (4x LDS.32 vs 1x LDS.128)
+      const botY = topY + 132;
+      const botH = H - botY - 18;
+      const halfW = (W - pad * 3) / 2;
+
+      // Left: Memory Layout Diagram
+      drawBox(ctx, pad, botY, halfW, botH, 10, pal.panel, pal.panelBorder, 1.2);
+      ctx.textAlign = 'left';
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = pal.text;
+      ctx.fillText(beforeMode ? 'sh_memA Shape: (BM=64 × BK=16)' : 'sh_memA Shape: TRANSPOSED (BK=16 × BM=64)', pad + 14, botY + 22);
+
+      const gx = pad + 18, gy = botY + 38, gw = halfW - 36, gh = botH - 78;
+      const rows = 4, cols = 8;
+      const cw = gw / cols, ch = gh / rows;
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          let active = false;
+          let cur = false;
+          if (beforeMode) {
+            active = c === 0;
+            cur = active && r === step4;
+          } else {
+            active = r === 0 && c < 4;
+            cur = active;
+          }
+          drawBox(
+            ctx, gx + c * cw + 2, gy + r * ch + 2, cw - 4, ch - 4, 4,
+            cur ? (beforeMode ? pal.danger : pal.reg) : active ? (beforeMode ? pal.dangerBg : pal.regBg) : pal.cellEmpty,
+            active ? (beforeMode ? pal.danger : pal.reg) : pal.cellStroke,
+            cur ? 1.8 : 1
+          );
+          if (active) {
+            ctx.fillStyle = cur ? pal.onSolid : pal.text;
+            ctx.font = '700 9.5px JetBrains Mono, monospace';
+            ctx.textAlign = 'center';
+            ctx.fillText(beforeMode ? `r${r},k0` : `k0,r${c}`, gx + c * cw + cw / 2, gy + r * ch + ch / 2 + 3.5);
+          }
+        }
+      }
+      drawFitText(
+        ctx,
+        beforeMode ? 'Stride 16 (64B) → Bank 0, 16, 0, 16 (CONFLICT!)' : 'Stride 1 (4B) → Banks 0..3 (128-bit CONTIGUOUS!)',
+        gx, botY + botH - 14, halfW - 32, '700 10px JetBrains Mono, monospace',
+        beforeMode ? pal.danger : pal.reg, 'left'
+      );
+
+      // Right: Instruction Pipeline Comparison
+      const rx = pad * 2 + halfW;
+      const innerMaxW = halfW - 44;
+      drawBox(ctx, rx, botY, halfW, botH, 10, pal.panel, beforeMode ? pal.danger : pal.smem, 1.3);
+      drawFitText(
+        ctx,
+        beforeMode ? 'MIO Instruction Stream: 4 × Scalar LDS.32' : 'MIO Instruction Stream: 1 × Vector LDS.128',
+        rx + 14, botY + 22, halfW - 28, '800 12px Inter, system-ui, sans-serif',
+        beforeMode ? pal.danger : pal.smem, 'left'
+      );
+
+      if (beforeMode) {
+        for (let i = 0; i < 4; i++) {
+          const iy = botY + 40 + i * 32;
+          const act = i === step4;
+          drawBox(ctx, rx + 14, iy, halfW - 28, 25, 6, act ? pal.dangerBg : pal.bg, act ? pal.danger : pal.panelBorder, act ? 1.6 : 1);
+          drawFitText(
+            ctx,
+            `LDS.32 reg_M[${i}] ← sh_memA[r+${i},k] ${i >= 2 ? '⚠ BANK CONFLICT' : ''}`,
+            rx + 22, iy + 16, innerMaxW, '700 10px JetBrains Mono, monospace',
+            act ? pal.danger : pal.textSub, 'left'
+          );
+        }
+      } else {
+        const iy = botY + 46;
+        drawBox(ctx, rx + 14, iy, halfW - 28, 48, 8, pal.regBg, pal.reg, 2);
+        drawFitText(ctx, 'LDS.128 reg_M[0..3] ← sh_memA[k, r+0..3]', rx + 22, iy + 20, innerMaxW, '800 11.5px JetBrains Mono, monospace', pal.reg, 'left');
+        drawFitText(ctx, 'Single 16B load · 0 bank conflicts · 4× less MIO', rx + 22, iy + 38, innerMaxW, '600 10.5px Inter, system-ui, sans-serif', pal.textSub, 'left');
+
+        const iy2 = iy + 60;
+        drawBox(ctx, rx + 14, iy2, halfW - 28, 48, 8, pal.smemBg, pal.smem, 1.8);
+        drawFitText(ctx, 'LDS.128 reg_N[0..3] ← sh_memB[k, c+0..3]', rx + 22, iy2 + 20, innerMaxW, '800 11.5px JetBrains Mono, monospace', pal.smem, 'left');
+        drawFitText(ctx, '2 vector loads → 16 FMAs (0.125 inst/FMA!)', rx + 22, iy2 + 38, innerMaxW, '600 10.5px Inter, system-ui, sans-serif', pal.textSub, 'left');
+      }
+      drawBadge(ctx, rx + halfW / 2, botY + botH - 26, beforeMode ? '0.50 LDS.32 inst/FMA + Stalls' : '0.125 LDS.128 inst/FMA (4× Speedup on MIO)', beforeMode ? pal.dangerBg : pal.regBg, beforeMode ? pal.danger : pal.reg, 'center');
+    }
+
+    // ---- RUNG 8: 7-HYPERPARAMETER AUTOTUNER SANDBOX ----
+    function renderRung8(ctx, W, H, t, pal) {
+      const gpu = GPUS[state.gpuKey];
+      const ev = evaluateConfig(state.cfg, gpu);
+      const { BM, BN, BK, WM, WN, TM, TN } = state.cfg;
+
+      if (!ev.valid) {
+        setPhaseText(`INVALID CONFIG (${BM}×${BN}×${BK}, W=${WM}×${WN}, T=${TM}×${TN}) — Rejected by is_valid_config() before JIT compilation!`);
+      } else {
+        setPhaseText(`VALID CONFIG · HBM AI = ${ev.hbmAI.toFixed(1)} FLOP/B · ${ev.activeBlocksPerSm} blk/SM (${ev.occupancyPct.toFixed(0)}% occ, capped by ${ev.limiter}) · ${ev.waves.toFixed(1)} waves (2048³)`);
+      }
+
+      const pad = 16;
+      const leftW = (W - pad * 3) * 0.48;
+      const rightW = (W - pad * 3) * 0.52;
+      const topY = 20;
+      const panelH = H - 38;
+
+      // Left: Proportional 3-level Tile Geometry (BMxBN -> WMxWN -> TMxTN)
+      drawBox(ctx, pad, topY, leftW, panelH, 10, pal.panel, ev.valid ? pal.smem : pal.danger, 1.5);
+      ctx.font = '800 12px Inter, system-ui, sans-serif';
+      ctx.fillStyle = ev.valid ? pal.smem : pal.danger;
+      ctx.textAlign = 'left';
+      ctx.fillText(`Live Tile Hierarchy: Block ${BM}×${BN} (BK=${BK})`, pad + 14, topY + 22);
+
+      const maxDraw = Math.min(leftW - 44, panelH - 110);
+      const scale = maxDraw / Math.max(BM, BN);
+      const drawW = BN * scale;
+      const drawH = BM * scale;
+      const bx = pad + (leftW - drawW) / 2;
+      const by = topY + 38 + (maxDraw - drawH) / 2;
+
+      // Outer Block
+      drawBox(ctx, bx, by, drawW, drawH, 6, pal.bg, ev.valid ? pal.smem : pal.danger, 2);
+
+      if (BM % WM === 0 && BN % WN === 0) {
+        const wrCount = BM / WM;
+        const wcCount = BN / WN;
+        const ww = drawW / wcCount;
+        const wh = drawH / wrCount;
+        const activeWarp = Math.floor(t * 1.3) % (wrCount * wcCount);
+
+        for (let wr = 0; wr < wrCount; wr++) {
+          for (let wc = 0; wc < wcCount; wc++) {
+            const wid = wr * wcCount + wc;
+            const wx = bx + wc * ww;
+            const wy = by + wr * wh;
+            const isAct = wid === 0;
+            drawBox(ctx, wx + 1.5, wy + 1.5, ww - 3, wh - 3, 4, isAct ? pal.warpBg : (wid === activeWarp ? pal.smemBg : pal.cellEmpty), isAct ? pal.warp : pal.cellStroke, isAct ? 1.8 : 1);
+
+            // Draw Thread patches inside Warp 0
+            if (isAct && WM % TM === 0 && WN % TN === 0) {
+              const prCount = WM / TM;
+              const pcCount = WN / TN;
+              const pw = (ww - 4) / pcCount;
+              const ph = (wh - 4) / prCount;
+              const pLane = Math.floor(t * 10) % (prCount * pcCount);
+              for (let pr = 0; pr < prCount; pr++) {
+                for (let pc = 0; pc < pcCount; pc++) {
+                  const lid = pr * pcCount + pc;
+                  ctx.fillStyle = lid === pLane ? pal.gold : pal.regBg;
+                  ctx.fillRect(wx + 2 + pc * pw + 0.6, wy + 2 + pr * ph + 0.6, Math.max(2, pw - 1.2), Math.max(2, ph - 1.2));
+                }
+              }
+            }
+          }
+        }
+      } else {
+        ctx.fillStyle = pal.danger;
+        ctx.font = '800 13px JetBrains Mono, monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(`Warp ${WM}×${WN} does not`, bx + drawW / 2, by + drawH / 2 - 8);
+        ctx.fillText(`cleanly tile Block ${BM}×${BN}!`, bx + drawW / 2, by + drawH / 2 + 12);
+      }
+
+      // 2-line caption under block (zero overflow + singular/plural warp grammar)
+      const warpWord = ev.warpsPerBlock === 1 ? 'warp' : 'warps';
+      drawFitText(
+        ctx,
+        `NT = ${ev.NT} threads (${ev.warpsPerBlock} ${warpWord})`,
+        pad + leftW / 2, topY + panelH - 30, leftW - 24,
+        '700 10.5px JetBrains Mono, monospace', pal.textSub, 'center'
+      );
+      drawFitText(
+        ctx,
+        `Thread Patch = ${TM}×${TN} (${TM * TN} FMAs/k)`,
+        pad + leftW / 2, topY + panelH - 13, leftW - 24,
+        '700 10.5px JetBrains Mono, monospace', pal.reg, 'center'
+      );
+
+      // Right: Top = 7-Rule is_valid_config() Validator | Bottom = SM Resource Ceiling Bars
+      const rx = pad * 2 + leftW;
+      const topH = Math.min(200, panelH * 0.54);
+      drawBox(ctx, rx, topY, rightW, topH, 10, pal.panel, ev.valid ? pal.reg : pal.danger, 1.4);
+      ctx.textAlign = 'left';
+      ctx.font = '800 11.5px Inter, system-ui, sans-serif';
+      ctx.fillStyle = ev.valid ? pal.reg : pal.danger;
+      ctx.fillText(ev.valid ? 'is_valid_config() — ALL 7 CONSTRAINTS PASS' : 'is_valid_config() — REJECTED (SEE RED CHECKS)', rx + 12, topY + 20);
+
+      ev.checks.forEach((chk, i) => {
+        const cy = topY + 38 + i * 22;
+        ctx.fillStyle = chk.ok ? pal.reg : pal.danger;
+        ctx.font = '800 11px JetBrains Mono, monospace';
+        ctx.fillText(chk.ok ? '✓' : '✕', rx + 14, cy);
+        ctx.fillStyle = chk.ok ? pal.textSub : pal.danger;
+        ctx.font = '600 10.5px JetBrains Mono, monospace';
+        ctx.fillText(chk.label + (chk.detail ? ` [${chk.detail}]` : ''), rx + 30, cy);
+      });
+
+      // Bottom-Right: GPU SM Occupancy Limiters (Regs vs SMEM vs Threads)
+      const by2 = topY + topH + 12;
+      const bh2 = panelH - topH - 12;
+      drawBox(ctx, rx, by2, rightW, bh2, 10, pal.panel, pal.panelBorder, 1.2);
+      ctx.fillStyle = pal.text;
+      ctx.font = '800 11.5px Inter, system-ui, sans-serif';
+      ctx.fillText(`${gpu.name} SM Residency Limits (Active = ${ev.activeBlocksPerSm} blocks/SM)`, rx + 12, by2 + 20);
+
+      const bars = [
+        { label: `Registers (${ev.estRegs}r/thr)`, val: ev.blocksByRegs, max: gpu.maxBlocksPerSm, col: pal.reg },
+        { label: `SMEM (${ev.smemKiB.toFixed(1)} KiB/blk)`, val: ev.blocksBySmem, max: gpu.maxBlocksPerSm, col: pal.smem },
+        { label: `Threads (${ev.NT} thr/blk)`, val: ev.blocksByThreads, max: gpu.maxBlocksPerSm, col: pal.warp }
+      ];
+      const barSpace = (bh2 - 36) / 3;
+      bars.forEach((b, i) => {
+        const y = by2 + 32 + i * barSpace;
+        const isLimiter = ev.valid && b.val === ev.activeBlocksPerSm;
+        ctx.fillStyle = isLimiter ? pal.hbm : pal.textSub;
+        ctx.font = '700 10px JetBrains Mono, monospace';
+        ctx.textAlign = 'left';
+        ctx.fillText(b.label, rx + 12, y + 10);
+        ctx.textAlign = 'right';
+        ctx.fillText(`${Math.min(b.val, gpu.maxBlocksPerSm)} blk/SM${isLimiter ? ' (CAP!)' : ''}`, rx + rightW - 12, y + 10);
+
+        const trackW = rightW - 24;
+        const fillW = Math.min(1, Math.min(b.val, gpu.maxBlocksPerSm) / gpu.maxBlocksPerSm) * trackW;
+        drawBox(ctx, rx + 12, y + 16, trackW, 9, 4, pal.bg, null);
+        drawBox(ctx, rx + 12, y + 16, Math.max(4, fillW), 9, 4, isLimiter ? pal.hbm : b.col, null);
+      });
+    }
+
+    // ---- RUNG 9 / EPILOGUE: UNFUSED vs FUSED EPILOGUE (HBM BYTE TAX!) ----
+    function renderRung9(ctx, W, H, t, pal) {
+      const unfused = state.toggles.unfused;
+      const gpu = GPUS[state.gpuKey];
+      const tcRatio = (gpu.bf16Tflops / gpu.fp32Tflops).toFixed(0);
+      const pulse = (t * 0.65) % 1;
+      const pad = 18;
+
+      if (unfused) {
+        setPhaseText('UNFUSED PIPELINE: Standalone GEMM + Bias + GELU makes 5 full M×N HBM trips — paying the "Extra Byte Tax" on every intermediate tensor!');
+      } else {
+        setPhaseText('FUSED EPILOGUE: Bias + GELU execute in SM Registers on dot_products[TM, TN] before a SINGLE HBM write — 5× less epilogue memory traffic!');
+      }
+
+      // Top zone: On-Chip SM (Registers + Compute) | Bottom zone: Off-Chip HBM
+      const smY = 24;
+      const smH = H * 0.41;
+      const hbmY = smY + smH + 62;
+      const hbmH = H - hbmY - 18;
+
+      drawBox(ctx, pad, smY, W - pad * 2, smH, 12, pal.panel, unfused ? pal.panelBorder : pal.reg, unfused ? 1.3 : 1.8);
+      drawFitText(ctx, 'ON-CHIP SM (Registers & Execution Units — ~20+ TB/s effective)', pad + 14, smY + 21, W - pad * 2 - 28, '800 12px Inter, system-ui, sans-serif', pal.reg, 'left');
+
+      drawBox(ctx, pad, hbmY, W - pad * 2, hbmH, 12, pal.panel, unfused ? pal.danger : pal.hbm, 1.5);
+
+      const stageW = Math.min(185, (W - pad * 2 - 110) / 3);
+      const gap = (W - pad * 2 - 36 - stageW * 3) / 2;
+      const x1 = pad + 18;
+      const x2 = x1 + stageW + gap;
+      const x3 = x2 + stageW + gap;
+      const boxY = smY + 38;
+      const boxH = smH - 52;
+
+      if (unfused) {
+        const stages = [
+          { x: x1, name: 'Kernel 1: GEMM', sub: 'cuBLAS / Custom', col: pal.warp },
+          { x: x2, name: 'Kernel 2: + Bias', sub: 'Elementwise CUDA', col: pal.hbm },
+          { x: x3, name: 'Kernel 3: GELU', sub: 'Elementwise CUDA', col: pal.hbm }
+        ];
+        stages.forEach(s => {
+          drawBox(ctx, s.x, boxY, stageW, boxH, 9, pal.bg, s.col, 1.6);
+          ctx.textAlign = 'center';
+          ctx.fillStyle = s.col;
+          ctx.font = '800 12px Inter, system-ui, sans-serif';
+          ctx.fillText(s.name, s.x + stageW / 2, boxY + boxH / 2 - 6);
+          ctx.fillStyle = pal.muted;
+          ctx.font = '600 10px JetBrains Mono, monospace';
+          ctx.fillText(s.sub, s.x + stageW / 2, boxY + boxH / 2 + 13);
+        });
+
+        // HBM buffers sit cleanly at top of HBM box; HBM title sits cleanly at bottom of HBM box (zero arrow collisions!)
+        const bW = Math.min(136, stageW * 0.85);
+        const hBoxY = hbmY + 14;
+        const hBoxH = hbmH - 46;
+        const hb1 = x1 + stageW * 0.65;
+        const hb2 = x2 + stageW * 0.65;
+        const hb3 = x3 + stageW * 0.12;
+
+        [
+          { x: hb1, label: 'Tmp C1 (M×N)', sub: 'Write + Re-read!' },
+          { x: hb2, label: 'Tmp C2 (M×N)', sub: 'Write + Re-read!' },
+          { x: hb3, label: 'Final Out (M×N)', sub: 'Write #3' }
+        ].forEach((b, idx) => {
+          const cx = Math.min(W - pad - bW - 14, b.x);
+          drawBox(ctx, cx, hBoxY, bW, hBoxH, 7, pal.dangerBg, pal.danger, 1.4);
+          drawFitText(ctx, b.label, cx + bW / 2, hBoxY + hBoxH / 2 - 4, bW - 14, '800 10.5px JetBrains Mono, monospace', pal.danger, 'center');
+          drawFitText(ctx, b.sub, cx + bW / 2, hBoxY + hBoxH / 2 + 13, bW - 14, '600 9.5px Inter, system-ui, sans-serif', pal.textSub, 'center');
+
+          // Down & Up arrows between SM and HBM boxes
+          if (idx === 0) {
+            drawArrow(ctx, x1 + stageW * 0.72, boxY + boxH, cx + bW * 0.30, hBoxY, pal.danger, 2);
+            drawArrow(ctx, cx + bW * 0.70, hBoxY, x2 + stageW * 0.28, boxY + boxH, pal.danger, 2);
+            drawPacket(ctx, x1 + stageW * 0.72, boxY + boxH, cx + bW * 0.30, hBoxY, pulse, pal.danger, 4.2);
+            drawPacket(ctx, cx + bW * 0.70, hBoxY, x2 + stageW * 0.28, boxY + boxH, (pulse + 0.5) % 1, pal.danger, 4.2);
+          } else if (idx === 1) {
+            drawArrow(ctx, x2 + stageW * 0.72, boxY + boxH, cx + bW * 0.30, hBoxY, pal.danger, 2);
+            drawArrow(ctx, cx + bW * 0.70, hBoxY, x3 + stageW * 0.28, boxY + boxH, pal.danger, 2);
+            drawPacket(ctx, x2 + stageW * 0.72, boxY + boxH, cx + bW * 0.30, hBoxY, (pulse + 0.25) % 1, pal.danger, 4.2);
+            drawPacket(ctx, cx + bW * 0.70, hBoxY, x3 + stageW * 0.28, boxY + boxH, (pulse + 0.75) % 1, pal.danger, 4.2);
+          } else {
+            drawArrow(ctx, x3 + stageW * 0.5, boxY + boxH, cx + bW * 0.5, hBoxY, pal.danger, 2);
+            drawPacket(ctx, x3 + stageW * 0.5, boxY + boxH, cx + bW * 0.5, hBoxY, (pulse + 0.4) % 1, pal.danger, 4.2);
+          }
+        });
+
+        drawFitText(
+          ctx,
+          `OFF-CHIP ${gpu.memLabel} (${gpu.bwTbs} TB/s on ${gpu.name} — Every Round-Trip Pays ~500 Cycles & Memory Bandwidth)`,
+          pad + 14, hbmY + hbmH - 12, W - pad * 2 - 28,
+          '800 11px Inter, system-ui, sans-serif', pal.danger, 'left'
+        );
+        // Opaque pill drawn LAST on top of arrows for crisp readability
+        drawBadge(ctx, W / 2, smY + smH + 20, '5× Output Tensor HBM Traffic (3 Writes + 2 Reads) + 3 Launches', pal.dangerBg, pal.danger, 'center', pal.bg);
+      } else {
+        // Fused Single Kernel!
+        drawFitText(
+          ctx,
+          `OFF-CHIP ${gpu.memLabel} (${gpu.bwTbs} TB/s on ${gpu.name} — Single Final Store Only)`,
+          pad + 14, hbmY + 21, W - pad * 2 - 28,
+          '800 11.5px Inter, system-ui, sans-serif', pal.hbm, 'left'
+        );
+
+        drawBox(ctx, x1 - 4, boxY - 4, (x3 + stageW) - x1 + 8, boxH + 8, 11, pal.regBg, pal.reg, 2);
+        const stages = [
+          { x: x1 + 8, name: '1. GEMM Outer Prod', sub: 'dot_products[TM, TN]', col: pal.smem },
+          { x: x2 + 4, name: '2. + Bias (In Regs!)', sub: '0 HBM bytes moved', col: pal.reg },
+          { x: x3 - 8, name: '3. GELU (In Regs!)', sub: '0 HBM bytes moved', col: pal.reg }
+        ];
+        stages.forEach((s, idx) => {
+          drawBox(ctx, s.x, boxY + 8, stageW - 8, boxH - 16, 8, pal.bg, s.col, 1.5);
+          drawFitText(ctx, s.name, s.x + (stageW - 8) / 2, boxY + boxH / 2 - 6, stageW - 18, '800 11.5px Inter, system-ui, sans-serif', s.col, 'center');
+          drawFitText(ctx, s.sub, s.x + (stageW - 8) / 2, boxY + boxH / 2 + 12, stageW - 18, '600 10px JetBrains Mono, monospace', pal.textSub, 'center');
+
+          if (idx < 2) {
+            const nx = stages[idx + 1].x;
+            drawArrow(ctx, s.x + stageW - 8, boxY + boxH / 2, nx, boxY + boxH / 2, pal.reg, 2.2);
+            drawPacket(ctx, s.x + stageW - 8, boxY + boxH / 2, nx, boxY + boxH / 2, (pulse * 2 + idx * 0.4) % 1, pal.gold, 4.5);
+          }
+        });
+
+        // Single clean HBM output write box (generous padding, zero overflow)
+        const outW = 215;
+        const outX = Math.min(W - pad - outW - 14, Math.max(pad + 14, x3 - 8 + (stageW - 8) / 2 - outW / 2));
+        const hBoxY = hbmY + 34;
+        const hBoxH = hbmH - 48;
+        drawBox(ctx, outX, hBoxY, outW, hBoxH, 8, pal.regBg, pal.reg, 1.8);
+        drawFitText(ctx, 'Final matC (M × N)', outX + outW / 2, hBoxY + hBoxH / 2 - 12, outW - 20, '800 12px JetBrains Mono, monospace', pal.reg, 'center');
+        drawFitText(ctx, 'SINGLE WRITE!', outX + outW / 2, hBoxY + hBoxH / 2 + 4, outW - 20, '800 10.5px JetBrains Mono, monospace', pal.reg, 'center');
+        drawFitText(ctx, '1× HBM Traffic · 1 Launch', outX + outW / 2, hBoxY + hBoxH / 2 + 20, outW - 20, '600 10px Inter, system-ui, sans-serif', pal.textSub, 'center');
+
+        const dropX = outX + outW / 2;
+        drawArrow(ctx, dropX, boxY + boxH + 4, dropX, hBoxY, pal.reg, 2.4);
+        drawPacket(ctx, dropX, boxY + boxH + 4, dropX, hBoxY, pulse, pal.reg, 5);
+
+        // Left note in HBM box (dynamically matches selected GPU!)
+        const noteMaxW = outX - (pad + 18) - 16;
+        drawFitText(ctx, 'What Production Libraries (cuBLAS / Triton / FlashAttention) Add Next:', pad + 18, hBoxY + 18, noteMaxW, '800 11px Inter, system-ui, sans-serif', pal.warp, 'left');
+        drawFitText(ctx, `• ${gpu.tcDesc}: ${gpu.bf16Tflops.toFixed(0)} TF ${gpu.tcShort} (${tcRatio}× FP32 CUDA Cores)`, pad + 18, hBoxY + 38, noteMaxW, '600 10.5px Inter, system-ui, sans-serif', pal.textSub, 'left');
+        drawFitText(ctx, '• TMA / cp.async double-buffering + XOR swizzled SMEM (overlap load & math)', pad + 18, hBoxY + 56, noteMaxW, '600 10.5px Inter, system-ui, sans-serif', pal.textSub, 'left');
+
+        drawBadge(ctx, W / 2, smY + smH + 20, 'Fused Epilogue: 4 Full M×N HBM Round-Trips Eliminated (Zero Extra Byte Tax!)', pal.regBg, pal.reg, 'center', pal.bg);
+      }
+    }
+
+    const RENDERERS = [
+      renderRung1, renderRung2, renderRung3, renderRung4,
+      renderRung5, renderRung6, renderRung7, renderRung8, renderRung9
+    ];
+
+    /* =========================================================================
+     * 8. Live Animated Log-Log Roofline Plot
+     * ========================================================================= */
+    function renderRoofline(ctx, W, H, pal) {
+      const gpu = GPUS[state.gpuKey];
+      const showTC = state.showTensorRoof;
+      const ridgeFP32 = gpu.fp32Tflops / gpu.bwTbs;
+      const ridgeBF16 = gpu.bf16Tflops / gpu.bwTbs;
+
+      const pL = 44, pR = W - 16, pT = 24, pB = H - 30;
+      const pw = pR - pL, ph = pB - pT;
+
+      // Log10 bounds (extra top headroom so TC & FP32 labels never clip top edge)
+      const xMinVal = 0.04;
+      const yMinVal = 0.1;
+      const minLogX = Math.log10(xMinVal);
+      const maxLogX = Math.log10(showTC ? 512 : 128);
+      const minLogY = Math.log10(yMinVal);
+      const maxLogY = Math.log10(showTC ? Math.max(1600, gpu.bf16Tflops * 2.1) : Math.max(115, gpu.fp32Tflops * 2.1));
+
+      const xOf = ai => pL + ((Math.log10(Math.max(xMinVal, ai)) - minLogX) / (maxLogX - minLogX)) * pw;
+      const yOf = tf => pB - ((Math.log10(Math.max(yMinVal, tf)) - minLogY) / (maxLogY - minLogY)) * ph;
+
+      // Exact bandwidth slope entry point on the visible plot (prevents T4 slope distortion!)
+      const bwStartX = Math.max(xMinVal, yMinVal / gpu.bwTbs);
+      const bwStartY = bwStartX * gpu.bwTbs;
+
+      ctx.fillStyle = pal.bg;
+      ctx.fillRect(0, 0, W, H);
+
+      // Subtle log gridlines
+      ctx.strokeStyle = pal.grid;
+      ctx.lineWidth = 1;
+      const xTicks = showTC ? [0.1, 1, 10, 100, 300] : [0.1, 1, 8, 16, 32, 64];
+      xTicks.forEach(v => {
+        const x = xOf(v);
+        if (x > pL && x < pR) {
+          ctx.beginPath(); ctx.moveTo(x, pT); ctx.lineTo(x, pB); ctx.stroke();
+          ctx.fillStyle = pal.muted;
+          ctx.font = '600 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(v < 1 ? v.toFixed(1) : `${v}`, x, pB + 12);
+        }
+      });
+
+      const yTicks = showTC ? [0.1, 1, 10, 100, 1000] : [0.1, 1, 10, 50];
+      yTicks.forEach(v => {
+        const y = yOf(v);
+        if (y >= pT && y <= pB) {
+          ctx.beginPath(); ctx.moveTo(pL, y); ctx.lineTo(pR, y); ctx.stroke();
+          ctx.fillStyle = pal.muted;
+          ctx.font = '600 9px JetBrains Mono, monospace';
+          ctx.textAlign = 'right';
+          ctx.fillText(v < 1 ? v.toFixed(1) : `${v}`, pL - 5, y + 3);
+        }
+      });
+
+      // Axes
+      ctx.strokeStyle = pal.panelBorder;
+      ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      ctx.moveTo(pL, pT); ctx.lineTo(pL, pB); ctx.lineTo(pR, pB);
+      ctx.stroke();
+
+      // Axis labels
+      ctx.fillStyle = pal.muted;
+      ctx.font = '700 9.5px Inter, system-ui, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText('HBM Arithmetic Intensity (FLOPs / Byte, log)', pL + pw / 2, H - 5);
+      ctx.save();
+      ctx.translate(12, pT + ph / 2);
+      ctx.rotate(-Math.PI / 2);
+      ctx.fillText('TFLOP/s (log)', 0, 0);
+      ctx.restore();
+
+      // Shaded memory-bound vs compute-bound split at FP32 ridge
+      const rxFP32 = xOf(ridgeFP32);
+      ctx.fillStyle = isLight() ? 'rgba(234, 88, 12, 0.05)' : 'rgba(249, 115, 22, 0.06)';
+      ctx.fillRect(pL, pT, Math.max(0, rxFP32 - pL), ph);
+      ctx.fillStyle = isLight() ? 'rgba(5, 150, 105, 0.05)' : 'rgba(52, 211, 153, 0.06)';
+      ctx.fillRect(rxFP32, pT, Math.max(0, pR - rxFP32), ph);
+
+      // Optional BF16/FP16 Tensor Core Roof (dashed violet — shares exact bandwidth diagonal!)
+      if (showTC) {
+        ctx.save();
+        ctx.strokeStyle = pal.warp;
+        ctx.lineWidth = 1.6;
+        ctx.setLineDash([5, 4]);
+        ctx.beginPath();
+        ctx.moveTo(xOf(bwStartX), yOf(bwStartY));
+        ctx.lineTo(xOf(ridgeBF16), yOf(gpu.bf16Tflops));
+        ctx.lineTo(pR, yOf(gpu.bf16Tflops));
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.fillStyle = pal.warp;
+        ctx.font = '700 9.5px JetBrains Mono, monospace';
+        ctx.textAlign = 'right';
+        ctx.fillText(`${gpu.tcLabel} ${gpu.bf16Tflops.toFixed(0)} TF (ridge ${ridgeBF16.toFixed(0)})`, pR - 4, Math.max(pT + 9, yOf(gpu.bf16Tflops) - 5));
+        ctx.restore();
+      }
+
+      // Main FP32 CUDA Core Roofline (bold cyan)
+      ctx.strokeStyle = pal.smem;
+      ctx.lineWidth = 2.4;
+      ctx.beginPath();
+      ctx.moveTo(xOf(bwStartX), yOf(bwStartY));
+      ctx.lineTo(rxFP32, yOf(gpu.fp32Tflops));
+      ctx.lineTo(pR, yOf(gpu.fp32Tflops));
+      ctx.stroke();
+
+      // FP32 Ridge vertical dashed line & label
+      ctx.strokeStyle = pal.gold;
+      ctx.lineWidth = 1;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath();
+      ctx.moveTo(rxFP32, yOf(gpu.fp32Tflops));
+      ctx.lineTo(rxFP32, pB);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = pal.smem;
+      ctx.font = '700 9.5px JetBrains Mono, monospace';
+      ctx.textAlign = 'right';
+      ctx.fillText(`FP32 ${gpu.fp32Tflops} TF`, pR - 4, yOf(gpu.fp32Tflops) - 5);
+
+      // Place Ridge label cleanly on bottom-right of vertical line so it never collides with FP32 ceiling label
+      ctx.fillStyle = pal.gold;
+      ctx.textAlign = 'left';
+      const ridgeLblX = Math.min(pR - 58, rxFP32 + 4);
+      ctx.fillText(`Ridge ${ridgeFP32.toFixed(1)}`, ridgeLblX, pB - 6);
+
+      // Breadcrumb dots for Rungs 1..8
+      RUNGS.slice(0, 8).forEach((r, idx) => {
+        const ai = idx === 7 ? evaluateConfig(state.cfg, gpu).hbmAI : r.hbmAI;
+        const ceilTf = Math.min(gpu.fp32Tflops, ai * gpu.bwTbs);
+        const effTf = Math.max(0.11, ceilTf * r.stallFactor);
+        const px = xOf(ai);
+        const py = yOf(effTf);
+        ctx.fillStyle = idx === state.rungIdx ? pal.gold : idx < state.rungIdx ? pal.reg : pal.muted;
+        ctx.globalAlpha = idx === state.rungIdx ? 0.3 : 0.7;
+        ctx.beginPath();
+        ctx.arc(px, py, 3.2, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1;
+      });
+
+      // Smoothly animated active kernel operating point!
+      const curCeil = Math.min(gpu.fp32Tflops, state.roofCurAI * gpu.bwTbs);
+      const curYVal = Math.max(0.11, curCeil * state.roofCurEff);
+      const cx = xOf(state.roofCurAI);
+      const cy = yOf(curYVal);
+      const ceilY = yOf(curCeil);
+
+      // Vertical gap line showing stall headroom below HBM/FP32 roof
+      if (cy - ceilY > 4) {
+        ctx.strokeStyle = pal.hbm;
+        ctx.lineWidth = 1.4;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(cx, ceilY);
+        ctx.lineTo(cx, cy);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Glowing active dot
+      ctx.save();
+      ctx.shadowColor = pal.gold;
+      ctx.shadowBlur = 14;
+      ctx.fillStyle = pal.gold;
+      ctx.beginPath();
+      ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.strokeStyle = pal.bg;
+      ctx.lineWidth = 1.8;
+      ctx.stroke();
+      ctx.restore();
+
+      // Active label pill (opaque background so slope/dots never bleed through text!)
+      const regime = state.roofCurAI >= ridgeFP32 ? 'Compute-Bound' : 'Memory-Bound';
+      const lbl = `R${state.rungIdx + 1}: ${state.roofCurAI < 1 ? state.roofCurAI.toFixed(2) : state.roofCurAI.toFixed(1)} F/B (${regime})`;
+      ctx.save();
+      ctx.font = '800 9.5px JetBrains Mono, monospace';
+      const tw = ctx.measureText(lbl).width;
+      const pillW = tw + 12;
+      const pillH = 18;
+      let px = cx > pL + pw * 0.50 ? cx - 10 - pillW : cx + 10;
+      px = Math.max(pL + 4, Math.min(pR - pillW - 4, px));
+      let py = cy + 8;
+      if (py + pillH > pB - 18) py = cy - pillH - 8;
+      py = Math.max(pT + 6, Math.min(pB - pillH - 4, py));
+      drawBox(ctx, px, py, pillW, pillH, 5, pal.panel, pal.gold, 1);
+      ctx.fillStyle = pal.text;
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(lbl, px + pillW / 2, py + pillH / 2 + 0.5);
+      ctx.restore();
+    }
+
+    /* =========================================================================
+     * 9. Syntax Highlighting (Safe HTML Escape + Python/Numba Tokens)
+     * ========================================================================= */
+    function escapeHtml(s) {
+      return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    }
+
+    function highlightPyLine(raw) {
+      // Split comment first so keywords inside comments stay muted
+      const hashIdx = raw.indexOf('#');
+      const codePart = hashIdx >= 0 ? raw.slice(0, hashIdx) : raw;
+      const commentPart = hashIdx >= 0 ? raw.slice(hashIdx) : '';
+
+      let out = escapeHtml(codePart);
+      // Strings
+      out = out.replace(/(".*?"|'.*?')/g, '<span class="tok-str">$1</span>');
+      // Decorators & keywords
+      out = out.replace(/@cuda\.jit/g, '<span class="tok-kw">@cuda.jit</span>');
+      out = out.replace(/\b(def|for|in|if|else|return|or|and|not|range)\b/g, '<span class="tok-kw">$1</span>');
+      // Functions & CUDA intrinsics
+      out = out.replace(/\b(cuda|syncthreads|shared|local|array|float32|gelu|is_valid_config)\b/g, '<span class="tok-fn">$1</span>');
+      // Numbers
+      out = out.replace(/\b(\d+(\.\d+)?)\b/g, '<span class="tok-num">$1</span>');
+
+      if (commentPart) {
+        out += '<span class="tok-cm">' + escapeHtml(commentPart) + '</span>';
+      }
+      return out;
+    }
+
+    /* =========================================================================
+     * 10. UI Rendering & Synchronization
+     * ========================================================================= */
+    function buildLadderRail() {
+      const rail = document.getElementById('ladderRail');
+      rail.innerHTML = RUNGS.map((r, i) => `
+        <button type="button" class="rung-tab" data-idx="${i}" ${r.kind ? `data-kind="${r.kind}"` : ''}>
+          <span class="rung-num"><span>${r.num}</span></span>
+          <span class="rung-name">${r.short}</span>
+          <span class="rung-tag mono">${r.tag}</span>
+        </button>
+      `).join('');
+
+      rail.querySelectorAll('.rung-tab').forEach(btn => {
+        btn.addEventListener('click', () => selectRung(Number(btn.dataset.idx)));
+      });
+    }
+
+    function buildSummaryTable() {
+      const tbody = document.getElementById('ladderTableBody');
+      tbody.innerHTML = RUNGS.map((r, i) => `
+        <tr data-idx="${i}">
+          <td class="mono">${r.num}</td>
+          <td><strong>${r.short}</strong></td>
+          <td class="mono">${r.tileSummary}</td>
+          <td class="mono"><span class="badge-mini ${r.hbmAI >= 16 ? 'b-reg' : r.hbmAI >= 8 ? 'b-smem' : 'b-hbm'}">${r.id === 'autotune' ? '8–32 FLOP/B' : (r.hbmAI < 1 ? r.hbmAI.toFixed(2) : r.hbmAI.toFixed(1)) + ' FLOP/B'}</span></td>
+          <td class="mono">${r.mioSummary}</td>
+          <td>${r.fixed}</td>
+          <td>${r.next}</td>
+        </tr>
+      `).join('');
+
+      tbody.querySelectorAll('tr').forEach(tr => {
+        tr.addEventListener('click', () => {
+          selectRung(Number(tr.dataset.idx));
+          window.scrollTo({ top: document.querySelector('.ladder-rail-wrap').offsetTop - 8, behavior: 'smooth' });
+        });
+      });
+    }
+
+    function buildAutotuneKnobs() {
+      const grid = document.getElementById('knobsGrid');
+      const keys = Object.keys(SEARCH_SPACE);
+      grid.innerHTML = keys.map(k => `
+        <div class="knob-box">
+          <div class="knob-label mono"><span>${k}</span><span id="knobVal_${k}">${state.cfg[k]}</span></div>
+          <div class="knob-opts">
+            ${SEARCH_SPACE[k].map(v => `<button type="button" class="knob-opt mono" data-k="${k}" data-v="${v}">${v}</button>`).join('')}
+          </div>
+        </div>
+      `).join('');
+
+      grid.querySelectorAll('.knob-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.cfg[btn.dataset.k] = Number(btn.dataset.v);
+          syncAutotuneUI();
+          renderMetrics();
+        });
+      });
+
+      document.querySelectorAll('.preset-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          state.cfg = { ...PRESETS[btn.dataset.preset] };
+          syncAutotuneUI();
+          renderMetrics();
+        });
+      });
+      syncAutotuneUI();
+    }
+
+    function syncAutotuneUI() {
+      Object.keys(SEARCH_SPACE).forEach(k => {
+        const valEl = document.getElementById(`knobVal_${k}`);
+        if (valEl) valEl.textContent = state.cfg[k];
+      });
+      document.querySelectorAll('.knob-opt').forEach(btn => {
+        btn.classList.toggle('active', state.cfg[btn.dataset.k] === Number(btn.dataset.v));
+      });
+    }
+
+    function renderMetrics() {
+      const rung = RUNGS[state.rungIdx];
+      const gpu = GPUS[state.gpuKey];
+      const grid = document.getElementById('metricsGrid');
+
+      let cards = rung.metrics;
+      if (rung.id === 'autotune') {
+        const ev = evaluateConfig(state.cfg, gpu);
+        const ridge = gpu.fp32Tflops / gpu.bwTbs;
+        cards = [
+          {
+            label: 'HBM Arithmetic Intensity',
+            value: ev.valid ? `${ev.hbmAI.toFixed(1)} FLOP/B` : 'INVALID',
+            sub: ev.valid ? (ev.hbmAI >= ridge ? `Past ${gpu.name} FP32 ridge (${ridge.toFixed(1)})!` : `Under ${gpu.name} FP32 ridge (${ridge.toFixed(1)})`) : 'Fix red constraint in validator',
+            pct: ev.valid ? Math.min(100, (ev.hbmAI / 32) * 100) : 100,
+            color: !ev.valid ? 'var(--c-danger)' : ev.hbmAI >= ridge ? 'var(--c-reg)' : 'var(--c-smem)'
+          },
+          {
+            label: 'SMEM / LDS.128 Ratio',
+            value: `${ev.lds128PerFma.toFixed(3)} / FMA`,
+            sub: `${ev.smemReadsPerFma.toFixed(2)} floats/FMA · ${ev.smemKiB.toFixed(1)} KiB SMEM/blk`,
+            pct: Math.min(100, (ev.smemReadsPerFma / 0.5) * 100),
+            color: ev.smemReadsPerFma <= 0.25 ? 'var(--c-reg)' : 'var(--c-smem)'
+          },
+          {
+            label: `${gpu.name} Occupancy`,
+            value: ev.valid ? `${ev.occupancyPct.toFixed(0)}% (${ev.activeBlocksPerSm} blk)` : '0%',
+            sub: ev.valid ? `Capped by ${ev.limiter} · ~${ev.estRegs} regs/thr` : 'Config rejected before compile',
+            pct: ev.valid ? ev.occupancyPct : 0,
+            color: ev.occupancyPct >= 50 ? 'var(--c-reg)' : 'var(--c-hbm)'
+          },
+          {
+            label: '2048³ Grid & Waves',
+            value: ev.valid && ev.waves > 0 ? `${ev.waves.toFixed(2)} waves` : '—',
+            sub: ev.valid ? `${ev.gridBlocks} total blocks across ${gpu.sms} SMs` : 'Check fractional tail wave risk',
+            pct: ev.valid ? Math.min(100, (ev.waves / 8) * 100) : 0,
+            color: 'var(--c-warp)'
+          }
+        ];
+      }
+
+      grid.innerHTML = cards.map(m => `
+        <div class="metric-card">
+          <span class="metric-label">${m.label}</span>
+          <span class="metric-value mono" style="color:${m.color}">${m.value}</span>
+          <span class="metric-sub">${m.sub}</span>
+          <div class="metric-bar-track">
+            <div class="metric-bar-fill" style="width:${m.pct}%;background:${m.color}"></div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    function updateGpuHeader() {
+      const g = GPUS[state.gpuKey];
+      const ridge = g.fp32Tflops / g.bwTbs;
+      document.getElementById('gpuSpecLine').textContent =
+        `${g.sms} SMs · ${g.fp32Tflops} TFLOP/s FP32 · ${g.bwTbs} TB/s ${g.memLabel} · FP32 Ridge ${ridge.toFixed(1)} FLOP/B`;
+      const tcLbl = document.getElementById('tcToggleLabel');
+      if (tcLbl) tcLbl.textContent = `Show ${g.tcShort} Tensor Roof`;
+      document.querySelectorAll('.gpu-btn').forEach(b => {
+        b.classList.toggle('active', b.dataset.gpu === state.gpuKey);
+      });
+    }
+
+    function selectRung(idx) {
+      state.rungIdx = Math.max(0, Math.min(RUNGS.length - 1, idx));
+      state.simTime = 0;
+      const rung = RUNGS[state.rungIdx];
+
+      // Update rail & table highlights
+      document.querySelectorAll('.rung-tab').forEach((el, i) => {
+        el.classList.toggle('active', i === state.rungIdx);
+        el.classList.toggle('passed', i < state.rungIdx);
+      });
+      document.querySelectorAll('#ladderTableBody tr').forEach((tr, i) => {
+        tr.classList.toggle('active-row', i === state.rungIdx);
+      });
+
+      // Stage header
+      document.getElementById('stageKicker').textContent = rung.kicker;
+      document.getElementById('stageTitle').textContent = rung.title;
+
+      // Rung-specific interactive toggles
+      const togWrap = document.getElementById('stageToggles');
+      togWrap.innerHTML = rung.toggles.map(tg => `
+        <button type="button" class="pill-toggle ${tg.warn ? 'warn' : ''} ${state.toggles[tg.key] ? 'active' : ''}" data-key="${tg.key}">
+          ${tg.label}
+        </button>
+      `).join('');
+      togWrap.querySelectorAll('.pill-toggle').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const k = btn.dataset.key;
+          state.toggles[k] = !state.toggles[k];
+          btn.classList.toggle('active', state.toggles[k]);
+        });
+      });
+
+      // Show/hide 7-knob autotuner panel
+      document.getElementById('autotunePanel').classList.toggle('visible', rung.id === 'autotune');
+
+      // Handoff card
+      document.getElementById('handoffFixed').textContent = rung.fixed;
+      document.getElementById('handoffNext').textContent = rung.next;
+
+      // Physics & Diagnostics
+      document.getElementById('physicsHeading').textContent = rung.physicsHeading;
+      document.getElementById('physicsBody').textContent = rung.physicsBody;
+      document.getElementById('formulaBox').textContent = rung.formula;
+      document.getElementById('diagHeading').textContent = rung.diagHeading;
+      document.getElementById('diagList').innerHTML = rung.diagBullets.map(b => `<li>${b}</li>`).join('');
+      document.getElementById('ncuCmdText').textContent = rung.ncuCmd;
+
+      // Code Spotlight + live GitHub line-range link
+      document.getElementById('codeLines').textContent = rung.codeLines;
+      const ghMatch = rung.codeLines.match(/L(\d+)[–-]L(\d+)/);
+      const ghAnchor = ghMatch ? `#L${ghMatch[1]}-L${ghMatch[2]}` : '';
+      const ghLink = document.getElementById('codeGithubLink');
+      if (ghLink) {
+        ghLink.href = `https://github.com/karthikBalasubramanian/Kernel-Engg/blob/assignment-2/lecture8/my_matmul_kernels.py${ghAnchor}`;
+      }
+      const lines = rung.code.split('\n');
+      const hlSet = new Set(rung.codeHighlights);
+      document.getElementById('codeBlock').innerHTML = lines.map((ln, idx) => {
+        const lineNum = rung.codeStart + idx;
+        const isHl = hlSet.has(lineNum);
+        return `<div class="code-line ${isHl ? 'hl' : ''}"><span class="ln">${lineNum}</span><span>${highlightPyLine(ln)}</span></div>`;
+      }).join('');
+
+      // Metrics
+      renderMetrics();
+
+      // Prev/Next buttons
+      const prevBtn = document.getElementById('btnPrevRung');
+      const nextBtn = document.getElementById('btnNextRung');
+      prevBtn.disabled = state.rungIdx === 0;
+      nextBtn.disabled = state.rungIdx === RUNGS.length - 1;
+      document.getElementById('prevLabel').textContent = state.rungIdx > 0 ? RUNGS[state.rungIdx - 1].short : 'Start';
+      document.getElementById('nextLabel').textContent = state.rungIdx < RUNGS.length - 1 ? RUNGS[state.rungIdx + 1].short : 'Done';
+      document.getElementById('pagerCounter').textContent = `${rung.num} (${state.rungIdx + 1} / ${RUNGS.length})`;
+    }
+
+    /* =========================================================================
+     * 11. High-DPI Canvas Resize + 60fps Main Animation Loop
+     * ========================================================================= */
+    const simCanvas = document.getElementById('simCanvas');
+    const simCtx = simCanvas.getContext('2d');
+    const roofCanvas = document.getElementById('rooflineCanvas');
+    const roofCtx = roofCanvas.getContext('2d');
+
+    let simW = 760, simH = 460;
+    let roofW = 420, roofH = 225;
+
+    function resizeCanvases() {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const sRect = document.getElementById('canvasShell').getBoundingClientRect();
+      simW = Math.max(320, Math.floor(sRect.width));
+      simH = Math.max(300, Math.floor(sRect.height));
+      simCanvas.width = Math.floor(simW * dpr);
+      simCanvas.height = Math.floor(simH * dpr);
+      simCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const rRect = document.getElementById('rooflineWrap').getBoundingClientRect();
+      roofW = Math.max(260, Math.floor(rRect.width));
+      roofH = Math.max(180, Math.floor(rRect.height));
+      roofCanvas.width = Math.floor(roofW * dpr);
+      roofCanvas.height = Math.floor(roofH * dpr);
+      roofCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    }
+
+    function frame(ts) {
+      if (!state.lastFrameTs) state.lastFrameTs = ts;
+      const dt = Math.min(0.05, (ts - state.lastFrameTs) / 1000);
+      state.lastFrameTs = ts;
+
+      if (state.playing) {
+        state.simTime += dt * state.speed;
+      }
+
+      // Smoothly lerp Roofline operating dot toward current rung's target
+      const rung = RUNGS[state.rungIdx];
+      const gpu = GPUS[state.gpuKey];
+      const targetAI = rung.id === 'autotune' ? evaluateConfig(state.cfg, gpu).hbmAI : rung.hbmAI;
+      const targetEff = rung.id === 'autotune'
+        ? (evaluateConfig(state.cfg, gpu).valid ? 0.94 : 0.12)
+        : rung.stallFactor;
+      // Log-space interpolation feels buttery on a log-log Roofline!
+      const logCur = Math.log10(Math.max(0.04, state.roofCurAI));
+      const logTgt = Math.log10(Math.max(0.04, targetAI));
+      state.roofCurAI = Math.pow(10, logCur + (logTgt - logCur) * Math.min(1, dt * 8));
+      state.roofCurEff += (targetEff - state.roofCurEff) * Math.min(1, dt * 8);
+
+      const pal = getPal();
+      // Clear & render main rung simulation
+      simCtx.fillStyle = pal.bg;
+      simCtx.fillRect(0, 0, simW, simH);
+      RENDERERS[state.rungIdx](simCtx, simW, simH, state.simTime, pal);
+
+      // Render synchronized Roofline
+      renderRoofline(roofCtx, roofW, roofH, pal);
+
+      requestAnimationFrame(frame);
+    }
+
+    /* =========================================================================
+     * 12. Theme Toggle & Event Wiring
+     * ========================================================================= */
+    function syncThemeIcons() {
+      const dark = !isLight();
+      document.getElementById('themeIconSun').style.display = dark ? 'block' : 'none';
+      document.getElementById('themeIconMoon').style.display = dark ? 'none' : 'block';
+    }
+
+    document.getElementById('themeToggle').addEventListener('click', () => {
+      const next = isLight() ? 'dark' : 'light';
+      document.documentElement.setAttribute('data-bs-theme', next);
+      try { localStorage.setItem('theme', next); } catch (e) {}
+      syncThemeIcons();
+    });
+
+    document.querySelectorAll('.gpu-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.gpuKey = btn.dataset.gpu;
+        updateGpuHeader();
+        renderMetrics();
+      });
+    });
+
+    document.getElementById('toggleTensorRoof').addEventListener('change', e => {
+      state.showTensorRoof = e.target.checked;
+    });
+
+    function syncPlayUI() {
+      document.getElementById('btnPlayPause').textContent = state.playing ? 'Pause' : 'Play';
+      document.getElementById('phasePulse').classList.toggle('paused', !state.playing);
+    }
+
+    document.getElementById('btnPlayPause').addEventListener('click', () => {
+      state.playing = !state.playing;
+      syncPlayUI();
+    });
+    document.getElementById('btnStep').addEventListener('click', () => {
+      state.playing = false;
+      state.simTime += 0.9;
+      syncPlayUI();
+    });
+    document.getElementById('btnReset').addEventListener('click', () => {
+      state.simTime = 0;
+      state.playing = true;
+      syncPlayUI();
+    });
+    document.querySelectorAll('.spd-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        state.speed = Number(btn.dataset.speed);
+        document.querySelectorAll('.spd-btn').forEach(b => b.classList.toggle('active', b === btn));
+      });
+    });
+
+    document.getElementById('btnPrevRung').addEventListener('click', () => selectRung(state.rungIdx - 1));
+    document.getElementById('btnNextRung').addEventListener('click', () => selectRung(state.rungIdx + 1));
+
+    document.getElementById('btnCopyNcu').addEventListener('click', function () {
+      const txt = document.getElementById('ncuCmdText').textContent;
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(txt).then(() => {
+          this.textContent = 'Copied!';
+          setTimeout(() => { this.textContent = 'Copy'; }, 1400);
+        }).catch(() => {});
+      }
+    });
+
+    // Keyboard shortcuts (Left/Right, 1-9, Space)
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      if (e.key === 'ArrowRight') { selectRung(state.rungIdx + 1); }
+      else if (e.key === 'ArrowLeft') { selectRung(state.rungIdx - 1); }
+      else if (e.key >= '1' && e.key <= '9') { selectRung(Number(e.key) - 1); }
+      else if (e.key === ' ') {
+        e.preventDefault();
+        state.playing = !state.playing;
+        syncPlayUI();
+      }
+    });
+
+    // ResizeObserver for crisp canvas sizing
+    if (window.ResizeObserver) {
+      const ro = new ResizeObserver(() => resizeCanvases());
+      ro.observe(document.getElementById('canvasShell'));
+      ro.observe(document.getElementById('rooflineWrap'));
+    }
+    window.addEventListener('resize', resizeCanvases);
+
+    // Boot!
+    syncThemeIcons();
+    buildLadderRail();
+    buildSummaryTable();
+    buildAutotuneKnobs();
+    updateGpuHeader();
+    selectRung(0);
+    resizeCanvases();
+    requestAnimationFrame(frame);
+  })();
+  </script>
+</body>
+</html>
